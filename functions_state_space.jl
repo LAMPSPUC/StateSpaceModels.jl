@@ -23,13 +23,16 @@ mutable struct System
   alpha::Array
   V::Array
   psi::Array
+  level::Array
+  slope::Array
+  seasonal::Array
 end
 
 function create_system()
     system = System(Array{Float64}(0), Array{Float64}(0), 0, 0, 0, 0, 0, Array{Float64}(0), Array{Float64}(0),
                     Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0),
                     Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), 0, Array{Float64}(0),
-                    Array{Float64}(0), Array{Float64}(0))
+                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0))
     return system
 end
 
@@ -274,7 +277,7 @@ function square_root_smoother(system)
     return system
 end
 
-function state_space(y, s; X = Array{Float64}(0,0))
+function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
     ## DESCRIPTION
     #
     #   Fits a state space model to the response y, returning the smoothed
@@ -373,8 +376,6 @@ function state_space(y, s; X = Array{Float64}(0,0))
     bigKappa = 1000
 
     ## Maximum likelihood estimation of parameters
-    # Number of seeds used to initialize the optimization method
-    nSeeds = 1
     # number of unknown parameters
     nPsi = Int((1 + system.r/system.p)*(system.p*(system.p + 1)/2))
     # vector of unknowns
@@ -393,13 +394,14 @@ function state_space(y, s; X = Array{Float64}(0,0))
         # uniformly generate values on the interval [infLim,supLim]
         seeds[:, iSeed] = infLim + rand(infLim:supLim, nPsi)
         # perform Nelder-Mead
-        println("Starting seed $iSeed...")
+        println("Computing MLE for seed $iSeed of $nSeeds...")
         tryOpt[iSeed] = optimize(psiTilde -> state_space_likelihood(psiTilde, system), seeds[:, iSeed],
                                     NelderMead(), Optim.Options(f_tol = 1e-2, g_tol = 1e-4, iterations = 10^5,
-                                                                show_trace = true, show_every = 2*10^4))
+                                                                show_trace = false))
         psi[:, iSeed] = tryOpt[iSeed].minimizer
         logLikelihood[iSeed] = tryOpt[iSeed].minimum
     end
+    println("Maximum likelihood estimation complete.")
     logLikelihood = -logLikelihood
     # choosing the best feasible solution
     bestPsi = psi[:, indmax(logLikelihood)]
@@ -431,27 +433,42 @@ function state_space(y, s; X = Array{Float64}(0,0))
     end
     y = system.y
     v = system.v
+    system.level = Array{Array}(system.p)
+    system.slope = Array{Array}(system.p)
+    system.seasonal = Array{Array}(system.p)
 
-    # for i = 1 : system.p
-    #     # Time series
-    #     plot(y[:,i], title = "Time series $i", label = "", ylims = [minimum(y[:,i])-1, maximum(y[:,i])+1])
-    #     savefig("series_$i")
-    #
-    #     # Level
-    #     plot(alphaMatrix[:,n_exp+i], title = "Level of series $i", label = "",
-    #          ylims = [minimum(alphaMatrix[:,n_exp+i])-1, maximum(alphaMatrix[:,n_exp+i])+1])
-    #     savefig("level_$i")
-    #
-    #     # Slope
-    #     plot(alphaMatrix[:,n_exp+system.p+i], title = "Slope of series $i", label = "",
-    #          ylims = [minimum(alphaMatrix[:,n_exp+system.p+i])-1, maximum(alphaMatrix[:,n_exp+system.p+i])+1])
-    #     savefig("slope_$i")
-    #
-    #     # Seasonal
-    #     plot(alphaMatrix[:,n_exp+2*system.p+i], title = "Seasonal of series $i", label = "",
-    #          ylims = [minimum(alphaMatrix[:,n_exp+2*system.p+i])-1, maximum(alphaMatrix[:,n_exp+2*system.p+i])+1])
-    #     savefig("seasonal_$i")
-    # end
+    for i = 1 : system.p
+        # Time series
+        p = plot(y[:,i], title = "Time series $i", label = "", ylims = [minimum(y[:,i])-1, maximum(y[:,i])+1])
+        savefig(p, "series_$i.png")
+
+        # Level
+        p = plot(alphaMatrix[:,n_exp+i], title = "Level of series $i", label = "",
+             ylims = [minimum(alphaMatrix[:,n_exp+i])-1, maximum(alphaMatrix[:,n_exp+i])+1])
+        savefig(p, "level_$i.png")
+        system.level[i] = alphaMatrix[:,n_exp+i]
+
+        # Slope
+        p = plot(alphaMatrix[:,n_exp+system.p+i], title = "Slope of series $i", label = "",
+             ylims = [minimum(alphaMatrix[:,n_exp+system.p+i])-1, maximum(alphaMatrix[:,n_exp+system.p+i])+1])
+        savefig(p, "slope_$i.png")
+        system.slope[i] = alphaMatrix[:,n_exp+system.p+i]
+
+        # Seasonal
+        p = plot(alphaMatrix[:,n_exp+2*system.p+i], title = "Seasonal of series $i", label = "",
+             ylims = [minimum(alphaMatrix[:,n_exp+2*system.p+i])-1, maximum(alphaMatrix[:,n_exp+2*system.p+i])+1])
+        savefig(p, "seasonal_$i.png")
+        system.seasonal[i] = alphaMatrix[:,n_exp+2*system.p+i]
+    end
 
     return system
+end
+
+function mape(A, F)
+    n = length(A)
+    if length(A) != length(F)
+        return -1
+    end
+    M = (100/n)*sum(abs.((A.-F)./A))
+    return M
 end
