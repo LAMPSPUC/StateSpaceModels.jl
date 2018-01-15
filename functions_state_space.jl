@@ -16,7 +16,6 @@ mutable struct System
   v::Array
   Fsqrt::Array
   K::Array
-  U2star::Array
   Ks::Array
   PsqrtSteady::Array
   ts::Int
@@ -26,20 +25,22 @@ mutable struct System
   level::Array
   slope::Array
   seasonal::Array
+  U2star::Array
+  steadyState::Bool
 end
 
 function create_system()
     system = System(Array{Float64}(0), Array{Float64}(0), 0, 0, 0, 0, 0, Array{Float64}(0), Array{Float64}(0),
                     Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0),
-                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), 0, Array{Float64}(0),
-                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0))
+                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), 0, Array{Float64}(0), Array{Float64}(0),
+                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), false)
     return system
 end
 
 function state_space_likelihood(psiTilde, system)
     ## DESCRIPTION
     #
-    #   Compute and return the log-likelihood concerning the vector psiTilde.
+    #   Compute and return the log-likelihood concerning vector psiTilde.
     # ------------------------------------------------------------------------------
 
     # Measurement's covariance matrix
@@ -67,8 +68,13 @@ function state_space_likelihood(psiTilde, system)
         end
     end
     logLikelihood = system.n*system.p*log(2*pi)/2
-    for t = 20 : system.n
-        logLikelihood = logLikelihood + .5 * (log(det(system.Fsqrt[t]*system.Fsqrt[t]')) + system.v[t]' * ((system.Fsqrt[t]*system.Fsqrt[t]') \ system.v[t]))
+
+    try
+        for t = 20 : system.n
+            logLikelihood = logLikelihood + .5 * (log(det(system.Fsqrt[t]*system.Fsqrt[t]')) + system.v[t]' * ((system.Fsqrt[t]*system.Fsqrt[t]') \ system.v[t]))
+        end
+    catch
+        println(Fsqrt)
     end
 
     return logLikelihood
@@ -113,11 +119,11 @@ function square_root_kalman_filter(Hsqrt, Qsqrt, system)
     # partitioned auxiliary matrix for the instant t
     U = zeros(system.p + system.m, system.m + system.p + system.r)
     # lower triangular partitioned auxiliary matrix
-    Ustar = zeros(system.p + system.m, system.m + system.p + system.r)
+    # Ustar = zeros(system.p + system.m, system.m + system.p + system.r)
     # partions of Ustar
-    U1star = Array{Array}(system.n)
+    # U1star = Array{Array}(system.n)
     U2star = Array{Array}(system.n)
-    U3star = Array{Array}(system.n)
+    # U3star = Array{Array}(system.n)
 
     ## Initialization
     # flag to keep track if the system is in a steady state
@@ -136,43 +142,44 @@ function square_root_kalman_filter(Hsqrt, Qsqrt, system)
         v[t] = system.y[t] - system.Z[t]*a[t]
         if steadyState == true
             # updating step
-            a[t+1] = system.T[t]*a[t] + Ks*v[t]
+            a[t+1] = system.T*a[t] + Ks*v[t]
         else
             # build the auxiliary matrix
             U = [system.Z[t]*Psqrt[t] Hsqrt zeros(system.p, system.r);
-                 system.T[t]*Psqrt[t] zeros(system.m, system.p) system.R[t]*Qsqrt]
+                 system.T*Psqrt[t] zeros(system.m, system.p) system.R*Qsqrt]
             # orthogonal-triangular decomposition
-            G, = qr(U')
+            G = qrfact!(U')[:Q]
             Ustar = U*G
             # partitions of Ustar
-            U1star[t] = Ustar[1:system.p, 1:system.p]
+            # U1star[t] = Ustar[1:system.p, 1:system.p]
             U2star[t] = Ustar[(system.p + 1):(system.p + system.m), 1:system.p]
-            U3star[t] = Ustar[(system.p + 1):(system.p + system.m), (system.p + 1):(system.p + system.m)]
+            # U3star[t] = Ustar[(system.p + 1):(system.p + system.m), (system.p + 1):(system.p + system.m)]
             # innovation's variance
-            Fsqrt[t] = U1star[t]
+            Fsqrt[t] = Ustar[1:system.p, 1:system.p]
             # Kalman gain
             K[t] = (Fsqrt[t]' \ U2star[t]')'
             # updating step
-            a[t+1] = system.T[t]*a[t] + K[t]*v[t]
-            Psqrt[t+1] = U3star[t]
+            a[t+1] = system.T*a[t] + K[t]*v[t]
+            Psqrt[t+1] = Ustar[(system.p + 1):(system.p + system.m), (system.p + 1):(system.p + system.m)]
             # test if the system reached steady state
             if maximum(abs.(Psqrt[t+1] - Psqrt[t])) < tol
                 steadyState = true
                 ts = t - 1
                 Ks = K[t-1]
                 PsqrtSteady = Psqrt[t-1]
-                a[t+1] = system.T[t]*a[t] + Ks*v[t]
+                a[t+1] = system.T*a[t] + Ks*v[t]
+                system.steadyState = true
             end
         end
     end
 
     ## Save
     system.a = a
+    system.U2star = U2star
     system.Psqrt = Psqrt
     system.v = v
     system.Fsqrt = Fsqrt
     system.K = K
-    system.U2star = U2star
     system.ts = ts
     if ts < system.n+1
         system.Ks = Ks
@@ -227,10 +234,10 @@ function square_root_smoother(system)
 
     ## Recursion
     for t = n : -1 : ts
-        L[t] = T[t] - Ks*Z[t]
+        L[t] = T - Ks*Z[t]
         r[t-1] = Z[t]' * (Fsqrt[ts] * Fsqrt[ts]')^(-1) * v[t] + L[t]' * r[t]
         # auxiliary matrix
-        Nstar = [Z[t]' * Fsqrt[ts]^(-1) L[t]' * Nsqrt[t]] #########
+        Nstar = [Z[t]' * Fsqrt[ts]^(-1) L[t]' * Nsqrt[t]]
         # orthogonal-triangular decomposition
         G, = qr(Nstar')
         NstarG = Nstar * G
@@ -243,7 +250,7 @@ function square_root_smoother(system)
 
     t = 0
     for t = (ts-1) : -1 : 2
-        L[t] = T[t] - U2star[t] * (Fsqrt[t]^(-1)) * Z[t]
+        L[t] = T - U2star[t] * (Fsqrt[t]^(-1)) * Z[t]
         r[t-1] = Z[t]' * ((Fsqrt[t]*Fsqrt[t]')^(-1)) * v[t] + L[t]'*r[t]
         # auxiliary matrix
         Nstar = [Z[t]'*Fsqrt[t]^(-1) L[t]'*Nsqrt[t]]
@@ -257,10 +264,10 @@ function square_root_smoother(system)
         V[t] = (Psqrt[t]*Psqrt[t]') - (Psqrt[t]*Psqrt[t]')*(Nsqrt[t]*Nsqrt[t]')*(Psqrt[t]*Psqrt[t]')
     end
 
-    L[1] = T[t] - U2star[1] * Fsqrt[1]^(-1) * Z[1]
+    L[1] = T - U2star[1] * Fsqrt[1]^(-1) * Z[1]
     r_0 = Z[1]' * (Fsqrt[1] * Fsqrt[1]')^(-1) * v[1] + L[1]' * r[1]
     # auxiliary matrix
-    Nstar = [Z[1]' * Fsqrt[1]^(-1) L[1]' * Nsqrt[1]]
+    Nstar = [Z[1]'*Fsqrt[1]^(-1) L[1]'*Nsqrt[1]]
     # orthogonal-triangular decomposition
     G, = qr(Nstar')
     NstarG = Nstar*G
@@ -334,6 +341,8 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
         println("Number of observations in X and y mismatch.")
     end
 
+    println("Creating state space model with $(system.p) endogenous variable(s) and $n_exp exogenous variable(s).")
+
     system.m = system.p * (1 + system.s + n_exp)
     system.r = system.p * 3
 
@@ -350,27 +359,21 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
     end
 
     # state equation
-    system.T = Array{Array}(system.n)
-    system.R = Array{Array}(system.n)
+    system.T = Array{Float64}(system.m, system.m)
+    system.R = Array{Float64}(system.m, system.r)
     if n_exp > 0
         T0 = [eye(n_exp, n_exp) zeros(n_exp, 1 + system.s)]
-        for t = 1 : system.n
-            system.T[t] = kron([T0; zeros(1, n_exp) 1 1 zeros(1, system.s - 1); zeros(1, n_exp) 0 1 zeros(1, system.s - 1);
-                zeros(1, n_exp) 0 0 -ones(1, system.s - 1);
-                zeros(system.s - 2, n_exp) zeros(system.s - 2, 2) eye(system.s - 2, system.s - 2) zeros(system.s - 2, 1)],
-                eye(system.p, system.p))
-        end
+        system.T = kron([T0; zeros(1, n_exp) 1 1 zeros(1, system.s - 1); zeros(1, n_exp) 0 1 zeros(1, system.s - 1);
+            zeros(1, n_exp) 0 0 -ones(1, system.s - 1);
+            zeros(system.s - 2, n_exp) zeros(system.s - 2, 2) eye(system.s - 2, system.s - 2) zeros(system.s - 2, 1)],
+            eye(system.p, system.p))
     else
-        for t = 1 : system.n
-            system.T[t] = kron([zeros(1, n_exp) 1 1 zeros(1, system.s - 1); zeros(1, n_exp) 0 1 zeros(1, system.s - 1);
-                zeros(1, n_exp) 0 0 -ones(1, system.s - 1);
-                zeros(system.s - 2, n_exp) zeros(system.s - 2, 2) eye(system.s - 2, system.s - 2) zeros(system.s - 2, 1)],
-                eye(system.p, system.p))
-        end
+        system.T = kron([zeros(1, n_exp) 1 1 zeros(1, system.s - 1); zeros(1, n_exp) 0 1 zeros(1, system.s - 1);
+            zeros(1, n_exp) 0 0 -ones(1, system.s - 1);
+            zeros(system.s - 2, n_exp) zeros(system.s - 2, 2) eye(system.s - 2, system.s - 2) zeros(system.s - 2, 1)],
+            eye(system.p, system.p))
     end
-    for t = 1 : system.n
-        system.R[t] = kron([zeros(n_exp, 3); eye(3, 3); zeros(system.s - 2, 3)], eye(system.p, system.p))
-    end
+    system.R = kron([zeros(n_exp, 3); eye(3, 3); zeros(system.s - 2, 3)], eye(system.p, system.p))
 
     # Big Kappa initialization
     bigKappa = 1000
@@ -396,11 +399,12 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
         # perform Nelder-Mead
         println("Computing MLE for seed $iSeed of $nSeeds...")
         tryOpt[iSeed] = optimize(psiTilde -> state_space_likelihood(psiTilde, system), seeds[:, iSeed],
-                                    NelderMead(), Optim.Options(f_tol = 1e-2, g_tol = 1e-4, iterations = 10^5,
-                                                                show_trace = false))
+                                    NelderMead(), Optim.Options(f_tol = 1e-2, g_tol = 1e-5, iterations = 10^5,
+                                                                show_trace = true, show_every = 10^3))
         psi[:, iSeed] = tryOpt[iSeed].minimizer
         logLikelihood[iSeed] = tryOpt[iSeed].minimum
     end
+
     println("Maximum likelihood estimation complete.")
     logLikelihood = -logLikelihood
     # choosing the best feasible solution
@@ -439,36 +443,27 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
 
     for i = 1 : system.p
         # Time series
-        p = plot(y[:,i], title = "Time series $i", label = "", ylims = [minimum(y[:,i])-1, maximum(y[:,i])+1])
-        savefig(p, "series_$i.png")
-
-        # Level
-        p = plot(alphaMatrix[:,n_exp+i], title = "Level of series $i", label = "",
-             ylims = [minimum(alphaMatrix[:,n_exp+i])-1, maximum(alphaMatrix[:,n_exp+i])+1])
-        savefig(p, "level_$i.png")
+        # p = plot(y[:,i], title = "Time series $i", label = "", ylims = [minimum(y[:,i])-1, maximum(y[:,i])+1])
+        # savefig(p, "series_$i.png")
+        #
+        # # Level
+        # p = plot(alphaMatrix[:,n_exp+i], title = "Level of series $i", label = "",
+        #      ylims = [minimum(alphaMatrix[:,n_exp+i])-1, maximum(alphaMatrix[:,n_exp+i])+1])
+        # savefig(p, "level_$i.png")
         system.level[i] = alphaMatrix[:,n_exp+i]
 
         # Slope
-        p = plot(alphaMatrix[:,n_exp+system.p+i], title = "Slope of series $i", label = "",
-             ylims = [minimum(alphaMatrix[:,n_exp+system.p+i])-1, maximum(alphaMatrix[:,n_exp+system.p+i])+1])
-        savefig(p, "slope_$i.png")
+        # p = plot(alphaMatrix[:,n_exp+system.p+i], title = "Slope of series $i", label = "",
+        #      ylims = [minimum(alphaMatrix[:,n_exp+system.p+i])-1, maximum(alphaMatrix[:,n_exp+system.p+i])+1])
+        # savefig(p, "slope_$i.png")
         system.slope[i] = alphaMatrix[:,n_exp+system.p+i]
 
         # Seasonal
-        p = plot(alphaMatrix[:,n_exp+2*system.p+i], title = "Seasonal of series $i", label = "",
-             ylims = [minimum(alphaMatrix[:,n_exp+2*system.p+i])-1, maximum(alphaMatrix[:,n_exp+2*system.p+i])+1])
-        savefig(p, "seasonal_$i.png")
+        # p = plot(alphaMatrix[:,n_exp+2*system.p+i], title = "Seasonal of series $i", label = "",
+        #      ylims = [minimum(alphaMatrix[:,n_exp+2*system.p+i])-1, maximum(alphaMatrix[:,n_exp+2*system.p+i])+1])
+        # savefig(p, "seasonal_$i.png")
         system.seasonal[i] = alphaMatrix[:,n_exp+2*system.p+i]
     end
 
     return system
-end
-
-function mape(A, F)
-    n = length(A)
-    if length(A) != length(F)
-        return -1
-    end
-    M = (100/n)*sum(abs.((A.-F)./A))
-    return M
 end
