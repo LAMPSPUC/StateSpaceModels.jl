@@ -1,4 +1,4 @@
-using Optim, Plots
+using Optim, Plots, Distributions
 
 mutable struct System
   y::Array # observations
@@ -26,6 +26,8 @@ mutable struct System
   slope::Array
   seasonal::Array
   U2star::Array
+  Hsqrt::Any
+  Qsqrt::Any
   steadyState::Bool
 end
 
@@ -33,7 +35,8 @@ function create_system()
     system = System(Array{Float64}(0), Array{Float64}(0), 0, 0, 0, 0, 0, Array{Float64}(0), Array{Float64}(0),
                     Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0),
                     Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), 0, Array{Float64}(0), Array{Float64}(0),
-                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), false)
+                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0),
+                    Array{Float64}(0), Array{Float64}(0), false)
     return system
 end
 
@@ -284,46 +287,9 @@ function square_root_smoother(system)
     return system
 end
 
+# Fits a basic structural model to the response y, returning the smoothed
+# estimates and their variances.
 function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
-    ## DESCRIPTION
-    #
-    #   Fits a state space model to the response y, returning the smoothed
-    #   estimates and their variances. Basic structural model:
-    #   Local level with trend plus additive seasonal component.
-    #
-    #  INPUTS:
-    #   i) y (Time series)
-    #
-    #     Missing or unavailable data needs to be represented by the special
-    #     caracter NaN.
-    #     If y is multivariate the model will be treated as a seemingly
-    #     unrelated time series equations (SUTSE). Each column of y is a
-    #     vector of observations of an endogenous variable.
-    #
-    #   ii) s (Periodicity)
-    #
-    #  OPTIONAL INPUTS:
-    #   ii) X (Design matrix)
-    #     If a design matrix is given, the explanatory variables will be
-    #     considered in the model.
-    #     X is a matrix of explanatory variables where each column is a
-    #     vector of observations.
-    #
-    #
-    #  OUTPUTS:
-    #   i) Smoothed state
-    #
-    #   ii) Smoothed state's variance
-    #
-    #  AUTHORS:
-    #   Mario Souto.
-    #
-    #  REFERENCES:
-    #   i) Anderson, Brian DO, and John B. Moore. Optimal filtering. Courier
-    #   Dover Publications, 2012.
-    #   ii) Durbin, James, and Siem Jan Koopman. Time series analysis by state
-    #   space methods. No. 38. Oxford University Press, 2012.
-    # ------------------------------------------------------------------------------
 
     # create system struct
     system = create_system()
@@ -428,6 +394,9 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
     system = square_root_kalman_filter(Hsqrt, Qsqrt, system)
     system = square_root_smoother(system)
 
+    system.Hsqrt = Hsqrt
+    system.Qsqrt = Qsqrt
+
     ## Plots
     alphaMatrix = Array{Float64}(system.n, system.m)
     for t = 1 : system.n
@@ -466,4 +435,60 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
     end
 
     return system
+end
+
+function simulate_state_space(system, N, S; X = Array{Float64}(0,0))
+
+    # check if there are explanatory variables
+    n_obs_exp, n_exp = size(X[:,:])
+
+    if N > n_obs_exp && n_obs_exp > 0
+        println("Período de simulação é maior que período das explicativas")
+    end
+
+    Z = Array{Array}(N)
+    if n_exp > 0
+        for t = 1 : N
+            Z[t] = kron([X[t, :]' 1 0 1 zeros(1, system.s - 2)], eye(system.p, system.p))
+        end
+    else
+        for t = 1 : N
+            Z[t] = kron([1 0 1 zeros(1, system.s - 2)], eye(system.p, system.p))
+        end
+    end
+
+    # observation innovation
+    dist_ϵ = MvNormal(zeros(system.p), (system.Hsqrt*system.Hsqrt'))
+
+    # state innovation
+    dist_η = MvNormal(zeros(system.r), (system.Qsqrt*system.Qsqrt'))
+
+    α_sim = Array{Float64}(N,system.m)
+    y_sim = Array{Array}(S)
+
+    for s = 1 : S
+        y_sim[s] = Array{Float64}(N, system.p)
+        ϵ = rand(dist_ϵ, N)'
+        η = rand(dist_η, N)'
+
+        for t = 1 : N
+            if t == 1
+                α_sim[t,:] = system.T*system.alpha[system.n] + (system.R * η[t,:])
+                y_sim[s][t,:] = Z[t]*α_sim[t,:] + ϵ[t]
+            else
+                α_sim[t,:] = system.T*α_sim[t-1,:] + (system.R * η[t,:])
+                y_sim[s][t,:] = Z[t]*α_sim[t,:] + ϵ[t]
+            end
+        end
+    end
+
+    yMatrix = Array{Float64}(N, S)
+    for t = 1 : N
+        for s = 1 : S
+            yMatrix[t,s] = y_sim[s][t]
+        end
+    end
+
+    return yMatrix
+
 end
