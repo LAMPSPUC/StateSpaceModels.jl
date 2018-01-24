@@ -348,38 +348,61 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
     # number of unknown parameters
     nPsi = Int((1 + system.r/system.p)*(system.p*(system.p + 1)/2))
     # vector of unknowns
-    psi = zeros(nPsi, nSeeds)
+    bestPsi = Array{Float64}(nPsi)
     # search limits
     infLim = -1000.0
     supLim = 1000.0
-    # memory allocation
-    logLikelihood = Array{Float64}(nSeeds)
-    seeds = Array{Float64}(nPsi, nSeeds)
-    tryOpt = Array{Any}(nSeeds)
-    bestPsi = Array{Float64}(nPsi)
+
     # optimization
     println("Starting maximum likelihood estimation.")
-    # if length(procs()) > 1
-    #     rmprocs(workers())
-    # end
-    # addprocs()
-    # println("Running with $(length(procs())) procs in parallel.")
-    for iSeed = 1:nSeeds
-        # uniformly generate values on the interval [infLim,supLim]
-        seeds[:, iSeed] = infLim + rand(infLim:supLim, nPsi)
+
+    if length(procs()) > 1 # parallel computing
+        println("Running with $(length(procs())) procs in parallel.")
+        # memory allocation
+        seeds = SharedArray{Float64}(nPsi, nSeeds)
+        bestPsi = SharedArray{Float64}(nPsi)
+        logLikelihood = SharedArray{Float64}(nSeeds)
+        psi = SharedArray{Float64}(nPsi, nSeeds)
+
+        for iSeed = 1:nSeeds
+            # uniformly generate values on the interval [infLim,supLim]
+            seeds[:, iSeed] = infLim + rand(infLim:supLim, nPsi)
+        end
+
+        @sync @parallel for iSeed = 1:nSeeds
+            # perform optimization
+            println("Computing MLE for seed $iSeed of $nSeeds...")
+            tryOpt = optimize(psiTilde -> state_space_likelihood(psiTilde, system), seeds[:, iSeed],
+                                LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-10, iterations = 10^5,
+                                show_trace = true, show_every = 10^3))
+            logLikelihood[iSeed] = tryOpt.minimum
+            psi[:, iSeed] = tryOpt.minimizer
+            println("Log-likelihood for seed $iSeed: $(-logLikelihood[iSeed])")
+        end
+
+        @show logLikelihood
+        @show psi
+
+    else # simple optimization
+        println("Running with one proc.")
+        # memory allocation
+        seeds = Array{Float64}(nPsi, nSeeds)
+        logLikelihood = Array{Float64}(nSeeds)
+        psi = Array{Float64}(nPsi, nSeeds)
+
+        for iSeed = 1:nSeeds
+            # uniformly generate values on the interval [infLim,supLim]
+            seeds[:, iSeed] = infLim + rand(infLim:supLim, nPsi)
+            # perform optimization
+            println("Computing MLE for seed $iSeed of $nSeeds...")
+            tryOpt = optimize(psiTilde -> state_space_likelihood(psiTilde, system), seeds[:, iSeed],
+                                LBFGS(), Optim.Options(f_tol = 1e-15, g_tol = 1e-15, x_tol = 1e-15,
+                                iterations = 10^5, show_trace = true, show_every = 10^3))
+            logLikelihood[iSeed] = tryOpt.minimum
+            psi[:, iSeed] = tryOpt.minimizer
+            println("Log-likelihood for seed $iSeed: $(-logLikelihood[iSeed])")
+        end
     end
-    # @parallel for iSeed = 1:nSeeds
-    for iSeed = 1:nSeeds
-        # perform optimization
-        println("Computing MLE for seed $iSeed of $nSeeds...")
-        tryOpt[iSeed] = optimize(psiTilde -> state_space_likelihood(psiTilde, system), seeds[:, iSeed],
-                                    LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-12, iterations = 10^5,
-                                                                show_trace = true, show_every = 10^3))
-        psi[:, iSeed] = tryOpt[iSeed].minimizer
-        logLikelihood[iSeed] = tryOpt[iSeed].minimum
-        println("Log-likelihood for seed $iSeed: $(tryOpt[iSeed].minimum)")
-    end
-    # rmprocs(workers())
 
     println("Maximum likelihood estimation complete.")
     logLikelihood = -logLikelihood
@@ -475,10 +498,10 @@ function simulate_state_space(system, N, S; X = Array{Float64}(0,0))
         for t = 1 : N
             if t == 1
                 α_sim[t,:] = system.T*system.alpha[system.n] + (system.R * η[t,:])
-                y_sim[s][t,:] = Z[t]*α_sim[t,:] + ϵ[t]
+                y_sim[s][t,:] = Z[t]*α_sim[t,:] + ϵ[t,:]
             else
                 α_sim[t,:] = system.T*α_sim[t-1,:] + (system.R * η[t,:])
-                y_sim[s][t,:] = Z[t]*α_sim[t,:] + ϵ[t]
+                y_sim[s][t,:] = Z[t]*α_sim[t,:] + ϵ[t,:]
             end
         end
     end
