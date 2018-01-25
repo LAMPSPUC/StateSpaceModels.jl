@@ -73,7 +73,7 @@ function state_space_likelihood(psiTilde, system)
     logLikelihood = system.n*system.p*log(2*pi)/2
 
     try
-        for t = 2 : system.n
+        for t = system.r : system.n
             logLikelihood = logLikelihood + .5 * (log(det(system.Fsqrt[t]*system.Fsqrt[t]')) + system.v[t]' * ((system.Fsqrt[t]*system.Fsqrt[t]') \ system.v[t]))
         end
     catch
