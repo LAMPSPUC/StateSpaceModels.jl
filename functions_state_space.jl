@@ -1,4 +1,4 @@
-using Optim, Plots, Distributions
+using Optim, Distributions
 
 mutable struct System
   y::Array # observations
@@ -6,7 +6,7 @@ mutable struct System
   n::Int # number of observations
   p::Int # number of endogenous variables
   m::Int # number of parameters
-  r::Int # ??
+  r::Int # total number of states
   s::Int # seasonality
   Z::Array # observation matrices
   T::Array # state update matrix
@@ -19,9 +19,9 @@ mutable struct System
   Ks::Array
   PsqrtSteady::Array
   ts::Int
-  alpha::Array
+  alpha::Array # state
   V::Array
-  psi::Array
+  psi::Array # parameters
   level::Array
   slope::Array
   seasonal::Array
@@ -31,6 +31,7 @@ mutable struct System
   steadyState::Bool
 end
 
+"""Create an empty system structure"""
 function create_system()
     system = System(Array{Float64}(0), Array{Float64}(0), 0, 0, 0, 0, 0, Array{Float64}(0), Array{Float64}(0),
                     Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0),
@@ -40,31 +41,28 @@ function create_system()
     return system
 end
 
-function state_space_likelihood(psiTilde, system)
-    ## DESCRIPTION
-    #
-    #   Compute and return the log-likelihood concerning vector psiTilde.
-    # ------------------------------------------------------------------------------
+"""Compute and return the log-likelihood concerning vector psiTilde"""
+function state_space_likelihood(psiTilde::Array{Float64}, system::System)
 
-    # Measurement's covariance matrix
+    # Measurement covariance matrix
     if system.p > 1
         Hsqrt = tril(ones(system.p, system.p))
         nUnknownsH = Int(system.p*(system.p + 1)/2)
         Hsqrt[Hsqrt .== 1] = psiTilde[1:nUnknownsH]
     else
-        Hsqrt = psiTilde[1]
+        Hsqrt = [psiTilde[1]]
         nUnknownsH = 1
     end
 
-    # State's covariance matrix
+    # State covariance matrix
     Qsqrt = kron(eye(Int(system.r/system.p)), tril(ones(system.p, system.p)))
     covUnknowns = Int(nUnknownsH + (system.r/system.p) * (system.p*(system.p + 1)/2))
     Qsqrt[Qsqrt .== 1] = psiTilde[nUnknownsH + 1 : covUnknowns]
 
-    ## Obtain the innovation vector v and its covariance matrix F
+    # Obtain the innovation vector v and its covariance matrix F
     system = square_root_kalman_filter(Hsqrt, Qsqrt, system)
 
-    ## Compute the log-likelihood based on v and F
+    # Compute the log-likelihood based on v and F
     if system.ts < system.n
         for cont = system.ts+1 : system.n
             system.Fsqrt[cont] = system.Fsqrt[system.ts]
@@ -72,34 +70,18 @@ function state_space_likelihood(psiTilde, system)
     end
     logLikelihood = system.n*system.p*log(2*pi)/2
 
-    try
-        for t = system.r : system.n
-            logLikelihood = logLikelihood + .5 * (log(det(system.Fsqrt[t]*system.Fsqrt[t]')) + system.v[t]' * ((system.Fsqrt[t]*system.Fsqrt[t]') \ system.v[t]))
-        end
-    catch
-        println(Fsqrt)
+    for t = system.r : system.n
+        logLikelihood = logLikelihood + .5 * (log(det(system.Fsqrt[t]*system.Fsqrt[t]')) + system.v[t]' * ((system.Fsqrt[t]*system.Fsqrt[t]') \ system.v[t]))
     end
 
     return logLikelihood
 end
 
-function square_root_kalman_filter(Hsqrt, Qsqrt, system)
-    ## Kalman Filter for time-series state-space models of the form:
-    #
-    #   measurement equations:
-    #   y(t) = Z * alpha(t) + epslon(t), epslon(t)~N(0,H)
-    #   state equations:
-    #   alpha(t+1) = T * alpha(t) + R * eta(t) , eta(t)~N(0,Q)
-    #
-    #  INPUTS:
-    #
-    #  OUTPUT:
-    #
-    # note: cell's index {.} correspond to the time index t.
-
-    bigKappa = 1000.0
+"""Kalman Filter for time series state space models with big Kappa initialization"""
+function square_root_kalman_filter(Hsqrt::Array{Float64}, Qsqrt::Array{Float64}, system::System)
 
     # initial state
+    bigKappa = 1000.0
     a0 = zeros(system.m)
     P0 = bigKappa*ones(system.m)
     P0sqrt = diagm(P0)
@@ -107,11 +89,11 @@ function square_root_kalman_filter(Hsqrt, Qsqrt, system)
     ## Memory Allocation
     # one-step ahead state predictor
     a = Array{Array}(system.n + 1)
-    # one-step ahead square-root state's variance predictor
+    # one-step ahead square-root state variance predictor
     Psqrt = Array{Array}(system.n + 1)
-    # innovations
+    # innovation
     v = Array{Array}(system.n)
-    # square-root innovations variance
+    # square-root innovation variance
     Fsqrt = Array{Array}(system.n)
     # Kalman gain
     K = Array{Array}(system.n)
@@ -119,7 +101,7 @@ function square_root_kalman_filter(Hsqrt, Qsqrt, system)
     Ks = NaN*ones(system.m, system.p)
     # steady state variance
     Ps = NaN*ones(system.m, system.m)
-    # partitioned auxiliary matrix for the instant t
+    # partitioned auxiliary matrix for instant t
     U = zeros(system.p + system.m, system.m + system.p + system.r)
     # lower triangular partitioned auxiliary matrix
     # Ustar = zeros(system.p + system.m, system.m + system.p + system.r)
@@ -133,8 +115,8 @@ function square_root_kalman_filter(Hsqrt, Qsqrt, system)
     steadyState = false
     # time index that the system reached steady state
     ts = system.n + 1
-    # error tolerance
-    tol = 1e-5
+    # relative error tolerance
+    tol = 1e-4
     # initial state
     a[1] = a0
     Psqrt[1] = P0sqrt
@@ -157,15 +139,15 @@ function square_root_kalman_filter(Hsqrt, Qsqrt, system)
             # U1star[t] = Ustar[1:system.p, 1:system.p]
             U2star[t] = Ustar[(system.p + 1):(system.p + system.m), 1:system.p]
             # U3star[t] = Ustar[(system.p + 1):(system.p + system.m), (system.p + 1):(system.p + system.m)]
-            # innovation's variance
+            # innovation variance
             Fsqrt[t] = Ustar[1:system.p, 1:system.p]
             # Kalman gain
             K[t] = (Fsqrt[t]' \ U2star[t]')'
             # updating step
             a[t+1] = system.T*a[t] + K[t]*v[t]
             Psqrt[t+1] = Ustar[(system.p + 1):(system.p + system.m), (system.p + 1):(system.p + system.m)]
-            # test if the system reached steady state
-            if maximum(abs.(Psqrt[t+1] - Psqrt[t])) < tol
+            # verify if system has reached steady state
+            if maximum(abs.((Psqrt[t+1] - Psqrt[t])/Psqrt[t+1])) < tol
                 steadyState = true
                 ts = t - 1
                 Ks = K[t-1]
@@ -192,15 +174,8 @@ function square_root_kalman_filter(Hsqrt, Qsqrt, system)
     return system
 end
 
-function square_root_smoother(system)
-    ## Fixed-Interval Smoother for time-series state-space models of the form:
-    #
-    #   measurement equations:
-    #   y(t) = Z * alpha(t) + epslon(t), epslon(t)~N(0,H)
-    #   state equations:
-    #   alpha(t+1) = T * alpha(t) + R * eta(t) , eta(t)~N(0,Q)
-    #
-    # note: cell's index {.} correspond to the time index t.
+"""Fixed interval smoother for time series state space models"""
+function square_root_smoother(system::System)
 
     ## Load system
     Z = system.Z
@@ -280,31 +255,30 @@ function square_root_smoother(system)
     # smoothed variance recursion
     V[1] = (Psqrt[1]*Psqrt[1]') - (Psqrt[1]*Psqrt[1]')*(Nsqrt_0*Nsqrt_0')*(Psqrt[1]*Psqrt[1]')
 
-    ## Save
+    # save in system structure
     system.alpha = alpha
     system.V = V
 
     return system
 end
 
-# Fits a basic structural model to the response y, returning the smoothed
-# estimates and their variances.
-function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
+"""Fits a basic structural model to y, returning the smoothed estimates and their variances"""
+function state_space(y::Array{Float64}, s::Int; X = Array{Float64}(0,0), nSeeds = 1)
 
-    # create system struct
+    # create system structure
     system = create_system()
     system.X = X
     system.y = y
     system.s = s
 
-    # check response dimensions
-    system.n, system.p = size(y[:,:]) # number of observations and endogenous variables
+    # number of endogenous observations and variables
+    system.n, system.p = size(y[:,:])
 
-    # check if there are explanatory variables
+    # number of exogenous observations and variables
     n_obs_exp, n_exp = size(X[:,:])
 
     if n_obs_exp != system.n && n_obs_exp > 0
-        println("Number of observations in X and y mismatch.")
+        error("Number of observations in X and y mismatch.")
     end
 
     println("Creating state space model with $(system.p) endogenous variable(s) and $n_exp exogenous variable(s).")
@@ -341,7 +315,7 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
     end
     system.R = kron([zeros(n_exp, 3); eye(3, 3); zeros(system.s - 2, 3)], eye(system.p, system.p))
 
-    # Big Kappa initialization
+    # big Kappa initialization
     bigKappa = 1000
 
     ## Maximum likelihood estimation of parameters
@@ -350,8 +324,8 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
     # vector of unknowns
     bestPsi = Array{Float64}(nPsi)
     # search limits
-    infLim = -1000.0
-    supLim = 1000.0
+    infLim = -1e5
+    supLim = 1e5
 
     # optimization
     println("Starting maximum likelihood estimation.")
@@ -373,8 +347,8 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
             # perform optimization
             println("Computing MLE for seed $iSeed of $nSeeds...")
             tryOpt = optimize(psiTilde -> state_space_likelihood(psiTilde, system), seeds[:, iSeed],
-                                LBFGS(), Optim.Options(f_tol = 1e-6, g_tol = 1e-10, iterations = 10^5,
-                                show_trace = true, show_every = 10^3))
+                                LBFGS(), Optim.Options(f_tol = 1e-12, g_tol = 1e-12, iterations = 10^5,
+                                show_trace = false))
             logLikelihood[iSeed] = tryOpt.minimum
             psi[:, iSeed] = tryOpt.minimizer
             println("Log-likelihood for seed $iSeed: $(-logLikelihood[iSeed])")
@@ -418,10 +392,10 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
         nUnknownsH = Int(system.p * (system.p + 1) / 2)
         Hsqrt[Hsqrt .== 1] = bestPsi[1:nUnknownsH]
     else
-        Hsqrt = bestPsi[1]
+        Hsqrt = [bestPsi[1]]
         nUnknownsH = 1
     end
-    # State's covariance matrix
+    # State covariance matrix
     Qsqrt = kron(eye(Int(system.r/system.p)), tril(ones(system.p, system.p)))
     Qsqrt[Qsqrt .== 1] = bestPsi[(nUnknownsH+1) : Int(nUnknownsH + (system.r/system.p)*(system.p*(system.p + 1)/2))]
 
@@ -461,7 +435,9 @@ function state_space(y, s; X = Array{Float64}(0,0), nSeeds = 1)
     return system
 end
 
-function simulate_state_space(system, N, S; X = Array{Float64}(0,0))
+"""Simulate S future scenarios up to N steps ahead from system y.
+Output is a NxS matrix with each line representing an instant and each column representing a scenario."""
+function simulate_state_space(system::System, N::Int, S::Int; X = Array{Float64}(0,0))
 
     # check if there are explanatory variables
     n_obs_exp, n_exp = size(X[:,:])
@@ -482,72 +458,71 @@ function simulate_state_space(system, N, S; X = Array{Float64}(0,0))
     end
 
     # observation innovation
-    dist_ϵ = MvNormal(zeros(system.p), sqrt.(system.Hsqrt*system.Hsqrt'))
+    dist_ϵ = MvNormal(zeros(system.p), system.Hsqrt*system.Hsqrt')
 
     # state innovation
-    dist_η = MvNormal(zeros(system.r), sqrt.(system.Qsqrt*system.Qsqrt'))
+    dist_η = MvNormal(zeros(system.r), system.Qsqrt*system.Qsqrt')
 
-    α_sim = Array{Float64}(N,system.m)
-    y_sim = Array{Array}(S)
+    αSim = Array{Float64}(N,system.m)
+    ySim = Array{Array}(S)
 
     for s = 1 : S
-        y_sim[s] = Array{Float64}(N, system.p)
+        ySim[s] = Array{Float64}(N, system.p)
         ϵ = rand(dist_ϵ, N)'
         η = rand(dist_η, N)'
 
         for t = 1 : N
             if t == 1
-                α_sim[t,:] = system.T*system.alpha[system.n] + (system.R * η[t,:])
-                y_sim[s][t,:] = Z[t]*α_sim[t,:] + ϵ[t,:]
+                αSim[t,:] = system.T*system.alpha[system.n] + (system.R * η[t,:])
+                ySim[s][t,:] = Z[t]*αSim[t,:] + ϵ[t,:]
             else
-                α_sim[t,:] = system.T*α_sim[t-1,:] + (system.R * η[t,:])
-                y_sim[s][t,:] = Z[t]*α_sim[t,:] + ϵ[t,:]
+                αSim[t,:] = system.T*αSim[t-1,:] + (system.R * η[t,:])
+                ySim[s][t,:] = Z[t]*αSim[t,:] + ϵ[t,:]
             end
         end
     end
 
-    yMatrix = Array{Float64}(N, S)
+    simMatrix = Array{Float64}(N, S)
     for t = 1 : N
         for s = 1 : S
-            yMatrix[t,s] = y_sim[s][t]
+            simMatrix[t,s] = ySim[s][t]
         end
     end
 
-    return yMatrix
-
+    return simMatrix
 end
 
-# Saves plots for each state
-function plots_state_space(system)
-
-    n_obs_exp, n_exp = size(system.X[:,:])
-
-    alphaMatrix = Array{Float64}(system.n, system.m)
-    for t = 1 : system.n
-        for i = 1 : system.m
-            alphaMatrix[t,i] = system.alpha[t][i]
-        end
-    end
-
-    for i = 1 : system.p
-        # Time series
-        p = plot(y[:,i], title = "Time series $i", label = "", ylims = [minimum(y[:,i])-1, maximum(y[:,i])+1])
-        savefig(p, "series_$i.png")
-
-        # Level
-        p = plot(alphaMatrix[:,n_exp+i], title = "Level of series $i", label = "",
-             ylims = [minimum(alphaMatrix[:,n_exp+i])-1, maximum(alphaMatrix[:,n_exp+i])+1])
-        savefig(p, "level_$i.png")
-
-        # Slope
-        p = plot(alphaMatrix[:,n_exp+system.p+i], title = "Slope of series $i", label = "",
-             ylims = [minimum(alphaMatrix[:,n_exp+system.p+i])-1, maximum(alphaMatrix[:,n_exp+system.p+i])+1])
-        savefig(p, "slope_$i.png")
-
-        # Seasonal
-        p = plot(alphaMatrix[:,n_exp+2*system.p+i], title = "Seasonal of series $i", label = "",
-             ylims = [minimum(alphaMatrix[:,n_exp+2*system.p+i])-1, maximum(alphaMatrix[:,n_exp+2*system.p+i])+1])
-        savefig(p, "seasonal_$i.png")
-    end
-
-end
+# # Saves plots for each state
+# function plots_state_space(system)
+#
+#     n_obs_exp, n_exp = size(system.X[:,:])
+#
+#     alphaMatrix = Array{Float64}(system.n, system.m)
+#     for t = 1 : system.n
+#         for i = 1 : system.m
+#             alphaMatrix[t,i] = system.alpha[t][i]
+#         end
+#     end
+#
+#     for i = 1 : system.p
+#         # Time series
+#         p = plot(y[:,i], title = "Time series $i", label = "", ylims = [minimum(y[:,i])-1, maximum(y[:,i])+1])
+#         savefig(p, "series_$i.png")
+#
+#         # Level
+#         p = plot(alphaMatrix[:,n_exp+i], title = "Level of series $i", label = "",
+#              ylims = [minimum(alphaMatrix[:,n_exp+i])-1, maximum(alphaMatrix[:,n_exp+i])+1])
+#         savefig(p, "level_$i.png")
+#
+#         # Slope
+#         p = plot(alphaMatrix[:,n_exp+system.p+i], title = "Slope of series $i", label = "",
+#              ylims = [minimum(alphaMatrix[:,n_exp+system.p+i])-1, maximum(alphaMatrix[:,n_exp+system.p+i])+1])
+#         savefig(p, "slope_$i.png")
+#
+#         # Seasonal
+#         p = plot(alphaMatrix[:,n_exp+2*system.p+i], title = "Seasonal of series $i", label = "",
+#              ylims = [minimum(alphaMatrix[:,n_exp+2*system.p+i])-1, maximum(alphaMatrix[:,n_exp+2*system.p+i])+1])
+#         savefig(p, "seasonal_$i.png")
+#     end
+#
+# end
