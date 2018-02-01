@@ -1,6 +1,6 @@
 module StateSpaceModels
 
-export state_space, simulate_state_space
+export statespace, simulate_statespace
 
 include("functions_state_space.jl")
 
