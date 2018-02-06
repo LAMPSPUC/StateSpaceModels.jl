@@ -22,7 +22,7 @@ mutable struct StateSpaceSystem
   alpha::Array # state
   V::Array
   psi::Array # parameters
-  level::Array
+  trend::Array
   slope::Array
   seasonal::Array
   U2star::Array
@@ -356,12 +356,12 @@ function statespace(y::Array{Float64}, s::Int; X = Array{Float64}(0,0), nseeds =
     end
     y = system.y
     v = system.v
-    system.level = Array{Array}(system.p)
+    system.trend = Array{Array}(system.p)
     system.slope = Array{Array}(system.p)
     system.seasonal = Array{Array}(system.p)
 
     for i = 1:system.p
-        system.level[i] = alphaMatrix[:, n_exp + i]
+        system.trend[i] = alphaMatrix[:, n_exp + i]
         system.slope[i] = alphaMatrix[:, n_exp + system.p + i]
         system.seasonal[i] = alphaMatrix[:, n_exp + 2*system.p + i]
     end
