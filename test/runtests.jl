@@ -1,5 +1,4 @@
-using Base.Test, CSV
-using StateSpaceModels
+using Base.Test, StateSpaceModels
 
-# Roda testes
+# Run tests
 include("test_statespace.jl")
