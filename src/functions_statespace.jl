@@ -1,222 +1,250 @@
 using Optim, Distributions
 
-mutable struct StateSpaceSystem
-  y::Array # observations
-  X::Array # exogenous variables
-  n::Int # number of observations
-  p::Int # number of endogenous variables
-  m::Int # number of parameters
-  r::Int # total number of states
-  s::Int # seasonality
-  Z::Array # observation matrices
-  T::Array # state update matrix
-  R::Array # state noise matrix
-  a::Array
-  sqrtP::Array
-  v::Array
-  sqrtF::Array
-  K::Array
-  Ks::Array
-  sqrtPSteady::Array
-  ts::Int
-  alpha::Array # state
-  V::Array
-  psi::Array # parameters
-  trend::Array
-  slope::Array
-  seasonal::Array
-  U2star::Array
-  sqrtH::Any
-  sqrtQ::Any
-  steadyState::Bool
+"""State space system dimensions"""
+struct StateSpaceDimensions
+    n::Int
+    p::Int
+    m::Int
+    r::Int
+    p_exp::Int
 end
 
-"""Create an empty system structure"""
-function statespace_system()
-    system = StateSpaceSystem(Array{Float64}(0), Array{Float64}(0), 0, 0, 0, 0, 0, Array{Float64}(0), Array{Float64}(0),
-                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0),
-                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), 0, Array{Float64}(0), Array{Float64}(0),
-                    Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0), Array{Float64}(0),
-                    Array{Float64}(0), Array{Float64}(0), false)
-    return system
+"""State space data matrices"""
+struct StateSpaceSystem
+    y::Array # observations
+    X::Array # exogenous variables
+    s::Int # seasonality period
+    Z::Array # observation matrix
+    T::Array # state matrix
+    R::Array # state noise matrix
 end
 
-"""Compute and return the log-likelihood concerning vector psitilde"""
-function statespace_likelihood(psitilde::Array{Float64}, system::StateSpaceSystem)
+"""Fixed parameters of the state space system"""
+mutable struct StateSpaceParameters
+    sqrtH::Array
+    sqrtQ::Array
+end
 
-    # Measurement covariance matrix
-    if system.p > 1
-        sqrtH = tril(ones(system.p, system.p))
-        unknownsH = Int(system.p*(system.p + 1)/2)
-        sqrtH[sqrtH .== 1] = psitilde[1:unknownsH]
+"""Smoothed state data"""
+struct SmoothedState
+    trend::Array # trend
+    slope::Array # slope
+    seasonal::Array # seasonal
+    V::Array # state variance
+    alpha::Array # state matrix
+end
+
+"""Kalman Filter output"""
+mutable struct FilterOutput
+    a::Array
+    v::Array
+    steadystate::Bool
+    tsteady::Int
+    Ksteady::Array
+    U2star::Array
+    sqrtP::Array
+    sqrtF::Array
+    sqrtPsteady::Array
+end
+
+"""Output data structure"""
+struct StateSpace
+    sys::StateSpaceSystem # system matrices
+    dim::StateSpaceDimensions # system dimensions
+    state::SmoothedState # smoothed state
+    param::StateSpaceParameters # fixed parameters
+    steadystate::Bool # flag that indicates if steady state was attained
+end
+
+"""Compute covariance matrix from given parameters"""
+function statespace_covariance(psi::Array{Float64,1}, p::Int, r::Int)
+
+    # Observation covariance matrix
+    if p > 1
+        sqrtH = tril(ones(p, p))
+        unknownsH = Int(p * (p + 1) / 2)
+        sqrtH[sqrtH .== 1] = psi[1:unknownsH]
     else
-        sqrtH = [psitilde[1]]
+        sqrtH = [psi[1]]
         unknownsH = 1
     end
 
     # State covariance matrix
-    sqrtQ = kron(eye(Int(system.r/system.p)), tril(ones(system.p, system.p)))
-    covunknowns = Int(unknownsH + (system.r/system.p) * (system.p*(system.p + 1)/2))
-    sqrtQ[sqrtQ .== 1] = psitilde[unknownsH+1:covunknowns]
+    sqrtQ = kron(eye(Int(r/p)), tril(ones(p, p)))
+    sqrtQ[sqrtQ .== 1] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
-    # Obtain the innovation vector v and its covariance matrix F
-    system = sqrt_kalmanfilter(sqrtH, sqrtQ, system)
+    return sqrtH, sqrtQ
+end
 
-    # Compute the log-likelihood based on v and F
-    if system.ts < system.n
-        for cont = system.ts+1:system.n
-            system.sqrtF[cont] = system.sqrtF[system.ts]
+"""Compute and return log-likelihood concerning parameter vector psitilde"""
+function statespace_likelihood(psitilde::Array{Float64,1}, sys::StateSpaceSystem, dim::StateSpaceDimensions)
+
+    sqrtH, sqrtQ = statespace_covariance(psitilde, dim.p, dim.r)
+
+    # Obtain innovation vector v and its covariance matrix F
+    ss_filter = sqrt_kalmanfilter(sys, dim, sqrtH, sqrtQ)
+
+    # Compute log-likelihood based on v and F
+    if ss_filter.tsteady < dim.n
+        for cont = ss_filter.tsteady+1:dim.n
+            ss_filter.sqrtF[cont] = ss_filter.sqrtF[ss_filter.tsteady]
         end
     end
-    loglikelihood = system.n*system.p*log(2*pi)/2
+    loglikelihood = dim.n*dim.p*log(2*pi)/2
 
-    for t = system.r:system.n
-        loglikelihood = loglikelihood + .5 * (log(det(system.sqrtF[t]*system.sqrtF[t]')) + system.v[t]'*((system.sqrtF[t]*system.sqrtF[t]') \ system.v[t]))
+    for t = dim.m:dim.n
+        loglikelihood = loglikelihood + .5 * (log(det(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]')) + ss_filter.v[t]'*((ss_filter.sqrtF[t]*ss_filter.sqrtF[t]') \ ss_filter.v[t]))
     end
 
     return loglikelihood
 end
 
-"""Kalman Filter for time series state space models with big Kappa initialization"""
-function sqrt_kalmanfilter(sqrtH::Array{Float64}, sqrtQ::Array{Float64}, system::StateSpaceSystem)
+"""Kalman Filter for state space time series systems with big Kappa initialization"""
+function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol = 1e-5)
 
-    # initial state
-    bigKappa = 1000.0
-    a0 = zeros(system.m)
-    P0 = bigKappa*ones(system.m)
+    # Load dimension data
+    n = dim.n
+    p = dim.p
+    m = dim.m
+    r = dim.r
+
+    # Load system data
+    y = sys.y
+    Z = sys.Z
+    T = sys.T
+    R = sys.R
+
+    # Initial state: big Kappa initialization
+    bigkappa = 1e6
+    a0 = zeros(m)
+    P0 = bigkappa*ones(m)
     sqrtP0 = diagm(P0)
 
-    # one-step ahead state predictor
-    a = Array{Array}(system.n+1)
-    # one-step ahead square-root state variance predictor
-    sqrtP = Array{Array}(system.n+1)
-    # innovation
-    v = Array{Array}(system.n)
-    # square-root innovation variance
-    sqrtF = Array{Array}(system.n)
+    # One step ahead state predictor
+    a = Array{Array}(n+1)
+    # One step ahead sqrt variance predictor
+    sqrtP = Array{Array}(n+1)
+    # Innovation
+    v = Array{Array}(n)
+    # Sqrt variance of the innovation
+    sqrtF = Array{Array}(n)
     # Kalman gain
-    K = Array{Array}(system.n)
-    # steady state Kalman gain
-    Ks = NaN*ones(system.m, system.p)
-    # steady state variance
-    Ps = NaN*ones(system.m, system.m)
-    # partitioned auxiliary matrix for instant t
-    U = zeros(system.p + system.m, system.m + system.p + system.r)
-    U2star = Array{Array}(system.n)
+    K = Array{Array}(n)
+    # Steady state Kalman gain
+    Ksteady = Array{Float64}(m, p)
+    # Steady state variance
+    Ps = Array{Float64}(m, m)
+    # Auxiliary matrices
+    U = zeros(p + m, m + p + r)
+    U2star = Array{Array}(n)
+    # Flag to indicate steady state
+    steadystate = false
+    # Instant in which state state was attained
+    tsteady = n+1
 
-    # flag to keep track if the system is in a steady state
-    steadyState = false
-    # time index that the system reached steady state
-    ts = system.n+1
-    # relative error tolerance
-    tol = 1e-5
-    # initial state
+    # Initial state
     a[1] = a0
     sqrtP[1] = sqrtP0
-    sqrtPSteady = zeros(0,0)
+    sqrtPsteady = zeros(0, 0)
 
-    for t = 1:system.n
-        v[t] = system.y[t] - system.Z[t]*a[t]
-        if steadyState == true
-            a[t+1] = system.T*a[t] + Ks*v[t]
+    # Kalman Filter
+    for t = 1:n
+        v[t] = y[t] - Z[t]*a[t]
+        if steadystate == true
+            a[t+1] = T*a[t] + Ksteady*v[t]
         else
-            U = [system.Z[t]*sqrtP[t] sqrtH zeros(system.p, system.r);
-                 system.T*sqrtP[t] zeros(system.m, system.p) system.R*sqrtQ]
+            # QR decomposition of auxiliary matrix U to obtain U2star
+            U = [Z[t]*sqrtP[t] sqrtH zeros(p, r); T*sqrtP[t] zeros(m, p) R*sqrtQ]
             G = qrfact!(U')[:Q]
             Ustar = U*G
-            U2star[t] = Ustar[(system.p + 1):(system.p + system.m), 1:system.p]
+            U2star[t] = Ustar[(p + 1):(p + m), 1:p]
+            sqrtF[t] = Ustar[1:p, 1:p]
 
-            sqrtF[t] = Ustar[1:system.p, 1:system.p]
+            # Kalman gain
             K[t] = (sqrtF[t]' \ U2star[t]')'
-            a[t+1] = system.T*a[t] + K[t]*v[t]
-            sqrtP[t+1] = Ustar[(system.p + 1):(system.p + system.m), (system.p + 1):(system.p + system.m)]
+            a[t+1] = T*a[t] + K[t]*v[t]
+            sqrtP[t+1] = Ustar[(p + 1):(p + m), (p + 1):(p + m)]
 
-            # verify if system has reached steady state
+            # Verifying if steady state was attained
             if maximum(abs.((sqrtP[t+1] - sqrtP[t])/sqrtP[t+1])) < tol
-                steadyState = true
-                ts = t-1
-                Ks = K[t-1]
-                sqrtPSteady = sqrtP[t-1]
-                a[t+1] = system.T*a[t] + Ks*v[t]
-                system.steadyState = true
+                steadystate = true
+                tsteady = t-1
+                Ksteady = K[t-1]
+                sqrtPsteady = sqrtP[t-1]
+                a[t+1] = T*a[t] + Ksteady*v[t]
             end
         end
     end
 
-    # Save
-    system.a = a
-    system.U2star = U2star
-    system.sqrtP = sqrtP
-    system.v = v
-    system.sqrtF = sqrtF
-    system.K = K
-    system.ts = ts
-    if ts < system.n+1
-        system.Ks = Ks
-        system.sqrtPSteady = sqrtPSteady
-    end
+    # Filter structure
+    ss_filter = FilterOutput(a, v, steadystate, tsteady, Ksteady, U2star, sqrtP, sqrtF, sqrtPsteady)
 
-    return system
+    return ss_filter
 end
 
-"""Fixed interval smoother for time series state space models"""
-function sqrt_smoother(system::StateSpaceSystem)
+"""Square-root smoother for state space time series systems"""
+function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filter::FilterOutput)
 
-    # Load system
-    Z = system.Z
-    T = system.T
-    n = system.n
-    m = system.m
-    ts = system.ts
-    U2star = system.U2star
-    sqrtF = system.sqrtF
-    v = system.v
-    a = system.a
-    sqrtP = system.sqrtP
+    # Load dimension data
+    n = dim.n
+    m = dim.m
+    p = dim.p
+    p_exp = dim.p_exp
 
-    if ts < n+1
-        Ks = system.Ks
-        sqrtPSteady = system.sqrtPSteady
-    end
+    # Load system data
+    Z = sys.Z
+    T = sys.T
 
-    # smoothed state
-    alpha = Array{Array}(n)
-    # smoothed variance
+    # Load filter data
+    a = ss_filter.a
+    v = ss_filter.v
+    tsteady = ss_filter.tsteady
+    Ksteady = ss_filter.Ksteady
+    U2star = ss_filter.U2star
+    sqrtF = ss_filter.sqrtF
+    sqrtP = ss_filter.sqrtP
+    sqrtPsteady = ss_filter.sqrtPsteady
+
+    # Smoothed state
+    alpha = Array{Float64}(n, m)
+    # Smoothed state variance
     V = Array{Array}(n)
     L = Array{Array}(n)
-    # weighted sum of innovations after time (t-1)
     r = Array{Array}(n)
-    # variance of the weighted sum of innovations after time (t-1)
     sqrtN = Array{Array}(n)
 
     # Initialization
     sqrtN[end] = zeros(m, m)
     r[end] = zeros(m)
 
-    for t = n:-1:ts
-        L[t] = T - Ks*Z[t]
-        r[t-1] = Z[t]'*(sqrtF[ts]*sqrtF[ts]')^(-1)*v[t] + L[t]'*r[t]
-        Nstar = [Z[t]'*sqrtF[ts]^(-1) L[t]'*sqrtN[t]]
+    # Iterating backwards
+    for t = n:-1:tsteady
+        L[t] = T - Ksteady*Z[t]
+        r[t-1] = Z[t]'*(sqrtF[tsteady]*sqrtF[tsteady]')^(-1) * v[t] + L[t]'*r[t]
+
+        # QR decomposition of auxiliary matrix Nstar
+        Nstar = [Z[t]'*sqrtF[tsteady]^(-1) L[t]'*sqrtN[t]]
         G, = qr(Nstar')
         NstarG = Nstar*G
         sqrtN[t-1] = NstarG[1:m, 1:m]
-        # smoothed state recursion
-        alpha[t] = a[t] + (sqrtPSteady * sqrtPSteady') * r[t-1]
-        # smoothed variance recursion
-        V[t] = (sqrtPSteady*sqrtPSteady') - (sqrtPSteady*sqrtPSteady')*(sqrtN[t]*sqrtN[t]')*(sqrtPSteady*sqrtPSteady')
+
+        # Computing smoothed state and its variance
+        alpha[t, :] = a[t] + (sqrtPsteady * sqrtPsteady') * r[t-1]
+        V[t] = (sqrtPsteady*sqrtPsteady') - (sqrtPsteady*sqrtPsteady')*(sqrtN[t]*sqrtN[t]')*(sqrtPsteady*sqrtPsteady')
     end
 
-    t = 0
-    for t = ts-1:-1:2
-        L[t] = T - U2star[t] * (sqrtF[t]^(-1)) * Z[t]
-        r[t-1] = Z[t]' * ((sqrtF[t]*sqrtF[t]')^(-1)) * v[t] + L[t]'*r[t]
+    for t = tsteady-1:-1:2
+        L[t] = T - U2star[t]*(sqrtF[t]^(-1))*Z[t]
+        r[t-1] = Z[t]'*((sqrtF[t]*sqrtF[t]')^(-1)) * v[t] + L[t]'*r[t]
         Nstar = [Z[t]'*sqrtF[t]^(-1) L[t]'*sqrtN[t]]
+
+        # QR decomposition of auxiliary matrix Nstar
         G, = qr(Nstar')
         NstarG = Nstar*G
         sqrtN[t-1] = NstarG[1:m, 1:m]
-        # smoothed state recursion
-        alpha[t] = a[t] + (sqrtP[t]*sqrtP[t]')*r[t-1]
-        # smoothed variance recursion
+
+        # Computing smoothed state and its variance
+        alpha[t, :] = a[t] + (sqrtP[t]*sqrtP[t]')*r[t-1]
         V[t] = (sqrtP[t]*sqrtP[t]') - (sqrtP[t]*sqrtP[t]')*(sqrtN[t]*sqrtN[t]')*(sqrtP[t]*sqrtP[t]')
     end
 
@@ -225,202 +253,189 @@ function sqrt_smoother(system::StateSpaceSystem)
     Nstar = [Z[1]'*sqrtF[1]^(-1) L[1]'*sqrtN[1]]
     G, = qr(Nstar')
     NstarG = Nstar*G
-    sqrtN0 = NstarG[1:m, 1:m]
-    # smoothed state recursion
-    alpha[1] = a[1] + (sqrtP[1]*sqrtP[1]')*r_0
-    # smoothed variance recursion
-    V[1] = (sqrtP[1]*sqrtP[1]') - (sqrtP[1]*sqrtP[1]')*(sqrtN0*sqrtN0')*(sqrtP[1]*sqrtP[1]')
 
-    # save in system structure
-    system.alpha = alpha
-    system.V = V
+    sqrtN_0 = NstarG[1:m, 1:m]
+    alpha[1, :] = a[1] + (sqrtP[1]*sqrtP[1]')*r_0
+    V[1] = (sqrtP[1]*sqrtP[1]') - (sqrtP[1]*sqrtP[1]')*(sqrtN_0*sqrtN_0')*(sqrtP[1]*sqrtP[1]')
 
-    return system
+    # Defining states
+    trend = Array{Float64}(n, p)
+    slope = Array{Float64}(n, p)
+    seasonal = Array{Float64}(n, p)
+    for i = 1:p
+        trend[:, i] = alpha[:, p_exp + i]
+        slope[:, i] = alpha[:, p_exp + p + i]
+        seasonal[:, i] = alpha[:, p_exp + 2*p + i]
+    end
+
+    # State structure
+    smoothedstate = SmoothedState(trend, slope, seasonal, V, alpha)
+
+    return smoothedstate
 end
 
-"""Fits a basic structural model to y, returning the smoothed estimates and their variances"""
-function statespace(y::Array{Float64}, s::Int; X = Array{Float64}(0,0), nseeds = 1)
+"""Estimate fixed parameters of a state space system"""
+function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, nseeds::Int;
+    f_tol = 1e-12, g_tol = 1e-12, iterations = 10^5)
 
-    # create system structure
-    system = statespace_system()
-    system.X = X
-    system.y = y
-    system.s = s
-
-    # number of endogenous observations and variables
-    system.n, system.p = size(y[:,:])
-
-    # number of exogenous observations and variables
-    n_obs_exp, n_exp = size(X[:,:])
-
-    if n_obs_exp > 0 && n_obs_exp != system.n
-        error("Number of observations in X and y mismatch.")
-    end
-
-    info("Creating state space model with $(system.p) endogenous variable(s) and $n_exp exogenous variable(s).")
-
-    system.m = (1 + system.s + n_exp)*system.p
-    system.r = 3*system.p
-
-    # measurement equation
-    system.Z = Array{Array}(system.n)
-    if n_exp > 0
-        for t = 1:system.n
-            system.Z[t] = kron([X[t, :]' 1 0 1 zeros(1, system.s - 2)], eye(system.p, system.p))
-        end
-    else
-        for t = 1:system.n
-            system.Z[t] = kron([1 0 1 zeros(1, system.s - 2)], eye(system.p, system.p))
-        end
-    end
-
-    # state equation
-    system.T = Array{Float64}(system.m, system.m)
-    system.R = Array{Float64}(system.m, system.r)
-    if n_exp > 0
-        T0 = [eye(n_exp, n_exp) zeros(n_exp, 1 + system.s)]
-        system.T = kron([T0; zeros(1, n_exp) 1 1 zeros(1, system.s - 1); zeros(1, n_exp) 0 1 zeros(1, system.s - 1);
-            zeros(1, n_exp) 0 0 -ones(1, system.s - 1);
-            zeros(system.s - 2, n_exp) zeros(system.s - 2, 2) eye(system.s - 2, system.s - 2) zeros(system.s - 2, 1)],
-            eye(system.p, system.p))
-    else
-        system.T = kron([zeros(1, n_exp) 1 1 zeros(1, system.s - 1); zeros(1, n_exp) 0 1 zeros(1, system.s - 1);
-            zeros(1, n_exp) 0 0 -ones(1, system.s - 1);
-            zeros(system.s - 2, n_exp) zeros(system.s - 2, 2) eye(system.s - 2, system.s - 2) zeros(system.s - 2, 1)],
-            eye(system.p, system.p))
-    end
-    system.R = kron([zeros(n_exp, 3); eye(3, 3); zeros(system.s - 2, 3)], eye(system.p, system.p))
-
-    ## Maximum likelihood estimation
-    # number of unknown parameters
-    npsi = Int((1 + system.r/system.p)*(system.p*(system.p + 1)/2))
-    # vector of unknowns
-    bestpsi = Array{Float64}(npsi)
-    # search limits
-    inflim = -1e5
-    suplim = 1e5
-
-    # optimization
-    info("Starting maximum likelihood estimation.")
-    info("Running with $(length(procs())) procs in parallel.")
-
+    # Initialization
+    npsi = Int((1 + dim.r/dim.p)*(dim.p*(dim.p + 1)/2))
     seeds = SharedArray{Float64}(npsi, nseeds)
-    bestpsi = SharedArray{Float64}(npsi)
     loglikelihood = SharedArray{Float64}(nseeds)
     psi = SharedArray{Float64}(npsi, nseeds)
 
-    for iseed = 1:nseeds
-        # uniformly generate values on the interval [inflim, suplim]
-        seeds[:, iseed] = inflim + rand(inflim:suplim, npsi)
+    # Initial conditions limits
+    inflim = -1e5
+    suplim = 1e5
+    seedrange = collect(inflim:suplim)
+
+    # Avoiding zero values for covariance
+    deleteat!(seedrange, find(seedrange .== 0.0))
+
+    info("Iniciando estimação por máxima verossimilhança com $nseeds sementes.")
+    if length(procs()) > 1
+        info("Rodando com $(length(procs())) processadores em paralelo.")
+    else
+        info("Rodando com $(length(procs())) processador.")
     end
 
-    @sync @parallel for iseed = 1:nseeds
-        # perform optimization
-        info("Computing MLE for seed $iseed of $nseeds...")
-        tryOpt = optimize(psitilde -> statespace_likelihood(psitilde, system), seeds[:, iseed],
-                            LBFGS(), Optim.Options(f_tol = 1e-12, g_tol = 1e-12, iterations = 10^5,
-                            show_trace = false))
-        loglikelihood[iseed] = tryOpt.minimum
-        psi[:, iseed] = tryOpt.minimizer
-        info("Log-likelihood for seed $iseed: $(-loglikelihood[iseed])")
+    # Setting seed
+    srand(123)
+
+    # Generate random initial values in [inflim, suplim]
+    for iseed = 1:nseeds
+        seeds[:, iseed] = rand(seedrange, npsi)
     end
-    bestpsi = psi[:, indmin(loglikelihood)]
-    system.psi = bestpsi
+
+    # Optimization
+    @sync @parallel for iseed = 1:nseeds
+        info("Optimizing likelihood for seed $iseed of $nseeds...")
+        optseed = optimize(psitilde -> statespace_likelihood(psitilde, sys, dim), seeds[:, iseed],
+                            LBFGS(), Optim.Options(f_tol = f_tol, g_tol = g_tol, iterations = iterations,
+                            show_trace = false))
+        loglikelihood[iseed] = -optseed.minimum
+        psi[:, iseed] = optseed.minimizer
+        info("Log-likelihood for seed $iseed: $(loglikelihood[iseed])")
+    end
 
     info("Maximum likelihood estimation complete.")
-    info("Log-Likelihood: $(maximum(-loglikelihood))")
+    info("Log-likelihood: $(maximum(loglikelihood))")
 
-    # Measurement's covariance matrix
-    if system.p > 1
-        sqrtH = tril(ones(system.p, system.p));
-        unknownsH = Int(system.p * (system.p + 1) / 2)
-        sqrtH[sqrtH .== 1] = bestpsi[1:unknownsH]
+    bestpsi = psi[:, indmax(loglikelihood)]
+    sqrtH, sqrtQ = statespace_covariance(bestpsi, dim.p, dim.r)
+
+    # Parameter structure
+    param = StateSpaceParameters(sqrtH, sqrtQ)
+
+    return param
+end
+
+function statespace(y::Array{Float64,1}, s::Int; X = Array{Float64,2}(0,0), nseeds = 1)
+    n = length(y)
+    y = reshape(y, (n,1))
+    statespace(y, s; X = X, nseeds = nseeds)
+end
+
+"""Estimate basic structural model and obtain smoothed state"""
+function statespace(y::Array{Float64,2}, s::Int; X = Array{Float64,2}(0,0), nseeds = 1)
+
+    # Number of observations and endogenous variables
+    n, p = size(y)
+
+    # Number of observations and exogenous variables
+    n_exp, p_exp = size(X)
+
+    if p_exp > 0 && n_exp < n
+        error("Number of observations in X e y are incompatible.")
+    end
+
+    info("Creating structural model with $p endogenous variables and $p_exp exogenous variables.")
+
+    m = (1 + s + p_exp)*p
+    r = 3*p
+
+    # Observation equation
+    Z = Array{Array}(n)
+    for t = 1:n
+        Z[t] = p_exp > 0 ? kron([X[t, :]' 1 0 1 zeros(1, s - 2)], eye(p, p)) :
+                           kron([1 0 1 zeros(1, s - 2)], eye(p, p))
+    end
+
+    # State equation
+    if p_exp > 0
+        T0 = [eye(p_exp, p_exp) zeros(p_exp, 1 + s)]
+        T = kron([T0; zeros(1, p_exp) 1 1 zeros(1, s - 1); zeros(1, p_exp) 0 1 zeros(1, s - 1);
+            zeros(1, p_exp) 0 0 -ones(1, s - 1);
+            zeros(s - 2, p_exp) zeros(s - 2, 2) eye(s - 2, s - 2) zeros(s - 2, 1)],
+            eye(p, p))
     else
-        sqrtH = [bestpsi[1]]
-        unknownsH = 1
+        T = kron([zeros(1, p_exp) 1 1 zeros(1, s - 1); zeros(1, p_exp) 0 1 zeros(1, s - 1);
+            zeros(1, p_exp) 0 0 -ones(1, s - 1);
+            zeros(s - 2, p_exp) zeros(s - 2, 2) eye(s - 2, s - 2) zeros(s - 2, 1)],
+            eye(p, p))
     end
-    # State covariance matrix
-    sqrtQ = kron(eye(Int(system.r/system.p)), tril(ones(system.p, system.p)))
-    sqrtQ[sqrtQ .== 1] = bestpsi[(unknownsH+1):Int(unknownsH + (system.r/system.p)*(system.p*(system.p + 1)/2))]
+    R = kron([zeros(p_exp, 3); eye(3, 3); zeros(s - 2, 3)], eye(p, p))
 
-    ## Filter & Smoother
-    system = sqrt_kalmanfilter(sqrtH, sqrtQ, system)
-    system = sqrt_smoother(system)
+    # Creating data structures
+    dim = StateSpaceDimensions(n, p, m, r, p_exp)
+    sys = StateSpaceSystem(y, X, s, Z, T, R)
 
-    system.sqrtH = sqrtH
-    system.sqrtQ = sqrtQ
+    # Maximum likelihood estimation
+    ss_par = estimate_statespace(sys, dim, nseeds)
 
-    alphaMatrix = Array{Float64}(system.n, system.m)
-    for t = 1:system.n, i = 1:system.m
-        alphaMatrix[t,i] = system.alpha[t][i]
-    end
-    y = system.y
-    v = system.v
-    system.trend = Array{Array}(system.p)
-    system.slope = Array{Array}(system.p)
-    system.seasonal = Array{Array}(system.p)
-
-    for i = 1:system.p
-        system.trend[i] = alphaMatrix[:, n_exp + i]
-        system.slope[i] = alphaMatrix[:, n_exp + system.p + i]
-        system.seasonal[i] = alphaMatrix[:, n_exp + 2*system.p + i]
-    end
+    # Kalman Filter and smoothing
+    ss_filter = sqrt_kalmanfilter(sys, dim, ss_par.sqrtH, ss_par.sqrtQ)
+    smoothedstate = sqrt_smoother(sys, dim, ss_filter)
 
     info("End of structural model estimation.")
 
-    return system
+    output = StateSpace(sys, dim, smoothedstate, ss_par, ss_filter.steadystate)
+
+    return output
 end
 
-"""Simulate S future scenarios up to N steps ahead from system y.
-Output is a NxS matrix with each line representing an instant and each column representing a scenario."""
-function simulate_statespace(system::StateSpaceSystem, N::Int, S::Int; X = Array{Float64}(0,0))
+"""Simulate S future scenarios up to N periods ahead.
+    Returns an NxS matrix where each line represents a period and each column represents a scenario."""
+function simulate_statespace(ss::StateSpace, N::Int, S::Int)
 
-    # check if there are explanatory variables
-    n_obs_exp, n_exp = size(X[:,:])
+    # Number of observations and exogenous variables
+    n_exp, p_exp = size(ss.sys.X)
 
-    if n_obs_exp > 0 && N > n_obs_exp
-        info("Simulation period is larger than explanatory variables input")
+    if p_exp > 0 && N > n_exp - ss.dim.n
+        error("Simulation period is larger than number of observations of future exogenous variables.")
     end
 
-    Z = Array{Array}(N)
-    if n_exp > 0
-        for t = 1:N
-            Z[t] = kron([X[t, :]' 1 0 1 zeros(1, system.s - 2)], eye(system.p, system.p))
-        end
-    else
-        for t = 1:N
-            Z[t] = kron([1 0 1 zeros(1, system.s - 2)], eye(system.p, system.p))
-        end
-    end
+    # Distribution of observation innovation
+    dist_ϵ = MvNormal(zeros(ss.dim.p), ss.param.sqrtH*ss.param.sqrtH')
+    # Distribution of state innovation
+    dist_η = MvNormal(zeros(ss.dim.r), ss.param.sqrtQ*ss.param.sqrtQ')
 
-    # observation innovation
-    dist_ϵ = MvNormal(zeros(system.p), system.sqrtH*system.sqrtH')
-
-    # state innovation
-    dist_η = MvNormal(zeros(system.r), system.sqrtQ*system.sqrtQ')
-
-    αsim = Array{Float64}(N,system.m)
+    αsim = Array{Float64}(N, ss.dim.m)
     ysim = Array{Array}(S)
 
     for s = 1:S
-        ysim[s] = Array{Float64}(N, system.p)
+        ysim[s] = Array{Float64}(N, ss.dim.p)
+
+        # Simulating innovations
         ϵ = rand(dist_ϵ, N)'
         η = rand(dist_η, N)'
 
+        # Generating scenarios from innovations
         for t = 1:N
             if t == 1
-                αsim[t,:] = system.T*system.alpha[system.n] + (system.R*η[t,:])
-                ysim[s][t,:] = Z[t]*αsim[t,:] + ϵ[t,:]
+                αsim[t, :] = ss.sys.T*ss.state.alpha[ss.dim.n, :] + (ss.sys.R*η[t, :])
+                ysim[s][t, :] = ss.sys.Z[t]*αsim[t, :] + ϵ[t, :]
             else
-                αsim[t,:] = system.T*αsim[t-1,:] + (system.R*η[t,:])
-                ysim[s][t,:] = Z[t]*αsim[t,:] + ϵ[t,:]
+                αsim[t, :] = ss.sys.T*αsim[t-1, :] + (ss.sys.R*η[t, :])
+                ysim[s][t, :] = ss.sys.Z[t]*αsim[t, :] + ϵ[t, :]
             end
         end
     end
 
+    # Creating scenarios matrix
     scenarios = Array{Float64}(N, S)
     for t = 1:N, s = 1:S
-        scenarios[t,s] = ysim[s][t]
+        scenarios[t, s] = ysim[s][t]
     end
 
     return scenarios
