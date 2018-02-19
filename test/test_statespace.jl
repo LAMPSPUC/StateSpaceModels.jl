@@ -1,0 +1,68 @@
+
+# Carrega dados
+EMG_data = CSV.read("./mercado-EMG-17.csv")
+
+# Testes
+@testset "Testes do modelo estrutural" begin
+    @testset "Teste de sinal constante" begin
+        y = ones(100, 1)
+        ss = statespace(y, 2)
+
+        @test ss.state.trend[5:end, 1] + ss.state.seasonal[5:end, 1] ≈ y[5:end] atol = 1e-5
+        @test sum(ss.param.sqrtH .< 1e-8) == length(ss.param.sqrtH)
+        @test sum(ss.param.sqrtQ .< 1e-8) == length(ss.param.sqrtQ)
+    end
+    @testset "Teste de sinal linear" begin
+        y = Array{Float64}(0.1:0.1:5)
+        ss = statespace(y, 2)
+
+        @test ss.state.trend[4:end, 1] + ss.state.seasonal[4:end, 1] ≈ y[4:end] atol = 1e-5
+        @test sum(ss.param.sqrtH .< 1e-8) == length(ss.param.sqrtH)
+        @test sum(ss.param.sqrtQ .< 1e-8) == length(ss.param.sqrtQ)
+    end
+    @testset "Teste de sinal triangular" begin
+        y = Array{Float64}([collect(1:5); collect(4:-1:1); collect(2:5); collect(4:-1:1); collect(2:5);
+                            collect(4:-1:1); collect(2:5); collect(4:-1:1); collect(2:5);
+                            collect(4:-1:1); collect(2:5); collect(4:-1:1); collect(2:5);
+                            collect(4:-1:1); collect(2:5); collect(4:-1:1); collect(2:5)])
+        ss = statespace(y, 8)
+        n = length(y)
+        correct_trend = 3*ones(n)
+        correct_slope = zeros(n)
+        correct_seasonal = y - correct_trend
+
+        @test ss.state.trend[11:end, 1] ≈ correct_trend[11:end] atol = 1e-5
+        @test ss.state.slope[11:end, 1] ≈ correct_slope[11:end] atol = 1e-5
+        @test ss.state.seasonal[11:end, 1] ≈ correct_seasonal[11:end] atol = 1e-5
+    end
+    @testset "Teste Residencial EMG" begin
+        y = Array{Float64}(EMG_data[:RES_EMG])
+        ss = statespace(y, 12; nseeds = 5)
+
+        state = ss.state.trend[:, 1] + ss.state.seasonal[:, 1]
+        state_stamp = Array{Float64}(EMG_data[:Level_RES]) + Array{Float64}(EMG_data[:Seasonal_RES])
+
+        @test state[15:end] ≈ state_stamp[15:end] rtol = 1e-2
+    end
+    @testset "Teste Simulação Residencial EMG" begin
+        y = Array{Float64}(EMG_data[:RES_EMG])
+        ss = statespace(y, 12; nseeds = 1)
+
+        N = 48
+        S = 2000
+        sim = simulate_statespace(ss, N, S)
+
+        media_sim = mean(sim, 2)
+        q5 = zeros(N)
+        q95 = zeros(N)
+        for t = 1 : N
+            q5[t] = quantile(sim[t,:], 0.1)
+            q95[t] = quantile(sim[t,:], 0.9)
+        end
+
+        @test size(sim) == (N, S)
+        @test minimum(q5) > 35000
+        @test maximum(q95) < 59000
+        @test sum(q5 .< media_sim .< q95) == N
+    end
+end
