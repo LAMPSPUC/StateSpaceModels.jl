@@ -292,11 +292,11 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
     # Avoiding zero values for covariance
     deleteat!(seedrange, find(seedrange .== 0.0))
 
-    info("Iniciando estimação por máxima verossimilhança com $nseeds sementes.")
+    info("Initiating maximum likelihood estimation with $nseeds seeds.")
     if length(procs()) > 1
-        info("Rodando com $(length(procs())) processadores em paralelo.")
+        info("Running with $(length(procs())) procs in parallel.")
     else
-        info("Rodando com $(length(procs())) processador.")
+        info("Running with $(length(procs())) proc.")
     end
 
     # Setting seed
