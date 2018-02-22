@@ -16,6 +16,7 @@ Current features:
 
 Future features (work in progress):
 * User-defined model
+* Cycles
 * Forecasting and confidence intervals
 * Missing values completion
 * Structural break
