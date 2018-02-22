@@ -9,6 +9,7 @@ Simulation of future scenarios is done through function `simulate_statespace`.
 
 Current features:
 * Basic structural model (level, slope, seasonal)
+* Exogenous variables
 * Square-root Kalman Filter and smoother
 * Big Kappa initialization
 * Monte Carlo simulation
