@@ -21,4 +21,4 @@ Future features (work in progress):
 * Forecasting and confidence intervals
 * Missing values completion
 * Structural break
-* Exact initialization
+* Exact initialization.
