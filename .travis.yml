@@ -1,0 +1,23 @@
+language: julia
+os:
+    - linux
+julia:
+    - 0.6
+matrix:
+    allow_failures:
+        - julia: nightly
+notifications:
+    email: false
+sudo: false
+addons:
+    apt_packages:
+        - gfortran
+        - liblapack-dev
+        - libgmp-dev
+        - libglpk-dev
+script:
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia -e 'Pkg.clone(pwd())'
+    - julia -e 'Pkg.test("StateSpaceModels")'
+after_success:
+    - echo $TRAVIS_JULIA_VERSION
