@@ -1,8 +1,8 @@
 # StateSpaceModels.jl
 
-| **DOI** |
-|:-----------------:|
-| [![DOI](https://zenodo.org/badge/117544868.svg)](https://zenodo.org/badge/latestdoi/117544868) |
+| **DOI** | **Build Status** |
+|:-----------------:|:-----------------:|
+| [![DOI](https://zenodo.org/badge/117544868.svg)](https://zenodo.org/badge/latestdoi/117544868) | [![Build Status][build-img]][build-url] |
 
 ## Installation
 This package is unregistered so you will need to `Pkg.clone` it as follows:
@@ -36,4 +36,8 @@ Future features (work in progress):
 * Forecasting and confidence intervals
 * Missing values completion
 * Structural break
-* Exact initialization.
+* Exact initialization
+
+[build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
+[build-url]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl
+
