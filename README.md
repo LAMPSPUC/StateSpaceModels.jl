@@ -1,8 +1,8 @@
 # StateSpaceModels.jl
 
-| **DOI** | **Build Status** |
-|:-----------------:|:-----------------:|
-| [![DOI](https://zenodo.org/badge/117544868.svg)](https://zenodo.org/badge/latestdoi/117544868) | [![Build Status][build-img]][build-url] |
+| **DOI** | **Build Status** | **Coverage** |
+|:-----------------:|:-----------------:|:-----------------:|
+| [![DOI](https://zenodo.org/badge/117544868.svg)](https://zenodo.org/badge/latestdoi/117544868) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |
 
 ## Installation
 This package is unregistered so you will need to `Pkg.clone` it as follows:
@@ -41,3 +41,5 @@ Future features (work in progress):
 [build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
 [build-url]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl
 
+[codecov-img]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl/coverage.svg?branch=master
+[codecov-url]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl?branch=master
