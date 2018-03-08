@@ -300,7 +300,7 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
     end
 
     # Setting seed
-    srand(123)
+    # srand(123)
     println("First random number: $(rand())")
 
     # Generate random initial values in [inflim, suplim]
@@ -339,6 +339,9 @@ end
 
 """Estimate basic structural model and obtain smoothed state"""
 function statespace(y::Array{Float64,2}, s::Int; X = Array{Float64,2}(0,0), nseeds = 1)
+
+    # Setting seed
+    srand(123)
 
     # Number of observations and endogenous variables
     n, p = size(y)
