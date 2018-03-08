@@ -76,7 +76,7 @@ function statespace_covariance(psi::Array{Float64,1}, p::Int, r::Int)
     return sqrtH, sqrtQ
 end
 
-"""Compute and return log-likelihood concerning parameter vector psitilde"""
+"""Compute and return the log-likelihood concerning the parameter vector psitilde"""
 function statespace_likelihood(psitilde::Array{Float64,1}, sys::StateSpaceSystem, dim::StateSpaceDimensions)
 
     sqrtH, sqrtQ = statespace_covariance(psitilde, dim.p, dim.r)
