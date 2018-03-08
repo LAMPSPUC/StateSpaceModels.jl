@@ -1,7 +1,13 @@
 module StateSpaceModels
 
-export statespace, simulate_statespace
+using Optim, Distributions
 
-include("functions_statespace.jl")
+export statespace, simulate
+
+include("structures.jl")
+include("estimation.jl")
+include("kalmanfilter.jl")
+include("modeling.jl")
+include("simulation.jl")
 
 end

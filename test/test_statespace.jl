@@ -1,4 +1,3 @@
-
 # Tests
 @testset "Strutural model tests" begin
     @testset "Constant signal test" begin
@@ -8,8 +7,6 @@
         @test ss.state.trend[5:end, 1] + ss.state.seasonal[5:end, 1] ≈ y[5:end] atol = 1e-5
         @test sum(ss.param.sqrtH .< 1e-7) == length(ss.param.sqrtH)
         @test sum(ss.param.sqrtQ .< 1e-7) == length(ss.param.sqrtQ)
-        println("sqrtH = $(ss.param.sqrtH)")
-        println("sqrtQ = $(ss.param.sqrtQ)")
     end
     @testset "Linear signal test" begin
         y = Array{Float64}(0.1:0.1:5)
