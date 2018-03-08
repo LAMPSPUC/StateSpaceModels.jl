@@ -57,7 +57,7 @@ function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(0, 0), n
 
     info("End of structural model estimation.")
 
-    output = StateSpace(sys, dim, smoothedstate, ss_par, ss_filter.steadystate)
+    output = StateSpace(sys, dim, smoothedstate, ss_par, ss_filter)
 
     return output
 end

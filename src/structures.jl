@@ -29,7 +29,7 @@ struct SmoothedState
     slope::Array # slope
     seasonal::Array # seasonal
     V::Array # state variance
-    alpha::Array # state matrix
+    alpha::Array # smoothed state
 end
 
 """Kalman Filter output"""
@@ -51,5 +51,5 @@ struct StateSpace
     dim::StateSpaceDimensions # system dimensions
     state::SmoothedState # smoothed state
     param::StateSpaceParameters # fixed parameters
-    steadystate::Bool # flag that indicates if steady state was attained
+    filter::FilterOutput # Kalman Filter results
 end
