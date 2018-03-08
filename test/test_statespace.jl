@@ -6,8 +6,8 @@
         ss = statespace(y, 2)
 
         @test ss.state.trend[5:end, 1] + ss.state.seasonal[5:end, 1] ≈ y[5:end] atol = 1e-5
-        @test sum(ss.param.sqrtH .< 1e-8) == length(ss.param.sqrtH)
-        @test sum(ss.param.sqrtQ .< 1e-8) == length(ss.param.sqrtQ)
+        @test sum(ss.param.sqrtH .< 1e-7) == length(ss.param.sqrtH)
+        @test sum(ss.param.sqrtQ .< 1e-7) == length(ss.param.sqrtQ)
         println("sqrtH = $(ss.param.sqrtH)")
         println("sqrtQ = $(ss.param.sqrtQ)")
     end
@@ -16,8 +16,8 @@
         ss = statespace(y, 2)
 
         @test ss.state.trend[4:end, 1] + ss.state.seasonal[4:end, 1] ≈ y[4:end] atol = 1e-5
-        @test sum(ss.param.sqrtH .< 1e-8) == length(ss.param.sqrtH)
-        @test sum(ss.param.sqrtQ .< 1e-8) == length(ss.param.sqrtQ)
+        @test sum(ss.param.sqrtH .< 1e-7) == length(ss.param.sqrtH)
+        @test sum(ss.param.sqrtQ .< 1e-7) == length(ss.param.sqrtQ)
     end
     @testset "Triangular signal test" begin
         y = Array{Float64}([collect(1:5); collect(4:-1:1); collect(2:5); collect(4:-1:1); collect(2:5);
