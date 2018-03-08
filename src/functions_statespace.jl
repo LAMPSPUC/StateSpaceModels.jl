@@ -301,6 +301,7 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
 
     # Setting seed
     srand(123)
+    println("First random number: $(rand())")
 
     # Generate random initial values in [inflim, suplim]
     for iseed = 1:nseeds
