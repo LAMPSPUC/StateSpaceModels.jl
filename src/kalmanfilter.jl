@@ -48,19 +48,19 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
 
     # Kalman Filter
     for t = 1:n
-        v[t] = y[t] - Z[t]*a[t]
+        v[t] = y[t, :] - Z[t]*a[t]
         if steadystate == true
             a[t+1] = T*a[t] + Ksteady*v[t]
         else
             # QR decomposition of auxiliary matrix U to obtain U2star
             U = [Z[t]*sqrtP[t] sqrtH zeros(p, r); T*sqrtP[t] zeros(m, p) R*sqrtQ]
-            G = qrfact!(U')[:Q]
+            G = qr(U')[1]
             Ustar = U*G
             U2star[t] = Ustar[(p + 1):(p + m), 1:p]
             sqrtF[t] = Ustar[1:p, 1:p]
 
             # Kalman gain
-            K[t] = (sqrtF[t]' \ U2star[t]')'
+            K[t] = U2star[t]*pinv(sqrtF[t])
             a[t+1] = T*a[t] + K[t]*v[t]
             sqrtP[t+1] = Ustar[(p + 1):(p + m), (p + 1):(p + m)]
 
@@ -105,7 +105,7 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     sqrtPsteady = ss_filter.sqrtPsteady
 
     # Smoothed state
-    alpha = Array{Float64}(n, m)
+    alpha = Array{Array}(n)
     # Smoothed state variance
     V = Array{Array}(n)
     L = Array{Array}(n)
@@ -119,42 +119,44 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     # Iterating backwards
     for t = n:-1:tsteady
         L[t] = T - Ksteady*Z[t]
-        r[t-1] = Z[t]'*(sqrtF[tsteady]*sqrtF[tsteady]')^(-1) * v[t] + L[t]'*r[t]
+        r[t-1] = Z[t]' * pinv(sqrtF[tsteady]*sqrtF[tsteady]') * v[t] + L[t]'*r[t]
 
         # QR decomposition of auxiliary matrix Nstar
-        Nstar = [Z[t]'*sqrtF[tsteady]^(-1) L[t]'*sqrtN[t]]
-        G, = qr(Nstar')
+        Nstar = [Z[t]' * pinv(sqrtF[tsteady]) L[t]'*sqrtN[t]]
+        G = qr(Nstar')[1]
         NstarG = Nstar*G
         sqrtN[t-1] = NstarG[1:m, 1:m]
 
         # Computing smoothed state and its variance
-        alpha[t, :] = a[t] + (sqrtPsteady * sqrtPsteady') * r[t-1]
+        alpha[t] = a[t] + (sqrtPsteady*sqrtPsteady') * r[t-1]
         V[t] = (sqrtPsteady*sqrtPsteady') - (sqrtPsteady*sqrtPsteady')*(sqrtN[t]*sqrtN[t]')*(sqrtPsteady*sqrtPsteady')
     end
 
     for t = tsteady-1:-1:2
-        L[t] = T - U2star[t]*(sqrtF[t]^(-1))*Z[t]
-        r[t-1] = Z[t]'*((sqrtF[t]*sqrtF[t]')^(-1)) * v[t] + L[t]'*r[t]
-        Nstar = [Z[t]'*sqrtF[t]^(-1) L[t]'*sqrtN[t]]
+        L[t] = T - U2star[t] * pinv(sqrtF[t]) * Z[t]
+        r[t-1] = Z[t]' * pinv(sqrtF[t]*sqrtF[t]') * v[t] + L[t]'*r[t]
+        Nstar = [Z[t]'*pinv(sqrtF[t]) L[t]'*sqrtN[t]]
 
         # QR decomposition of auxiliary matrix Nstar
-        G, = qr(Nstar')
+        G = qr(Nstar')[1]
         NstarG = Nstar*G
         sqrtN[t-1] = NstarG[1:m, 1:m]
 
         # Computing smoothed state and its variance
-        alpha[t, :] = a[t] + (sqrtP[t]*sqrtP[t]')*r[t-1]
+        alpha[t] = a[t] + (sqrtP[t]*sqrtP[t]')*r[t-1]
         V[t] = (sqrtP[t]*sqrtP[t]') - (sqrtP[t]*sqrtP[t]')*(sqrtN[t]*sqrtN[t]')*(sqrtP[t]*sqrtP[t]')
     end
 
-    L[1] = T - U2star[1] * sqrtF[1]^(-1) * Z[1]
-    r_0 = Z[1]' * (sqrtF[1] * sqrtF[1]')^(-1) * v[1] + L[1]' * r[1]
-    Nstar = [Z[1]'*sqrtF[1]^(-1) L[1]'*sqrtN[1]]
-    G, = qr(Nstar')
+    @show v[end]
+
+    L[1] = T - U2star[1] * pinv(sqrtF[1]) * Z[1]
+    r_0 = Z[1]' * pinv(sqrtF[1] * sqrtF[1]') * v[1] + L[1]' * r[1]
+    Nstar = [Z[1]'*pinv(sqrtF[1]) L[1]'*sqrtN[1]]
+    G = qr(Nstar')[1]
     NstarG = Nstar*G
 
     sqrtN_0 = NstarG[1:m, 1:m]
-    alpha[1, :] = a[1] + (sqrtP[1]*sqrtP[1]')*r_0
+    alpha[1] = a[1] + (sqrtP[1]*sqrtP[1]') * r_0
     V[1] = (sqrtP[1]*sqrtP[1]') - (sqrtP[1]*sqrtP[1]')*(sqrtN_0*sqrtN_0')*(sqrtP[1]*sqrtP[1]')
 
     # Defining states
@@ -162,9 +164,11 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     slope = Array{Float64}(n, p)
     seasonal = Array{Float64}(n, p)
     for i = 1:p
-        trend[:, i] = alpha[:, p_exp + i]
-        slope[:, i] = alpha[:, p_exp + p + i]
-        seasonal[:, i] = alpha[:, p_exp + 2*p + i]
+        for t = 1:n
+            trend[t, i] = alpha[t][p_exp + i]
+            slope[t, i] = alpha[t][p_exp + p + i]
+            seasonal[t, i] = alpha[t][p_exp + 2*p + i]
+        end
     end
 
     # State structure

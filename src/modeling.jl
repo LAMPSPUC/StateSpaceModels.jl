@@ -17,7 +17,7 @@ function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(0, 0), n
         error("Number of observations in X e y are incompatible.")
     end
 
-    info("Creating structural model with $p endogenous variables and $p_exp exogenous variables.")
+    info("Creating state-space model with $p endogenous variables and $p_exp exogenous variables.")
 
     m = (1 + s + p_exp)*p
     r = 3*p
@@ -55,7 +55,7 @@ function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(0, 0), n
     ss_filter = sqrt_kalmanfilter(sys, dim, ss_par.sqrtH, ss_par.sqrtQ)
     smoothedstate = sqrt_smoother(sys, dim, ss_filter)
 
-    info("End of structural model estimation.")
+    info("End of state-space model estimation.")
 
     output = StateSpace(sys, dim, smoothedstate, ss_par, ss_filter)
 

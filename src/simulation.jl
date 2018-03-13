@@ -14,7 +14,7 @@ function simulate(ss::StateSpace, N::Int, S::Int)
     # Distribution of state innovation
     dist_η = MvNormal(zeros(ss.dim.r), ss.param.sqrtQ*ss.param.sqrtQ')
 
-    αsim = Array{Float64}(N, ss.dim.m)
+    αsim = Array{Array}(N)
     ysim = Array{Array}(S)
 
     for s = 1:S
@@ -27,11 +27,11 @@ function simulate(ss::StateSpace, N::Int, S::Int)
         # Generating scenarios from innovations
         for t = 1:N
             if t == 1
-                αsim[t, :] = ss.sys.T*ss.state.alpha[ss.dim.n, :] + (ss.sys.R*η[t, :])
-                ysim[s][t, :] = ss.sys.Z[t]*αsim[t, :] + ϵ[t, :]
+                αsim[t] = ss.sys.T*ss.state.alpha[ss.dim.n] + (ss.sys.R*η[t, :])
+                ysim[s][t, :] = ss.sys.Z[t]*αsim[t] + ϵ[t, :]
             else
-                αsim[t, :] = ss.sys.T*αsim[t-1, :] + (ss.sys.R*η[t, :])
-                ysim[s][t, :] = ss.sys.Z[t]*αsim[t, :] + ϵ[t, :]
+                αsim[t] = ss.sys.T*αsim[t-1] + (ss.sys.R*η[t, :])
+                ysim[s][t, :] = ss.sys.Z[t]*αsim[t] + ϵ[t, :]
             end
         end
     end
