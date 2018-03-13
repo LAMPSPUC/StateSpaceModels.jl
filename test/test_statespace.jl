@@ -31,4 +31,15 @@
         @test ss.state.slope[11:end, 1] ≈ correct_slope[11:end] atol = 1e-5
         @test ss.state.seasonal[11:end, 1] ≈ correct_seasonal[11:end] atol = 1e-5
     end
+    @testset "Basic multivariate test" begin
+        y = [ones(50) collect(1:50)]
+        ss = statespace(y, 3; nseeds = 5)
+        correct_trend = y
+        correct_slope = [zeros(50) ones(50)]
+        correct_seasonal = [zeros(50) zeros(50)]
+
+        @test ss.state.trend[4:end, :] ≈ correct_trend[4:end, :] atol = 1e-5
+        @test ss.state.slope[4:end, :] ≈ correct_slope[4:end, :] atol = 1e-5
+        @test ss.state.seasonal[4:end, :] ≈ correct_seasonal[4:end, :] atol = 1e-5
+    end
 end
