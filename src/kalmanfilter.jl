@@ -147,8 +147,6 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
         V[t] = (sqrtP[t]*sqrtP[t]') - (sqrtP[t]*sqrtP[t]')*(sqrtN[t]*sqrtN[t]')*(sqrtP[t]*sqrtP[t]')
     end
 
-    @show v[end]
-
     L[1] = T - U2star[1] * pinv(sqrtF[1]) * Z[1]
     r_0 = Z[1]' * pinv(sqrtF[1] * sqrtF[1]') * v[1] + L[1]' * r[1]
     Nstar = [Z[1]'*pinv(sqrtF[1]) L[1]'*sqrtN[1]]

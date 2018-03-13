@@ -18,7 +18,7 @@ StateSpaceModels.jl is a package for modeling, forecasting and simulating time s
 
 Estimation is done through function `statespace` and will automatically be run in parallel with all the currently active threads.
 
-Simulation of future scenarios is done through function `simulate_statespace`.
+Simulation of scenarios is done through function `simulate`.
 
 ## Features
 
@@ -29,6 +29,7 @@ Current features:
 * Big Kappa initialization
 * Monte Carlo simulation
 * Parallel MLE estimation
+* Multivariate modeling
 
 Future features (work in progress):
 * User-defined model
