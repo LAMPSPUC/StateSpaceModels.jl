@@ -40,11 +40,11 @@
         @test maximum(q95 .- q5) <= 1e-5
     end
     @testset "Basic multivariate test" begin
-        y = [ones(50) collect(1:50)]
+        y = [ones(20) collect(1:20)]
         ss = statespace(y, 3; nseeds = 5)
         correct_trend = y
-        correct_slope = [zeros(50) ones(50)]
-        correct_seasonal = [zeros(50) zeros(50)]
+        correct_slope = [zeros(20) ones(20)]
+        correct_seasonal = [zeros(20) zeros(20)]
 
         @test ss.state.trend[4:end, :] ≈ correct_trend[4:end, :] atol = 1e-5
         @test ss.state.slope[4:end, :] ≈ correct_slope[4:end, :] atol = 1e-5
