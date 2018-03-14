@@ -161,8 +161,15 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     trend = Array{Float64}(n, p)
     slope = Array{Float64}(n, p)
     seasonal = Array{Float64}(n, p)
+    exogenous = Array{Array}(p_exp)
+    for j = 1:p_exp
+        exogenous[j] = Array{Float64}(n, p)
+    end
     for i = 1:p
         for t = 1:n
+            for j = 1:p_exp
+                exogenous[j][t, i] = alpha[t][j-1 + i]*sys.X[t, j]
+            end
             trend[t, i] = alpha[t][p_exp + i]
             slope[t, i] = alpha[t][p_exp + p + i]
             seasonal[t, i] = alpha[t][p_exp + 2*p + i]
@@ -170,7 +177,7 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     end
 
     # State structure
-    smoothedstate = SmoothedState(trend, slope, seasonal, V, alpha)
+    smoothedstate = SmoothedState(trend, slope, seasonal, exogenous, V, alpha)
 
     return smoothedstate
 end

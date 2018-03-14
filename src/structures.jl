@@ -28,6 +28,7 @@ struct SmoothedState
     trend::Array # trend
     slope::Array # slope
     seasonal::Array # seasonal
+    exogenous::Array # regression for the exogenous variables
     V::Array # state variance
     alpha::Array # smoothed state
 end
