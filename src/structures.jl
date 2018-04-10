@@ -1,4 +1,4 @@
-"""State space system dimensions"""
+"""Structure with state space dimensions"""
 struct StateSpaceDimensions
     n::Int
     p::Int
@@ -7,50 +7,50 @@ struct StateSpaceDimensions
     p_exp::Int
 end
 
-"""State space data matrices"""
+"""Structure with state space matrices and data"""
 struct StateSpaceSystem
     y::Array # observations
     X::Array # exogenous variables
-    s::Int # seasonality period
+    s::Int # seasonality
     Z::Array # observation matrix
     T::Array # state matrix
-    R::Array # state noise matrix
+    R::Array # state error matrix
 end
 
-"""Fixed parameters of the state space system"""
+"""Structure with state space hyperparameters"""
 mutable struct StateSpaceParameters
-    sqrtH::Array
-    sqrtQ::Array
+    sqrtH::Array # lower triangular matrix with sqrt-covariance of the observation
+    sqrtQ::Array # lower triangular matrix with sqrt-covariance of the state
 end
 
-"""Smoothed state data"""
+"""Structure with smoothed state"""
 struct SmoothedState
-    trend::Array # trend
-    slope::Array # slope
-    seasonal::Array # seasonal
-    exogenous::Array # regression for the exogenous variables
-    V::Array # state variance
-    alpha::Array # smoothed state
+    trend::Array # smoothed trend
+    slope::Array # smoothed slope
+    seasonal::Array # smoothed seasonality
+    exogenous::Array # smoothed regression of exogenous variables
+    V::Array # variance of smoothed state
+    alpha::Array # smoothed state matrix
 end
 
-"""Kalman Filter output"""
+"""Structure with Kalman filter output"""
 mutable struct FilterOutput
-    a::Array
-    v::Array
-    steadystate::Bool
-    tsteady::Int
+    a::Array # predictive state
+    v::Array # innovations
+    steadystate::Bool # flag that indicates if steady state was attained
+    tsteady::Int # instant when steady state was attained
     Ksteady::Array
     U2star::Array
-    sqrtP::Array
-    sqrtF::Array
+    sqrtP::Array # lower triangular matrix with sqrt-covariance of the predictive state
+    sqrtF::Array # lower triangular matrix with sqrt-covariance of the innovations
     sqrtPsteady::Array
 end
 
-"""Output data structure"""
+"""General output structure for the user"""
 struct StateSpace
-    sys::StateSpaceSystem # system matrices
-    dim::StateSpaceDimensions # system dimensions
-    state::SmoothedState # smoothed state
-    param::StateSpaceParameters # fixed parameters
-    filter::FilterOutput # Kalman Filter results
+    sys::StateSpaceSystem
+    dim::StateSpaceDimensions
+    state::SmoothedState
+    param::StateSpaceParameters
+    filter::FilterOutput
 end
