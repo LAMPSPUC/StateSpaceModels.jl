@@ -1,7 +1,7 @@
-"""Kalman Filter for state space time series systems with big Kappa initialization"""
+"""Square-root Kalman filter for time series with big Kappa initialization."""
 function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol = 1e-5)
 
-    # Load dimension data
+    # Load dimensions data
     n = dim.n
     p = dim.p
     m = dim.m
@@ -19,26 +19,22 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
     P0 = bigkappa*ones(m)
     sqrtP0 = diagm(P0)
 
-    # One step ahead state predictor
+    # Predictive state and its sqrt-covariance
     a = Array{Array}(n+1)
-    # One step ahead sqrt variance predictor
     sqrtP = Array{Array}(n+1)
-    # Innovation
+    # Innovation and its sqrt-covariance
     v = Array{Array}(n)
-    # Sqrt variance of the innovation
     sqrtF = Array{Array}(n)
-    # Kalman gain
+    # Kalman gain and steady-state Kalman gain
     K = Array{Array}(n)
-    # Steady state Kalman gain
     Ksteady = Array{Float64}(m, p)
-    # Steady state variance
+    # Predictive variance in steady state
     Ps = Array{Float64}(m, m)
     # Auxiliary matrices
     U = zeros(p + m, m + p + r)
     U2star = Array{Array}(n)
-    # Flag to indicate steady state
+    # Steady state flags
     steadystate = false
-    # Instant in which state state was attained
     tsteady = n+1
 
     # Initial state
@@ -46,13 +42,13 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
     sqrtP[1] = sqrtP0
     sqrtPsteady = zeros(0, 0)
 
-    # Kalman Filter
+    # Square-root Kalman filter
     for t = 1:n
         v[t] = y[t, :] - Z[t]*a[t]
         if steadystate == true
             a[t+1] = T*a[t] + Ksteady*v[t]
         else
-            # QR decomposition of auxiliary matrix U to obtain U2star
+            # QR decomposition of auxiliary matrix U to obtain Ustar
             U = [Z[t]*sqrtP[t] sqrtH zeros(p, r); T*sqrtP[t] zeros(m, p) R*sqrtQ]
             G = qr(U')[1]
             Ustar = U*G
@@ -64,7 +60,7 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
             a[t+1] = T*a[t] + K[t]*v[t]
             sqrtP[t+1] = Ustar[(p + 1):(p + m), (p + 1):(p + m)]
 
-            # Verifying if steady state was attained
+            # Checking if steady state was attained
             if maximum(abs.((sqrtP[t+1] - sqrtP[t])/sqrtP[t+1])) < tol
                 steadystate = true
                 tsteady = t-1
@@ -75,16 +71,16 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
         end
     end
 
-    # Filter structure
+    # Saving in filter structure
     ss_filter = FilterOutput(a, v, steadystate, tsteady, Ksteady, U2star, sqrtP, sqrtF, sqrtPsteady)
 
     return ss_filter
 end
 
-"""Square-root smoother for state space time series systems"""
+"""Square-root smoothing for time series state space model."""
 function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filter::FilterOutput)
 
-    # Load dimension data
+    # Load dimensions data
     n = dim.n
     m = dim.m
     p = dim.p
@@ -104,9 +100,8 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     sqrtP = ss_filter.sqrtP
     sqrtPsteady = ss_filter.sqrtPsteady
 
-    # Smoothed state
+    # Smoothed state and its covariance
     alpha = Array{Array}(n)
-    # Smoothed state variance
     V = Array{Array}(n)
     L = Array{Array}(n)
     r = Array{Array}(n)
@@ -127,7 +122,7 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
         NstarG = Nstar*G
         sqrtN[t-1] = NstarG[1:m, 1:m]
 
-        # Computing smoothed state and its variance
+        # Smoothed state and its covariance
         alpha[t] = a[t] + (sqrtPsteady*sqrtPsteady') * r[t-1]
         V[t] = (sqrtPsteady*sqrtPsteady') - (sqrtPsteady*sqrtPsteady')*(sqrtN[t]*sqrtN[t]')*(sqrtPsteady*sqrtPsteady')
     end
@@ -142,7 +137,7 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
         NstarG = Nstar*G
         sqrtN[t-1] = NstarG[1:m, 1:m]
 
-        # Computing smoothed state and its variance
+        # Smoothed state and its covariance
         alpha[t] = a[t] + (sqrtP[t]*sqrtP[t]')*r[t-1]
         V[t] = (sqrtP[t]*sqrtP[t]') - (sqrtP[t]*sqrtP[t]')*(sqrtN[t]*sqrtN[t]')*(sqrtP[t]*sqrtP[t]')
     end
@@ -157,13 +152,13 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     alpha[1] = a[1] + (sqrtP[1]*sqrtP[1]') * r_0
     V[1] = (sqrtP[1]*sqrtP[1]') - (sqrtP[1]*sqrtP[1]')*(sqrtN_0*sqrtN_0')*(sqrtP[1]*sqrtP[1]')
 
-    # Defining states
+    # Defining smoothed state vectors
     trend = Array{Float64}(n, p)
     slope = Array{Float64}(n, p)
     seasonal = Array{Float64}(n, p)
     exogenous = Array{Array}(p_exp)
     for j = 1:p_exp
-        exogenous[j] = Array{Float64}(n, p)
+        exogenous[j] = zeros(n, p)
     end
     for i = 1:p
         for t = 1:n
@@ -176,7 +171,7 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
         end
     end
 
-    # State structure
+    # Smoothed state structure
     smoothedstate = SmoothedState(trend, slope, seasonal, exogenous, V, alpha)
 
     return smoothedstate
