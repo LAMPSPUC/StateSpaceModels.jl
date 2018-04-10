@@ -71,7 +71,7 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
         end
     end
 
-    # Estrutura de filtro
+    # Saving in filter structure
     ss_filter = FilterOutput(a, v, steadystate, tsteady, Ksteady, U2star, sqrtP, sqrtF, sqrtPsteady)
 
     return ss_filter
