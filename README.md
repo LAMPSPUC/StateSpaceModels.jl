@@ -35,7 +35,8 @@ Future features (work in progress):
 * User-defined model
 * Cycles
 * Forecasting and confidence intervals
-* Missing values completion
+* Completion of missing values
+* Different models for each variable in multivariate case
 * Structural break
 * Exact initialization
 
