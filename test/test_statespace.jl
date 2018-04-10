@@ -33,8 +33,8 @@
         q5 = zeros(N)
         q95 = zeros(N)
         for t = 1 : N
-            q5[t] = quantile(sim[t,:], 0.05)
-            q95[t] = quantile(sim[t,:], 0.95)
+            q5[t] = quantile(sim[1, t,:], 0.05)
+            q95[t] = quantile(sim[1, t,:], 0.95)
         end
         @test sum(q95 .- q5 .>= 0) == 10
         @test maximum(q95 .- q5) <= 1e-4
@@ -46,8 +46,17 @@
         correct_slope = [zeros(20) ones(20)]
         correct_seasonal = [zeros(20) zeros(20)]
 
+        N = 50
+        S = 1000
+        sim = simulate(ss, N, S)
+
+        mean_sim1 = mean(sim[1, :, :], 2)
+        mean_sim2 = mean(sim[2, :, :], 2)
+
         @test ss.state.trend[5:end, :] ≈ correct_trend[5:end, :] atol = 1e-4
         @test ss.state.slope[5:end, :] ≈ correct_slope[5:end, :] atol = 1e-4
         @test ss.state.seasonal[5:end, :] ≈ correct_seasonal[5:end, :] atol = 1e-4
+        @test mean_sim1 ≈ ones(N) atol = 1e-2
+        @test mean_sim2 ≈ collect(21.0:20.0 + N) atol = 1e-2
     end
 end
