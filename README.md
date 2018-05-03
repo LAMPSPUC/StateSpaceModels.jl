@@ -2,7 +2,7 @@
 
 | **DOI** | **Build Status** | **Coverage** |
 |:-----------------:|:-----------------:|:-----------------:|
-| [![DOI](https://zenodo.org/badge/117544868.svg)](https://zenodo.org/badge/latestdoi/117544868) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |
+| [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1240453.svg)](https://doi.org/10.5281/zenodo.1240453) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |
 
 ## Installation
 This package is unregistered so you will need to `Pkg.clone` it as follows:
