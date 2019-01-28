@@ -12,7 +12,7 @@ function statespace_covariance(psi::Array{Float64,1}, p::Int, r::Int)
     end
 
     # State sqrt-covariance matrix
-    sqrtQ = kron(eye(Int(r/p)), tril(ones(p, p)))
+    sqrtQ = kron(Matrix{Float64}(LinearAlgebra.I, Int(r/p), Int(r/p)), tril(ones(p, p)))
     sqrtQ[sqrtQ .== 1] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
     return sqrtH, sqrtQ
@@ -36,12 +36,12 @@ function statespace_likelihood(psitilde::Array{Float64,1}, sys::StateSpaceSystem
     # Compute log-likelihood based on v and F
     loglikelihood = dim.n*dim.p*log(2*pi)/2
     for t = dim.m:dim.n
-        det_sqrtF = det(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]')
+        det_sqrtF = LinearAlgebra.det(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]')
         if det_sqrtF < 1e-30
             det_sqrtF = 1e-30
         end
         loglikelihood = loglikelihood + .5 * (log(det_sqrtF) +
-                         ss_filter.v[t]' * pinv(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]') * ss_filter.v[t])
+                         ss_filter.v[t]' * LinearAlgebra.pinv(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]') * ss_filter.v[t])
     end
 
     return loglikelihood
@@ -63,10 +63,10 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
     seedrange = collect(inflim:0.1:suplim)
 
     # Avoiding zero values for covariance
-    deleteat!(seedrange, find(seedrange .== 0.0))
+    deleteat!(seedrange, findall(seedrange .== 0.0))
 
-    info("Initiating maximum likelihood estimation with $nseeds seeds.")
-    info("Running with $(length(procs())) threads.")
+    # @info("Initiating maximum likelihood estimation with $nseeds seeds.")
+    # @info("Running with $(length(procs())) threads.")
 
     # Generate initial values in [inflim, suplim]
     for iseed = 1:nseeds
@@ -78,20 +78,20 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
     end
 
     # Optimization
-    @sync @parallel for iseed = 1:nseeds
-        info("Optimizing likelihood for seed $iseed of $nseeds...")
+    @sync @distributed for iseed = 1:nseeds
+        # @info("Optimizing likelihood for seed $iseed of $nseeds...")
         optseed = optimize(psitilde -> statespace_likelihood(psitilde, sys, dim), seeds[:, iseed],
                             LBFGS(), Optim.Options(f_tol = f_tol, g_tol = g_tol, iterations = iterations,
                             show_trace = false))
         loglikelihood[iseed] = -optseed.minimum
         psi[:, iseed] = optseed.minimizer
-        info("Log-likelihood for seed $iseed: $(loglikelihood[iseed])")
+        # @info("Log-likelihood for seed $iseed: $(loglikelihood[iseed])")
     end
 
-    info("Maximum likelihood estimation complete.")
-    info("Log-likelihood: $(maximum(loglikelihood))")
+    # @info("Maximum likelihood estimation complete.")
+    # @info("Log-likelihood: $(maximum(loglikelihood))")
 
-    bestpsi = psi[:, indmax(loglikelihood)]
+    bestpsi = psi[:, argmax(loglikelihood)]
     sqrtH, sqrtQ = statespace_covariance(bestpsi, dim.p, dim.r)
 
     # Parameter structure

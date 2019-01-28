@@ -50,8 +50,8 @@
         S = 1000
         sim = simulate(ss, N, S)
 
-        mean_sim1 = mean(sim[1, :, :], 2)
-        mean_sim2 = mean(sim[2, :, :], 2)
+        mean_sim1 = mean(sim[1, :, :], dims = 2)
+        mean_sim2 = mean(sim[2, :, :], dims = 2)
 
         @test ss.state.trend[5:end, :] ≈ correct_trend[5:end, :] atol = 1e-4
         @test ss.state.slope[5:end, :] ≈ correct_slope[5:end, :] atol = 1e-4

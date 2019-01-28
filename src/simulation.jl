@@ -14,11 +14,11 @@ function simulate(ss::StateSpace, N::Int, S::Int)
     # Distribution of state error
     dist_η = MvNormal(zeros(ss.dim.r), ss.param.sqrtQ*ss.param.sqrtQ')
 
-    αsim = Array{Array}(N)
-    ysim = Array{Array}(S)
+    αsim = Array{Array}(undef, N)
+    ysim = Array{Array}(undef, S)
 
     for s = 1:S
-        ysim[s] = Array{Float64}(N, ss.dim.p)
+        ysim[s] = Array{Float64}(undef, N, ss.dim.p)
 
         # Simulating error
         ϵ = rand(dist_ϵ, N)'
@@ -39,7 +39,7 @@ function simulate(ss::StateSpace, N::Int, S::Int)
     end
 
     # Organizing scenarios in matrix form
-    scenarios = Array{Float64}(ss.dim.p, N, S)
+    scenarios = Array{Float64}(undef, ss.dim.p, N, S)
     for p = 1:ss.dim.p, t = 1:N, s = 1:S
         scenarios[p, t, s] = ysim[s][t, p]
     end

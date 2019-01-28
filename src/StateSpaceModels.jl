@@ -2,7 +2,7 @@ __precompile__()
 
 module StateSpaceModels
 
-using Optim, Distributions
+using Optim, Distributions, Distributed, LinearAlgebra, SharedArrays
 
 export statespace, simulate
 

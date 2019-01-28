@@ -17,22 +17,22 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
     bigkappa = 1e6
     a0 = zeros(m)
     P0 = bigkappa*ones(m)
-    sqrtP0 = diagm(P0)
+    sqrtP0 = Matrix(Diagonal(P0))
 
     # Predictive state and its sqrt-covariance
-    a = Array{Array}(n+1)
-    sqrtP = Array{Array}(n+1)
+    a = Array{Array}(undef, n+1)
+    sqrtP = Array{Array}(undef, n+1)
     # Innovation and its sqrt-covariance
-    v = Array{Array}(n)
-    sqrtF = Array{Array}(n)
+    v = Array{Array}(undef, n)
+    sqrtF = Array{Array}(undef, n)
     # Kalman gain and steady-state Kalman gain
-    K = Array{Array}(n)
-    Ksteady = Array{Float64}(m, p)
+    K = Array{Array}(undef, n)
+    Ksteady = Array{Float64}(undef, m, p)
     # Predictive variance in steady state
-    Ps = Array{Float64}(m, m)
+    Ps = Array{Float64}(undef, m, m)
     # Auxiliary matrices
     U = zeros(p + m, m + p + r)
-    U2star = Array{Array}(n)
+    U2star = Array{Array}(undef, n)
     # Steady state flags
     steadystate = false
     tsteady = n+1
@@ -50,13 +50,13 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
         else
             # QR decomposition of auxiliary matrix U to obtain Ustar
             U = [Z[t]*sqrtP[t] sqrtH zeros(p, r); T*sqrtP[t] zeros(m, p) R*sqrtQ]
-            G = qr(U')[1]
+            G = LinearAlgebra.qr(U').Q
             Ustar = U*G
             U2star[t] = Ustar[(p + 1):(p + m), 1:p]
             sqrtF[t] = Ustar[1:p, 1:p]
 
             # Kalman gain
-            K[t] = U2star[t]*pinv(sqrtF[t])
+            K[t] = U2star[t]*LinearAlgebra.pinv(sqrtF[t])
             a[t+1] = T*a[t] + K[t]*v[t]
             sqrtP[t+1] = Ustar[(p + 1):(p + m), (p + 1):(p + m)]
 
@@ -101,11 +101,11 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     sqrtPsteady = ss_filter.sqrtPsteady
 
     # Smoothed state and its covariance
-    alpha = Array{Array}(n)
-    V = Array{Array}(n)
-    L = Array{Array}(n)
-    r = Array{Array}(n)
-    sqrtN = Array{Array}(n)
+    alpha = Array{Array}(undef, n)
+    V = Array{Array}(undef, n)
+    L = Array{Array}(undef, n)
+    r = Array{Array}(undef, n)
+    sqrtN = Array{Array}(undef, n)
 
     # Initialization
     sqrtN[end] = zeros(m, m)
@@ -114,11 +114,11 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     # Iterating backwards
     for t = n:-1:tsteady
         L[t] = T - Ksteady*Z[t]
-        r[t-1] = Z[t]' * pinv(sqrtF[tsteady]*sqrtF[tsteady]') * v[t] + L[t]'*r[t]
+        r[t-1] = Z[t]' * LinearAlgebra.pinv(sqrtF[tsteady]*sqrtF[tsteady]') * v[t] + L[t]'*r[t]
 
         # QR decomposition of auxiliary matrix Nstar
-        Nstar = [Z[t]' * pinv(sqrtF[tsteady]) L[t]'*sqrtN[t]]
-        G = qr(Nstar')[1]
+        Nstar = [Z[t]' * LinearAlgebra.pinv(sqrtF[tsteady]) L[t]'*sqrtN[t]]
+        G = LinearAlgebra.qr(Nstar').Q
         NstarG = Nstar*G
         sqrtN[t-1] = NstarG[1:m, 1:m]
 
@@ -128,12 +128,12 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     end
 
     for t = tsteady-1:-1:2
-        L[t] = T - U2star[t] * pinv(sqrtF[t]) * Z[t]
-        r[t-1] = Z[t]' * pinv(sqrtF[t]*sqrtF[t]') * v[t] + L[t]'*r[t]
-        Nstar = [Z[t]'*pinv(sqrtF[t]) L[t]'*sqrtN[t]]
+        L[t] = T - U2star[t] * LinearAlgebra.pinv(sqrtF[t]) * Z[t]
+        r[t-1] = Z[t]' * LinearAlgebra.pinv(sqrtF[t]*sqrtF[t]') * v[t] + L[t]'*r[t]
+        Nstar = [Z[t]'*LinearAlgebra.pinv(sqrtF[t]) L[t]'*sqrtN[t]]
 
         # QR decomposition of auxiliary matrix Nstar
-        G = qr(Nstar')[1]
+        G = LinearAlgebra.qr(Nstar').Q
         NstarG = Nstar*G
         sqrtN[t-1] = NstarG[1:m, 1:m]
 
@@ -142,10 +142,10 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
         V[t] = (sqrtP[t]*sqrtP[t]') - (sqrtP[t]*sqrtP[t]')*(sqrtN[t]*sqrtN[t]')*(sqrtP[t]*sqrtP[t]')
     end
 
-    L[1] = T - U2star[1] * pinv(sqrtF[1]) * Z[1]
-    r_0 = Z[1]' * pinv(sqrtF[1] * sqrtF[1]') * v[1] + L[1]' * r[1]
-    Nstar = [Z[1]'*pinv(sqrtF[1]) L[1]'*sqrtN[1]]
-    G = qr(Nstar')[1]
+    L[1] = T - U2star[1] * LinearAlgebra.pinv(sqrtF[1]) * Z[1]
+    r_0 = Z[1]' * LinearAlgebra.pinv(sqrtF[1] * sqrtF[1]') * v[1] + L[1]' * r[1]
+    Nstar = [Z[1]'*LinearAlgebra.pinv(sqrtF[1]) L[1]'*sqrtN[1]]
+    G = LinearAlgebra.qr(Nstar').Q
     NstarG = Nstar*G
 
     sqrtN_0 = NstarG[1:m, 1:m]
@@ -153,10 +153,10 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     V[1] = (sqrtP[1]*sqrtP[1]') - (sqrtP[1]*sqrtP[1]')*(sqrtN_0*sqrtN_0')*(sqrtP[1]*sqrtP[1]')
 
     # Defining smoothed state vectors
-    trend = Array{Float64}(n, p)
-    slope = Array{Float64}(n, p)
-    seasonal = Array{Float64}(n, p)
-    exogenous = Array{Array}(p_exp)
+    trend = Array{Float64}(undef, n, p)
+    slope = Array{Float64}(undef, n, p)
+    seasonal = Array{Float64}(undef, n, p)
+    exogenous = Array{Array}(undef, p_exp)
     for j = 1:p_exp
         exogenous[j] = zeros(n, p)
     end
