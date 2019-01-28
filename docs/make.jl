@@ -1,17 +1,20 @@
-using Documenter
+using Documenter, StateSpaceModels
 
 makedocs(
-    modules = [Documenter],
-    format = Documenter.HTML(
-        # Use clean URLs, unless built as a "local" build
-        prettyurls = false
-    ),
+    modules = [StateSpaceModels],
+    doctest  = false,
+    clean    = true,
+    format   = :html,
     sitename = "StateSpaceModels.jl",
-    authors = "Guilherme Bodin and contributors.",
+    authors = "Raphael Saavedra, Mario Souto and contributors.",
     pages = [
         "Home" => "index.md",
         "Manual" => Any[
             "manual.md"
             ]
     ]
+)
+
+deploydocs(
+    repo = "github.com/LAMPSPUC/StateSpaceModels.jl.git",
 )
