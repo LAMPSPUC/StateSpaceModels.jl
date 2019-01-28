@@ -15,11 +15,7 @@ addons:
         - liblapack-dev
         - libgmp-dev
         - libglpk-dev
-script:
-    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'Pkg.clone(pwd())'
-    - julia -e 'Pkg.test("StateSpaceModels"; coverage=true)'
 after_success:
     # push coverage results to Codecov
     - echo $TRAVIS_JULIA_VERSION
-    - julia -e 'cd(Pkg.dir("StateSpaceModels")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+    - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
