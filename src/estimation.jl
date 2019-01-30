@@ -53,9 +53,9 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
 
     # Initialization
     npsi = Int((1 + dim.r/dim.p)*(dim.p*(dim.p + 1)/2))
-    seeds = SharedArray{Float64}(npsi, nseeds)
-    loglikelihood = SharedArray{Float64}(nseeds)
-    psi = SharedArray{Float64}(npsi, nseeds)
+    seeds = Array{Float64}(undef, npsi, nseeds)
+    loglikelihood = Array{Float64}(undef, nseeds)
+    psi = Array{Float64}(undef, npsi, nseeds)
 
     # Initial conditions
     inflim = -1e3
@@ -65,8 +65,7 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
     # Avoiding zero values for covariance
     deleteat!(seedrange, findall(seedrange .== 0.0))
 
-    # @info("Initiating maximum likelihood estimation with $nseeds seeds.")
-    # @info("Running with $(length(procs())) threads.")
+    @info("Initiating maximum likelihood estimation with $nseeds seeds.")
 
     # Generate initial values in [inflim, suplim]
     for iseed = 1:nseeds
@@ -78,18 +77,18 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
     end
 
     # Optimization
-    @sync @distributed for iseed = 1:nseeds
-        # @info("Optimizing likelihood for seed $iseed of $nseeds...")
+    for iseed = 1:nseeds
+        @info("Optimizing likelihood for seed $iseed of $nseeds...")
         optseed = optimize(psitilde -> statespace_likelihood(psitilde, sys, dim), seeds[:, iseed],
                             LBFGS(), Optim.Options(f_tol = f_tol, g_tol = g_tol, iterations = iterations,
                             show_trace = false))
         loglikelihood[iseed] = -optseed.minimum
         psi[:, iseed] = optseed.minimizer
-        # @info("Log-likelihood for seed $iseed: $(loglikelihood[iseed])")
+        @info("Log-likelihood for seed $iseed: $(loglikelihood[iseed])")
     end
 
-    # @info("Maximum likelihood estimation complete.")
-    # @info("Log-likelihood: $(maximum(loglikelihood))")
+    @info("Maximum likelihood estimation complete.")
+    @info("Log-likelihood: $(maximum(loglikelihood))")
 
     bestpsi = psi[:, argmax(loglikelihood)]
     sqrtH, sqrtQ = statespace_covariance(bestpsi, dim.p, dim.r)
