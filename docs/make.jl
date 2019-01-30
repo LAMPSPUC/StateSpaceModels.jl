@@ -4,14 +4,12 @@ makedocs(
     modules = [StateSpaceModels],
     doctest  = false,
     clean    = true,
-    format   = :html,
+    format   = Documenter.HTML(),
     sitename = "StateSpaceModels.jl",
     authors = "Raphael Saavedra, Mario Souto and contributors.",
     pages = [
         "Home" => "index.md",
-        "Manual" => Any[
-            "manual.md"
-            ]
+        "manual.md"
     ]
 )
 
