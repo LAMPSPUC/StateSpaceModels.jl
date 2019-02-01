@@ -1,5 +1,8 @@
-"""Simulate S future scenarios up to N steps ahead.
-    Returns an NxS matrix where each line represents an instant and each column a scenario."""
+"""
+    simulate(ss::StateSpace, N::Int, S::Int)
+
+Simulate S future scenarios up to N steps ahead. Returns an NxS matrix where each line represents an instant and each column a scenario.
+"""
 function simulate(ss::StateSpace, N::Int, S::Int)
 
     # Number of observations and exogenous variables

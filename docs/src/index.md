@@ -9,13 +9,7 @@ Pkg.add("https://github.com/LAMPSPUC/StateSpaceModels.jl.git")
 
 ## Notes
 
-This package is under development and some features may be changed or added.
-
-StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state space framework.
-
-Estimation is done through function `statespace` and will automatically be run in parallel with all the currently active threads.
-
-Simulation of scenarios is done through function `simulate`.
+StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state space framework. Implementations were made based on the book Time series analysis by state space methods: J. Durbin and S.J. Koopman.
 
 ## Features
 

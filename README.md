@@ -1,24 +1,19 @@
 # StateSpaceModels.jl
 
-| **DOI** | **Build Status** | **Coverage** |
-|:-----------------:|:-----------------:|:-----------------:|
-| [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1240453.svg)](https://doi.org/10.5281/zenodo.1240453) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |
+| **DOI** | **Build Status** | **Coverage** | **Documentation** |
+|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
+| [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1240453.svg)](https://doi.org/10.5281/zenodo.1240453) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lampspuc.github.io/StateSpaceModels.jl/latest/)
 
 ## Installation
-This package is unregistered so you will need to `Pkg.clone` it as follows:
+
+This package is unregistered so you will need to `Pkg.add` it as follows:
 ```julia
-Pkg.clone("https://github.com/LAMPSPUC/StateSpaceModels.jl.git")
+Pkg.add("https://github.com/LAMPSPUC/StateSpaceModels.jl.git")
 ```
 
 ## Notes
 
-This package is under development and some features may be changed or added.
-
-StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state space framework.
-
-Estimation is done through function `statespace` and will automatically be run in parallel with all the currently active threads.
-
-Simulation of scenarios is done through function `simulate`.
+StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state space framework. Implementations were made based on the book Time series analysis by state space methods: J. Durbin and S.J. Koopman.
 
 ## Features
 
