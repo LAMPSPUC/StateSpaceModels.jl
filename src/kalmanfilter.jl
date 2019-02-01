@@ -1,5 +1,9 @@
-"""Square-root Kalman filter for time series with big Kappa initialization."""
-function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol = 1e-5)
+"""
+    sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol::Float64 = 1e-5)
+
+Square-root Kalman filter for time series with big Kappa initialization.
+"""
+function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol::Float64 = 1e-5)
 
     # Load dimensions data
     n = dim.n
@@ -77,7 +81,11 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
     return ss_filter
 end
 
-"""Square-root smoothing for time series state space model."""
+"""
+    sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filter::FilterOutput)
+
+Square-root smoothing for time series state space model.
+"""
 function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filter::FilterOutput)
 
     # Load dimensions data

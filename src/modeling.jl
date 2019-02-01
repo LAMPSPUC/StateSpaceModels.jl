@@ -1,11 +1,20 @@
-function statespace(y::Array{Float64, 1}, s::Int; X = Array{Float64,2}(undef, 0, 0), nseeds = 3)
+"""
+    statespace(y::Array{Float64, 1}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
+
+Estimate structural model and calculate smoothed and predictive state.
+"""
+function statespace(y::Array{Float64, 1}, s::Int; X = Array{Float64,2}(undef, 0, 0), nseeds::Int = 3)
     n = length(y)
     y = reshape(y, (n, 1))
     statespace(y, s; X = X, nseeds = nseeds)
 end
 
-"""Estimate structural model and calculate smoothed and predictive state."""
-function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds = 3)
+"""
+    statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
+
+Estimate structural model and calculate smoothed and predictive state.
+"""
+function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
 
     # Number of observations and endogenous variables
     n, p = size(y)
