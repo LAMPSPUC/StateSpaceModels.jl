@@ -1,8 +1,4 @@
-push!(LOAD_PATH, "/home/guilhermebodin/Documents/StateSpaceModels.jl/src/")
 using CSV, StateSpaceModels, Plots, Statistics, Dates
-
-#Defining PyPlot backend
-pyplot()
 
 #load the AirPassengers dataset
 AP = CSV.read("AirPassengers.csv")
@@ -11,7 +7,7 @@ AP = CSV.read("AirPassengers.csv")
 logAP = log.(Array{Float64}(AP[:Passengers]))
 
 #Visualize the data
-p1 = plot(AP[:Date], logAP, label = "AirPassengers timeseries")
+p1 = plot(AP[:Date], logAP, label = "AirPassengers timeseries", size = (1000, 500))
 
 #Define its seasonality 
 s = 12
@@ -20,9 +16,8 @@ s = 12
 ss = statespace(logAP, s)
 
 #Analyze its decomposition in seasonal and trend
-p2 = plot(AP[:Date], ss.state.seasonal, label = "AirPassengers seasonal")
-p3 = plot(AP[:Date], ss.state.trend, label = "AirPassengers trend")
-plot(p2, p3)
+p2 = plot(AP[:Date], ss.state.seasonal, label = "AirPassengers seasonal", size = (1000, 500))
+p3 = plot(AP[:Date], ss.state.trend, label = "AirPassengers trend", size = (1000, 500))
 
 #Simulate 100 scenarios, 20 steps ahead
 num_scenarios = 100
