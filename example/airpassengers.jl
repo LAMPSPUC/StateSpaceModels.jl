@@ -1,4 +1,8 @@
+push!(LOAD_PATH, "/home/guilhermebodin/Documents/StateSpaceModels.jl/src/")
 using CSV, StateSpaceModels, Plots, Statistics, Dates
+
+#Defining PyPlot backend
+pyplot()
 
 #load the AirPassengers dataset
 AP = CSV.read("AirPassengers.csv")
