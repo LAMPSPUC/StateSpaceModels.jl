@@ -4,12 +4,12 @@
 
 This package is unregistered so you will need to `Pkg.add` it as follows:
 ```julia
-Pkg.add("https://github.com/LAMPSPUC/StateSpaceModels.jl.git")
+pkg> add https://github.com/LAMPSPUC/StateSpaceModels.jl.git
 ```
 
 ## Notes
 
-StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state space framework. Implementations were made based on the book Time series analysis by state space methods: J. Durbin and S.J. Koopman.
+StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state space framework based on structural models of Harvey (1989), in which a time series is decomposed in trend, slope and seasonals. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by J. Durbin and S. J. Koopman.
 
 ## Features
 
@@ -19,7 +19,7 @@ Current features:
 * Square-root Kalman Filter and smoother
 * Big Kappa initialization
 * Monte Carlo simulation
-* Parallel MLE estimation
+* Maximum likelihood estimation
 * Multivariate modeling
 
 Future features (work in progress):
