@@ -1,9 +1,7 @@
 # Manual
 
 ## Estimation
-The model estimation is made using the function `statespace(y, s; X, nseeds)`. It receives as argument the timeseries and the desired seasonality `s`.
-
-The user can input explanatory variables in an ```Array{Float64, 2}``` variable `X` and specify the desired number of seeds to perform the estimation `nseeds`.
+The model estimation is made using the function `statespace(y, s; X, nseeds)`. It receives as argument the time series `y` and the desired seasonality `s`. The user can input exogenous variables using optional argument `X` and specify the desired number of random seeds `nseeds` to perform the estimation.
 
 ```julia
 ss = statespace(y, s; X = X, nseeds = nseeds)
@@ -19,7 +17,7 @@ simulation = simulate(ss, N, S)
 
 ## Example
 
-Letś take the Air Passenger time series to build and example. Taking the log of the series we should have a nice timeseries to simulate. The code is in the example folder.
+Let's take the Air Passenger time series to build and example. Taking the log of the series we should have a nice time series to simulate. The code is in the example folder.
 
 ```julia
 using CSV, StateSpaceModels, Plots, Statistics, Dates
@@ -35,7 +33,7 @@ p1 = plot(AP[:Date], logAP, label = "AirPassengers timeseries", size = (1000, 50
 
 ![Log of Air Passengers time series](./assets/logofairpassengers.png)
 
-Estimating a StateSpaceModel should give us the trend and seasonal components of the time series
+Estimating a StateSpaceModel gives us the trend and seasonal components of the time series.
 
 ```julia
 #Define its seasonality 
@@ -52,10 +50,10 @@ p3 = plot(AP[:Date], ss.state.trend, label = "AirPassengers trend", size = (1000
 ![Lof of Air Passengers trend component](./assets/trendairpassengers.png)
 ![Log of Air Passengers seasonal component](./assets/seasonalairpassengers.png)
 
-We can also simulate the future of this time series. ?In this example we simulate 100 scenarios of 60 steps ahead.
+We can also simulate future scenarios for this time series. In this example, we simulate 100 scenarios up to five years (60 observations) ahead.
 
 ```julia
-#Simulate 100 scenarios, 20 steps ahead
+#Simulate 100 scenarios, 60 steps ahead
 num_scenarios = 100
 num_steps_ahead = 60
 simulation = simulate(ss, num_steps_ahead, num_scenarios)
