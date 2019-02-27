@@ -19,7 +19,8 @@ Work using this package:
 
 [Simulating Low and High-Frequency Energy
 Demand Scenarios in a Unified Framework – Part
-I: Low-Frequency Simulation](https://proceedings.science/sbpo/papers/simulando-cenarios-de-demanda-em-baixa-e-alta-frequencia-em-um-framework-unificado---parte-i%3A-simulacao-em-baixa-frequen)
+I: Low-Frequency Simulation](https://proceedings.science/sbpo/papers/simulando-cenarios-de-demanda-em-baixa-e-alta-frequencia-em-um-framework-unificado---parte-i%3A-simulacao-em-baixa-frequen).
+In: L Simpósio Brasileiro de Pesquisa Operacional, Rio de Janeiro, Brazil.
 
 ## Features
 
