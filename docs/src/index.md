@@ -2,9 +2,9 @@
 
 ## Installation
 
-This package is unregistered so you will need to `Pkg.add` it as follows:
+This package is registered in METADATA so you will can do `Pkg.add` it as follows:
 ```julia
-pkg> add https://github.com/LAMPSPUC/StateSpaceModels.jl.git
+pkg> add StateSpaceModels
 ```
 
 ## Notes
