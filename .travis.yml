@@ -18,7 +18,7 @@ addons:
 after_success:
     # push coverage results to Codecov
     - echo $TRAVIS_JULIA_VERSION
-    - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+    - julia -e 'if VERSION >= v"0.7.0-" using Pkg end; cd(Pkg.dir("StateSpaceModels")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())';
 jobs:
   include:
     - stage: "Documentation"
