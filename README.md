@@ -6,7 +6,7 @@
 
 ## Installation
 
-This package is registered in METADATA so you will can do `Pkg.add` it as follows:
+This package is registered in METADATA so you can `Pkg.add` it as follows:
 ```julia
 pkg> add StateSpaceModels
 ```
@@ -15,7 +15,7 @@ pkg> add StateSpaceModels
 
 StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state space framework based on structural models of Harvey (1989), in which a time series is decomposed in trend, slope and seasonals. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by J. Durbin and S. J. Koopman.
 
-Work using this package:
+Works using this package:
 
 [Simulating Low and High-Frequency Energy
 Demand Scenarios in a Unified Framework – Part
