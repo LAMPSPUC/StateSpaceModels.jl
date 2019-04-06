@@ -12,7 +12,7 @@ end
 """
     statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
 
-Estimate structural model and calculate smoothed and predictive state.
+Estimate time series structural model and calculate smoothed and predictive state.
 """
 function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
 
@@ -35,24 +35,55 @@ function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0
     N = max(n, n_exp)
     Z = Array{Array}(undef, N)
     for t = 1:N
-        Z[t] = p_exp > 0 ? kron([X[t, :]' 1 0 1 zeros(1, s - 2)], Matrix{Float64}(LinearAlgebra.I, p, p)) :
-        kron([1 0 1 zeros(1, s - 2)], Matrix{Float64}(LinearAlgebra.I, p, p))
+        if p_exp > 0
+            Z[t] = kron(
+                [
+                    X[t, :]' 1 0 1 zeros(1, s - 2)
+                ],
+                Matrix{Float64}(I, p, p)
+                )
+        else
+            Z[t] = kron(
+                [
+                    1 0 1 zeros(1, s - 2)
+                ],
+                Matrix{Float64}(I, p, p)
+                )
+        end
     end
     
     # State equation
     if p_exp > 0
-        T0 = [Matrix{Float64}(LinearAlgebra.I, p_exp, p_exp) zeros(p_exp, 1 + s)]
-        T = kron([T0; zeros(1, p_exp) 1 1 zeros(1, s - 1); zeros(1, p_exp) 0 1 zeros(1, s - 1);
-        zeros(1, p_exp) 0 0 -ones(1, s - 1);
-        zeros(s - 2, p_exp) zeros(s - 2, 2) Matrix{Float64}(LinearAlgebra.I, s - 2, s - 2) zeros(s - 2, 1)],
-        Matrix{Float64}(LinearAlgebra.I, p, p))
+        T0 = [Matrix{Float64}(I, p_exp, p_exp) zeros(p_exp, 1 + s)]
+        T = kron(
+            [
+                T0; 
+                zeros(1, p_exp) 1 1 zeros(1, s - 1); 
+                zeros(1, p_exp) 0 1 zeros(1, s - 1);
+                zeros(1, p_exp) 0 0 -ones(1, s - 1);
+                zeros(s - 2, p_exp) zeros(s - 2, 2) Matrix{Float64}(I, s - 2, s - 2) zeros(s - 2)
+            ],
+            Matrix{Float64}(I, p, p)
+            )
     else
-        T = kron([zeros(1, p_exp) 1 1 zeros(1, s - 1); zeros(1, p_exp) 0 1 zeros(1, s - 1);
-        zeros(1, p_exp) 0 0 -ones(1, s - 1);
-        zeros(s - 2, p_exp) zeros(s - 2, 2) Matrix{Float64}(LinearAlgebra.I, s - 2, s - 2) zeros(s - 2, 1)],
-        Matrix{Float64}(LinearAlgebra.I, p, p))
+        T = kron(
+            [
+                1 1 zeros(1, s - 1); 
+                0 1 zeros(1, s - 1);
+                0 0 -ones(1, s - 1);
+                zeros(s - 2, 2) Matrix{Float64}(I, s - 2, s - 2) zeros(s - 2)
+            ],
+            Matrix{Float64}(I, p, p)
+            )
     end
-    R = kron([zeros(p_exp, 3); Matrix{Float64}(LinearAlgebra.I, 3, 3); zeros(s - 2, 3)], Matrix{Float64}(LinearAlgebra.I, p, p))
+    R = kron(
+        [
+            zeros(p_exp, 3); 
+            Matrix{Float64}(I, 3, 3); 
+            zeros(s - 2, 3)
+        ],
+        Matrix{Float64}(I, p, p)
+        )
     
     # Creating state space data structures
     dim = StateSpaceDimensions(n, p, m, r, p_exp)
