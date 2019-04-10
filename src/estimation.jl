@@ -3,17 +3,17 @@ function statespace_covariance(psi::Array{Float64,1}, p::Int, r::Int)
 
     # Observation sqrt-covariance matrix
     if p > 1
-        sqrtH = tril(ones(p, p))
+        sqrtH     = tril!(ones(p, p))
         unknownsH = Int(p*(p + 1)/2)
-        sqrtH[sqrtH .== 1] = psi[1:unknownsH]
+        sqrtH[findall(x -> x == 1, sqrtH)] = psi[1:unknownsH]
     else
         sqrtH = [psi[1]]
         unknownsH = 1
     end
 
     # State sqrt-covariance matrix
-    sqrtQ = kron(Matrix{Float64}(LinearAlgebra.I, Int(r/p), Int(r/p)), tril(ones(p, p)))
-    sqrtQ[sqrtQ .== 1] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
+    sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
+    sqrtQ[findall(x -> x == 1, sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
     return sqrtH, sqrtQ
 end
@@ -36,12 +36,12 @@ function statespace_likelihood(psitilde::Array{Float64,1}, sys::StateSpaceSystem
     # Compute log-likelihood based on v and F
     loglikelihood = dim.n*dim.p*log(2*pi)/2
     for t = dim.m:dim.n
-        det_sqrtF = LinearAlgebra.det(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]')
+        det_sqrtF = det(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]')
         if det_sqrtF < 1e-30
             det_sqrtF = 1e-30
         end
         loglikelihood = loglikelihood + .5 * (log(det_sqrtF) +
-                         ss_filter.v[t]' * LinearAlgebra.pinv(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]') * ss_filter.v[t])
+                        ss_filter.v[t]' * pinv(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]') * ss_filter.v[t])
     end
 
     return loglikelihood
@@ -52,18 +52,18 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
     f_tol = 1e-10, g_tol = 1e-10, iterations = 10^5)
 
     # Initialization
-    npsi = Int((1 + dim.r/dim.p)*(dim.p*(dim.p + 1)/2))
-    seeds = Array{Float64}(undef, npsi, nseeds)
-    loglikelihood = Array{Float64}(undef, nseeds)
-    psi = Array{Float64}(undef, npsi, nseeds)
+    npsi          = Int((1 + dim.r/dim.p)*(dim.p*(dim.p + 1)/2))
+    seeds         = Array{Float64, 2}(undef, npsi, nseeds)
+    loglikelihood = Array{Float64, 1}(undef, nseeds)
+    psi           = Array{Float64, 2}(undef, npsi, nseeds)
 
     # Initial conditions
-    inflim = -1e3
-    suplim = 1e3
+    inflim    = -1e3
+    suplim    = 1e3
     seedrange = collect(inflim:0.1:suplim)
 
     # Avoiding zero values for covariance
-    deleteat!(seedrange, findall(seedrange .== 0.0))
+    deleteat!(seedrange, findall(x -> x == 0.0, seedrange))
 
     @info("Initiating maximum likelihood estimation with $nseeds seeds.")
 
@@ -90,7 +90,7 @@ function estimate_statespace(sys::StateSpaceSystem, dim::StateSpaceDimensions, n
     @info("Maximum likelihood estimation complete.")
     @info("Log-likelihood: $(maximum(loglikelihood))")
 
-    bestpsi = psi[:, argmax(loglikelihood)]
+    bestpsi      = psi[:, argmax(loglikelihood)]
     sqrtH, sqrtQ = statespace_covariance(bestpsi, dim.p, dim.r)
 
     # Parameter structure
