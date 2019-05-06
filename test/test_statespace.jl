@@ -1,5 +1,6 @@
 # Tests
 @testset "Strutural model tests" begin
+
     @testset "Constant signal test" begin
         y = ones(15)
         ss = statespace(y, 2; nseeds = 1)
@@ -14,6 +15,7 @@
         @test sum(ss.param.sqrtH .< 1e-6) == length(ss.param.sqrtH)
         @test sum(ss.param.sqrtQ .< 1e-6) == length(ss.param.sqrtQ)
     end
+
     @testset "Linear signal test with simulation" begin
         y = Array{Float64}(0.1:0.1:1.5)
         ss = statespace(y, 2; nseeds = 1)
@@ -39,9 +41,10 @@
         @test sum(q95 .- q5 .>= 0) == 10
         @test maximum(q95 .- q5) <= 1e-4
     end
+
     @testset "Basic multivariate test" begin
         y = [ones(20) collect(1:20)]
-        ss = statespace(y, 2; nseeds = 5)
+        ss = statespace(y, 2; nseeds = 3)
         correct_trend = y
         correct_slope = [zeros(20) ones(20)]
         correct_seasonal = [zeros(20) zeros(20)]
@@ -59,4 +62,5 @@
         @test mean_sim1 ≈ ones(N) atol = 1e-2
         @test mean_sim2 ≈ collect(21.0:20.0 + N) atol = 1e-2
     end
+
 end

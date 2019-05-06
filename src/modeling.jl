@@ -76,6 +76,7 @@ function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0
             Matrix{Float64}(I, p, p)
             )
     end
+
     R = kron(
         [
             zeros(p_exp, 3); 
@@ -101,4 +102,5 @@ function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0
     output = StateSpace(sys, dim, smoothedstate, ss_par, ss_filter)
 
     return output
+
 end

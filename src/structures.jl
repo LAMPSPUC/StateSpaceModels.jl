@@ -9,41 +9,41 @@ end
 
 """Structure with state space matrices and data"""
 struct StateSpaceSystem
-    y::Array # observations
-    X::Array # exogenous variables
+    y::Array{Float64, 2} # observations
+    X::Array{Float64, 2} # exogenous variables
     s::Int # seasonality
-    Z::Array # observation matrix
-    T::Array # state matrix
-    R::Array # state error matrix
+    Z::Array{Array{Float64, 2}} # observation matrix
+    T::Array{Float64, 2} # state matrix
+    R::Array{Float64, 2} # state error matrix
 end
 
 """Structure with state space hyperparameters"""
 mutable struct StateSpaceParameters
-    sqrtH::Array # lower triangular matrix with sqrt-covariance of the observation
-    sqrtQ::Array # lower triangular matrix with sqrt-covariance of the state
+    sqrtH::Array{Float64, 2} # lower triangular matrix with sqrt-covariance of the observation
+    sqrtQ::Array{Float64, 2} # lower triangular matrix with sqrt-covariance of the state
 end
 
 """Structure with smoothed state"""
 struct SmoothedState
-    trend::Array # smoothed trend
-    slope::Array # smoothed slope
-    seasonal::Array # smoothed seasonality
-    exogenous::Array # smoothed regression of exogenous variables
-    V::Array # variance of smoothed state
-    alpha::Array # smoothed state matrix
+    trend::Array{Float64, 2} # smoothed trend
+    slope::Array{Float64, 2} # smoothed slope
+    seasonal::Array{Float64, 2} # smoothed seasonality
+    exogenous::Array{Array} # smoothed regression of exogenous variables
+    V::Array{Array{Float64, 2}} # variance of smoothed state
+    alpha::Array{Array{Float64, 2}} # smoothed state matrix
 end
 
 """Structure with Kalman filter output"""
 mutable struct FilterOutput
-    a::Array # predictive state
-    v::Array # innovations
+    a::Array{Array{Float64, 2}} # predictive state
+    v::Array{Array{Float64, 2}} # innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained
-    Ksteady::Array
-    U2star::Array
-    sqrtP::Array # lower triangular matrix with sqrt-covariance of the predictive state
-    sqrtF::Array # lower triangular matrix with sqrt-covariance of the innovations
-    sqrtPsteady::Array
+    Ksteady::Array{Float64, 2}
+    U2star::Array{Array{Float64, 2}}
+    sqrtP::Array{Array{Float64, 2}} # lower triangular matrix with sqrt-covariance of the predictive state
+    sqrtF::Array{Array{Float64, 2}} # lower triangular matrix with sqrt-covariance of the innovations
+    sqrtPsteady::Array{Float64, 2}
 end
 
 """General output structure for the user"""
