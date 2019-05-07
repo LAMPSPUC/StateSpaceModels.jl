@@ -27,7 +27,7 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
     a     = Vector{Array{Float64, 2}}(undef, n+1)
     sqrtP = Vector{Array{Float64, 2}}(undef, n+1)
     # Innovation and its sqrt-covariance
-    v     = Vector{Vector{Float64}}(undef, n)
+    v     = Vector{Array{Float64, 2}}(undef, n)
     sqrtF = Vector{Array{Float64, 2}}(undef, n)
     # Kalman gain and steady-state Kalman gain
     K       = Vector{Array{Float64, 2}}(undef, n)
