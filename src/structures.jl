@@ -42,7 +42,7 @@ mutable struct FilterOutput
     Ksteady::Array{Float64, 2}
     U2star::Array{Array}
     sqrtP::Array{Array} # lower triangular matrix with sqrt-covariance of the predictive state
-    sqrtF::Array{Array # lower triangular matrix with sqrt-covariance of the innovations
+    sqrtF::Array{Array} # lower triangular matrix with sqrt-covariance of the innovations
     sqrtPsteady::Array{Float64, 2}
 end
 
