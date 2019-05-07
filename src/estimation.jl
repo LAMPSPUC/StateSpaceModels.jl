@@ -41,7 +41,7 @@ function statespace_likelihood(psitilde::Array{Float64,1}, sys::StateSpaceSystem
             det_sqrtF = 1e-30
         end
         loglikelihood = loglikelihood + .5 * (log(det_sqrtF) +
-                        ss_filter.v[t]' * pinv(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]') * ss_filter.v[t])
+                        (ss_filter.v[t]' * pinv(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]') * ss_filter.v[t])[1])
     end
 
     return loglikelihood

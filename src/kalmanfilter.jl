@@ -19,27 +19,27 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
 
     # Initial state: big Kappa initialization
     bigkappa = 1e6
-    a0       = zeros(m)
+    a0       = zeros(m, 1)
     P0       = bigkappa * ones(m)
     sqrtP0   = Matrix(Diagonal(P0))
 
     # Predictive state and its sqrt-covariance
-    a     = Array{Array}(undef, n+1)
-    sqrtP = Array{Array}(undef, n+1)
+    a     = Vector{Array{Float64, 2}}(undef, n+1)
+    sqrtP = Vector{Array{Float64, 2}}(undef, n+1)
     # Innovation and its sqrt-covariance
-    v     = Array{Array}(undef, n)
-    sqrtF = Array{Array}(undef, n)
+    v     = Vector{Array{Float64, 2}}(undef, n)
+    sqrtF = Vector{Array{Float64, 2}}(undef, n)
     # Kalman gain and steady-state Kalman gain
-    K       = Array{Array}(undef, n)
-    Ksteady = Array{Float64}(undef, m, p)
+    K       = Vector{Array{Float64, 2}}(undef, n)
+    Ksteady = Array{Float64, 2}(undef, m, p)
     # Predictive variance in steady state
-    Ps = Array{Float64}(undef, m, m)
+    Ps = Array{Float64, 2}(undef, m, m)
     # Auxiliary matrices
     U      = zeros(p + m, m + p + r)
-    U2star = Array{Array}(undef, n)
+    U2star = Vector{Array{Float64, 2}}(undef, n)
     # Steady state flags
     steadystate = false
-    tsteady     = n + 1
+    tsteady     = n+1
 
     # Initial state
     a[1]        = a0
@@ -109,15 +109,15 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     sqrtPsteady = ss_filter.sqrtPsteady
 
     # Smoothed state and its covariance
-    alpha = Array{Array}(undef, n)
-    V     = Array{Array}(undef, n)
-    L     = Array{Array}(undef, n)
-    r     = Array{Array}(undef, n)
-    sqrtN = Array{Array}(undef, n)
+    alpha = Vector{Array{Float64, 2}}(undef, n)
+    V     = Vector{Array{Float64, 2}}(undef, n)
+    L     = Vector{Array{Float64, 2}}(undef, n)
+    r     = Vector{Array{Float64, 2}}(undef, n)
+    sqrtN = Vector{Array{Float64, 2}}(undef, n)
 
     # Initialization
     sqrtN[end] = zeros(m, m)
-    r[end]     = zeros(m)
+    r[end]     = zeros(m, 1)
 
     # Iterating backwards
     for t = n:-1:tsteady
@@ -170,10 +170,10 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
                (sqrtP[1] * sqrtP[1]')
 
     # Defining smoothed state vectors
-    trend     = Array{Float64}(undef, n, p)
-    slope     = Array{Float64}(undef, n, p)
-    seasonal  = Array{Float64}(undef, n, p)
-    exogenous = Array{Array}(undef, p_exp)
+    trend     = Array{Float64, 2}(undef, n, p)
+    slope     = Array{Float64, 2}(undef, n, p)
+    seasonal  = Array{Float64, 2}(undef, n, p)
+    exogenous = Vector{Array{Float64, 2}}(undef, p_exp)
     for j = 1:p_exp
         exogenous[j] = zeros(n, p)
     end
