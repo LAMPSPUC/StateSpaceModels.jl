@@ -7,7 +7,7 @@ function statespace_covariance(psi::Array{Float64,1}, p::Int, r::Int)
         unknownsH = Int(p*(p + 1)/2)
         sqrtH[findall(x -> x == 1, sqrtH)] = psi[1:unknownsH]
     else
-        sqrtH = [psi[1]]
+        sqrtH = psi[1].*ones(1, 1)
         unknownsH = 1
     end
 

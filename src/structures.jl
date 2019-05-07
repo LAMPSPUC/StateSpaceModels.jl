@@ -12,7 +12,7 @@ struct StateSpaceSystem
     y::Array{Float64, 2} # observations
     X::Array{Float64, 2} # exogenous variables
     s::Int # seasonality
-    Z::Array{Array{Float64, 2}} # observation matrix
+    Z::Array{Array} # observation matrix
     T::Array{Float64, 2} # state matrix
     R::Array{Float64, 2} # state error matrix
 end
@@ -29,20 +29,20 @@ struct SmoothedState
     slope::Array{Float64, 2} # smoothed slope
     seasonal::Array{Float64, 2} # smoothed seasonality
     exogenous::Array{Array} # smoothed regression of exogenous variables
-    V::Array{Array{Float64, 2}} # variance of smoothed state
-    alpha::Array{Array{Float64, 2}} # smoothed state matrix
+    V::Array{Array} # variance of smoothed state
+    alpha::Array{Array} # smoothed state matrix
 end
 
 """Structure with Kalman filter output"""
 mutable struct FilterOutput
-    a::Array{Array{Float64, 2}} # predictive state
-    v::Array{Array{Float64, 2}} # innovations
+    a::Array{Array} # predictive state
+    v::Array{Array} # innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained
     Ksteady::Array{Float64, 2}
-    U2star::Array{Array{Float64, 2}}
-    sqrtP::Array{Array{Float64, 2}} # lower triangular matrix with sqrt-covariance of the predictive state
-    sqrtF::Array{Array{Float64, 2}} # lower triangular matrix with sqrt-covariance of the innovations
+    U2star::Array{Array}
+    sqrtP::Array{Array} # lower triangular matrix with sqrt-covariance of the predictive state
+    sqrtF::Array{Array} # lower triangular matrix with sqrt-covariance of the innovations
     sqrtPsteady::Array{Float64, 2}
 end
 
