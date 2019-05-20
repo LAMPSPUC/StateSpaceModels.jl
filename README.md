@@ -2,7 +2,7 @@
 
 | **DOI** | **Build Status** | **Coverage** | **Documentation** |
 |:-----------------:|:-----------------:|:-----------------:|:-----------------:|
-| [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1240453.svg)](https://doi.org/10.5281/zenodo.1240453) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lampspuc.github.io/StateSpaceModels.jl/latest/)
+| [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2598488.svg)](https://doi.org/10.5281/zenodo.2598488) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lampspuc.github.io/StateSpaceModels.jl/latest/)
 
 ## Installation
 
