@@ -35,12 +35,8 @@ Current features:
 
 Future features (work in progress):
 * User-defined model
-* Cycles
 * Forecasting and confidence intervals
 * Completion of missing values
-* Different models for each variable in multivariate case
-* Structural break
-* Exact initialization
 
 [build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
 [build-url]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl
