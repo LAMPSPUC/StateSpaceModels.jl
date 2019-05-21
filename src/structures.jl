@@ -7,8 +7,8 @@ struct StateSpaceDimensions
 end
 
 """Structure with state space matrices and data"""
-struct StateSpaceSystem
-    y::Matrix{Float64} # observations
+struct StateSpaceModel
+    y::VecOrMat{Float64} # observations
     Z::Vector{Matrix{Float64}} # observation matrix
     T::Matrix{Float64} # state matrix
     R::Matrix{Float64} # state error matrix
@@ -42,7 +42,7 @@ end
 
 """General output structure for the user"""
 struct StateSpace
-    sys::StateSpaceSystem
+    model::StateSpaceModel
     state::SmoothedState
     param::StateSpaceParameters
     filter::FilterOutput

@@ -1,21 +1,21 @@
 """
-sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Matrix{T}, sqrtQ::Matrix{T}; tol::Float64 = 1e-5) where T <: AbstractFloat
-
+    sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
+    
 Square-root Kalman filter with big Kappa initialization.
 """
-function sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Matrix{T}, sqrtQ::Matrix{T}; tol::Float64 = 1e-5) where T <: AbstractFloat
+function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
 
     # Load dimensions
-    n = sys.dim.n
-    p = sys.dim.p
-    m = sys.dim.m
-    r = sys.dim.r
+    n = model.dim.n
+    p = model.dim.p
+    m = model.dim.m
+    r = model.dim.r
 
     # Load system
-    y = sys.y
-    Z = sys.Z
-    T = sys.T
-    R = sys.R
+    y = model.y
+    Z = model.Z
+    T = model.T
+    R = model.R
 
     # Initial state: big Kappa initialization
     bigkappa = 1e6
@@ -87,20 +87,20 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Matrix{T}, sqrtQ::Matri
 end
 
 """
-    sqrt_smoother(sys::StateSpaceSystem, ss_filter::FilterOutput)
+    sqrt_smoother(model::StateSpaceModel, ss_filter::FilterOutput)
 
 Square-root smoother for state space model.
 """
-function sqrt_smoother(sys::StateSpaceSystem, ss_filter::FilterOutput)
+function sqrt_smoother(model::StateSpaceModel, ss_filter::FilterOutput)
 
     # Load dimensions data
-    n = sys.dim.n
-    m = sys.dim.m
-    p = sys.dim.p
+    n = model.dim.n
+    m = model.dim.m
+    p = model.dim.p
 
     # Load system data
-    Z = sys.Z
-    T = sys.T
+    Z = model.Z
+    T = model.T
 
     # Load filter data
     a           = ss_filter.a

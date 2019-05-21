@@ -2,30 +2,31 @@ module StateSpaceModels
 
 using Optim, Distributions, LinearAlgebra
 
-export statespace, simulate, StructuralModel
+export statespace, simulate, structuralmodel
 
 include("structures.jl")
 include("models.jl")
 include("estimation.jl")
-include("kalmanfilter.jl")
-include("build.jl")
+include("kalman.jl")
 include("simulation.jl")
 
 function statespace(model::StateSpaceModel; nseeds::Int = 3)
 
-    # Build state-space system
-    sys = build_statespace(model)
-    
+    @info("Starting state-space model estimation...")
+
     # Maximum likelihood estimation
-    param = estimate_statespace(sys, nseeds)
+    param = estimate_statespace(model, nseeds)
+
+    @info("End of estimation.")
+    @info("Starting filtering and smoothing...")
 
     # Kalman filter and smoothing
-    kfilter = sqrt_kalmanfilter(sys, param.sqrtH, param.sqrtQ)
-    smoothedstate = sqrt_smoother(sys, kfilter)
+    kfilter = sqrt_kalmanfilter(model, param.sqrtH, param.sqrtQ)
+    smoothedstate = sqrt_smoother(model, kfilter)
 
-    @info("End of structural model estimation.")
+    @info("Filtering and smoothing completed.")
 
-    output = StateSpace(sys, smoothedstate, param, kfilter)
+    output = StateSpace(model, smoothedstate, param, kfilter)
 
     return output
 

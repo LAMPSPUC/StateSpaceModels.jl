@@ -6,7 +6,7 @@ Simulate S future scenarios up to N steps ahead. Returns an NxS matrix where eac
 function simulate(ss::StateSpace, N::Int, S::Int)
 
     # Number of observations and exogenous variables
-    n_exp, p_exp = size(ss.sys.X)
+    n_exp, p_exp = size(ss.model.X)
 
     if p_exp > 0 && N > n_exp - ss.dim.n
         error("Simulation period is larger than period of exogenous variables")
@@ -30,13 +30,13 @@ function simulate(ss::StateSpace, N::Int, S::Int)
         # Generating scenarios from simulated errors
         for t = 1:N
             if t == 1
-                αsim[t] = ss.sys.T*ss.state.alpha[ss.dim.n] + (ss.sys.R*η[t, :])
-                ysim[s][t, :] = p_exp > 0 ? ss.sys.Z[ss.dim.n + t]*αsim[t] + ϵ[t, :] :
-                                            ss.sys.Z[1]*αsim[t] + ϵ[t, :]
+                αsim[t] = ss.model.T*ss.state.alpha[ss.dim.n] + (ss.model.R*η[t, :])
+                ysim[s][t, :] = p_exp > 0 ? ss.model.Z[ss.dim.n + t]*αsim[t] + ϵ[t, :] :
+                                            ss.model.Z[1]*αsim[t] + ϵ[t, :]
             else
-                αsim[t] = ss.sys.T*αsim[t-1] + (ss.sys.R*η[t, :])
-                ysim[s][t, :] = p_exp > 0 ? ss.sys.Z[ss.dim.n + t]*αsim[t] + ϵ[t, :] :
-                                            ss.sys.Z[1]*αsim[t] + ϵ[t, :]
+                αsim[t] = ss.model.T*αsim[t-1] + (ss.model.R*η[t, :])
+                ysim[s][t, :] = p_exp > 0 ? ss.model.Z[ss.dim.n + t]*αsim[t] + ϵ[t, :] :
+                                            ss.model.Z[1]*αsim[t] + ϵ[t, :]
             end
         end
     end
