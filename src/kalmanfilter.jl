@@ -1,17 +1,17 @@
 """
-    sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol::Float64 = 1e-5)
+    sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol::Float64 = 1e-5)
 
-Square-root Kalman filter for time series with big Kappa initialization.
+Square-root Kalman filter with big Kappa initialization.
 """
-function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol::Float64 = 1e-5)
+function sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol::Float64 = 1e-5)
 
-    # Load dimensions data
-    n = dim.n
-    p = dim.p
-    m = dim.m
-    r = dim.r
+    # Load dimensions
+    n = sys.dim.n
+    p = sys.dim.p
+    m = sys.dim.m
+    r = sys.dim.r
 
-    # Load system data
+    # Load system
     y = sys.y
     Z = sys.Z
     T = sys.T
@@ -24,19 +24,24 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
     sqrtP0   = Matrix(Diagonal(P0))
 
     # Predictive state and its sqrt-covariance
-    a     = Vector{Array{Float64, 2}}(undef, n+1)
-    sqrtP = Vector{Array{Float64, 2}}(undef, n+1)
+    a     = Vector{Matrix{Float64}}(undef, n+1)
+    sqrtP = Vector{Matrix{Float64}}(undef, n+1)
+
     # Innovation and its sqrt-covariance
-    v     = Vector{Array{Float64, 2}}(undef, n)
-    sqrtF = Vector{Array{Float64, 2}}(undef, n)
+    v     = Vector{Matrix{Float64}}(undef, n)
+    sqrtF = Vector{Matrix{Float64}}(undef, n)
+
     # Kalman gain and steady-state Kalman gain
-    K       = Vector{Array{Float64, 2}}(undef, n)
-    Ksteady = Array{Float64, 2}(undef, m, p)
+    K       = Vector{Matrix{Float64}}(undef, n)
+    Ksteady = Matrix{Float64}(undef, m, p)
+
     # Predictive variance in steady state
-    Ps = Array{Float64, 2}(undef, m, m)
+    Ps = Matrix{Float64}(undef, m, m)
+
     # Auxiliary matrices
     U      = zeros(p + m, m + p + r)
-    U2star = Vector{Array{Float64, 2}}(undef, n)
+    U2star = Vector{Matrix{Float64}}(undef, n)
+    
     # Steady state flags
     steadystate = false
     tsteady     = n+1
@@ -82,17 +87,16 @@ function sqrt_kalmanfilter(sys::StateSpaceSystem, dim::StateSpaceDimensions, sqr
 end
 
 """
-    sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filter::FilterOutput)
+    sqrt_smoother(sys::StateSpaceSystem, ss_filter::FilterOutput)
 
-Square-root smoothing for time series state space model.
+Square-root smoother for state space model.
 """
-function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filter::FilterOutput)
+function sqrt_smoother(sys::StateSpaceSystem, ss_filter::FilterOutput)
 
     # Load dimensions data
-    n = dim.n
-    m = dim.m
-    p = dim.p
-    p_exp = dim.p_exp
+    n = sys.dim.n
+    m = sys.dim.m
+    p = sys.dim.p
 
     # Load system data
     Z = sys.Z
@@ -109,11 +113,11 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
     sqrtPsteady = ss_filter.sqrtPsteady
 
     # Smoothed state and its covariance
-    alpha = Vector{Array{Float64, 2}}(undef, n)
-    V     = Vector{Array{Float64, 2}}(undef, n)
-    L     = Vector{Array{Float64, 2}}(undef, n)
-    r     = Vector{Array{Float64, 2}}(undef, n)
-    sqrtN = Vector{Array{Float64, 2}}(undef, n)
+    alpha = Vector{Matrix{Float64}}(undef, n)
+    V     = Vector{Matrix{Float64}}(undef, n)
+    L     = Vector{Matrix{Float64}}(undef, n)
+    r     = Vector{Matrix{Float64}}(undef, n)
+    sqrtN = Vector{Matrix{Float64}}(undef, n)
 
     # Initialization
     sqrtN[end] = zeros(m, m)
@@ -169,27 +173,8 @@ function sqrt_smoother(sys::StateSpaceSystem, dim::StateSpaceDimensions, ss_filt
                (sqrtN_0 * sqrtN_0') *
                (sqrtP[1] * sqrtP[1]')
 
-    # Defining smoothed state vectors
-    trend     = Array{Float64, 2}(undef, n, p)
-    slope     = Array{Float64, 2}(undef, n, p)
-    seasonal  = Array{Float64, 2}(undef, n, p)
-    exogenous = Vector{Array{Float64, 2}}(undef, p_exp)
-    for j = 1:p_exp
-        exogenous[j] = zeros(n, p)
-    end
-    for i = 1:p
-        for t = 1:n
-            for j = 1:p_exp
-                exogenous[j][t, i] = alpha[t][j-1 + i] * sys.X[t, j]
-            end
-            trend[t, i]    = alpha[t][p_exp + i]
-            slope[t, i]    = alpha[t][p_exp + p + i]
-            seasonal[t, i] = alpha[t][p_exp + 2*p + i]
-        end
-    end
-
     # Smoothed state structure
-    smoothedstate = SmoothedState(trend, slope, seasonal, exogenous, V, alpha)
+    smoothedstate = SmoothedState(alpha, V)
 
     return smoothedstate
 end

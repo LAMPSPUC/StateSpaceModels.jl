@@ -1,39 +1,30 @@
 """
-    statespace(y::Array{Float64, 1}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
-
-Estimate structural model and calculate smoothed and predictive state.
+    build_statespace(model::Union{BasicStructuralModel, StructuralModelExogenous})
+    Build state-space system for a given structural model.
 """
-function statespace(y::Array{Float64, 1}, s::Int; X = Array{Float64,2}(undef, 0, 0), nseeds::Int = 3)
-    n = length(y)
-    y = reshape(y, (n, 1))
-    statespace(y, s; X = X, nseeds = nseeds)
-end
+function build_statespace(model::Union{BasicStructuralModel, StructuralModelExogenous})
 
-"""
-    statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
-
-Estimate time series structural model and calculate smoothed and predictive state.
-"""
-function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
-
-    # Number of observations and endogenous variables
+    # Number of endogenous observations and variables
     n, p = size(y)
 
-    # Number of observations and exogenous variables
+    # Matrix of exogenous (explanatory) variables
+    X = isa(model, BasicStructuralModel) ? Matrix{Float64}(undef, 0, 0) : model.X
+
+    # Number of exogenous observations and variables
     n_exp, p_exp = size(X)
 
     if p_exp > 0 && n_exp < n
-        error("Number of observations in X and y mismatch.")
+        error("Number of observations in X must be greater than or equal to the number of observations in y.")
     end
 
-    @info("Creating structural model with $p endogenous variables and $p_exp exogenous variables.")
+    @info("Building structural model with $p endogenous variables and $p_exp exogenous variables.")
 
     m = (1 + s + p_exp)*p
     r = 3*p
 
     # Observation equation
     N = max(n, n_exp)
-    Z = Array{Array}(undef, N)
+    Z = Vector{Array}(undef, N)
     for t = 1:N
         if p_exp > 0
             Z[t] = kron(
@@ -85,22 +76,10 @@ function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0
         ],
         Matrix{Float64}(I, p, p)
         )
-    
-    # Creating state space data structures
-    dim = StateSpaceDimensions(n, p, m, r, p_exp)
-    sys = StateSpaceSystem(y, X, s, Z, T, R)
-    
-    # Maximum likelihood estimation
-    ss_par = estimate_statespace(sys, dim, nseeds)
 
-    # Kalman filter and smoothing
-    ss_filter = sqrt_kalmanfilter(sys, dim, ss_par.sqrtH, ss_par.sqrtQ)
-    smoothedstate = sqrt_smoother(sys, dim, ss_filter)
+    dim = StateSpaceDimensions(n, p, m, r)
+    sys = StateSpaceSystem(y, X, s, Z, T, R, dim)
 
-    @info("End of structural model estimation.")
-
-    output = StateSpace(sys, dim, smoothedstate, ss_par, ss_filter)
-
-    return output
+    return sys
 
 end
