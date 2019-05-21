@@ -5,7 +5,7 @@
 function build_statespace(model::Union{BasicStructuralModel, StructuralModelExogenous})
 
     # Number of endogenous observations and variables
-    n, p = size(y)
+    n, p = size(model.y)
 
     # Matrix of exogenous (explanatory) variables
     X = isa(model, BasicStructuralModel) ? Matrix{Float64}(undef, 0, 0) : model.X
@@ -19,6 +19,7 @@ function build_statespace(model::Union{BasicStructuralModel, StructuralModelExog
 
     @info("Building structural model with $p endogenous variables and $p_exp exogenous variables.")
 
+    s = model.s
     m = (1 + s + p_exp)*p
     r = 3*p
 
@@ -78,7 +79,7 @@ function build_statespace(model::Union{BasicStructuralModel, StructuralModelExog
         )
 
     dim = StateSpaceDimensions(n, p, m, r)
-    sys = StateSpaceSystem(y, X, s, Z, T, R, dim)
+    sys = StateSpaceSystem(model.y, Z, T, R, dim)
 
     return sys
 

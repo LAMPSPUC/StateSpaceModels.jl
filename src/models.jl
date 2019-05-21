@@ -21,4 +21,3 @@ function StructuralModel(y::VecOrMat{T}, s::Int; X::VecOrMat{T} = Matrix{Float64
         StructuralModelExogenous(y[:, :], s, X[:, :])
     end
 end
-

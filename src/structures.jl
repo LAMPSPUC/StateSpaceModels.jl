@@ -43,7 +43,6 @@ end
 """General output structure for the user"""
 struct StateSpace
     sys::StateSpaceSystem
-    dim::StateSpaceDimensions
     state::SmoothedState
     param::StateSpaceParameters
     filter::FilterOutput
