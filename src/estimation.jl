@@ -1,5 +1,5 @@
 """Computes sqrt-covariance matrices of the errors from hyperparameter vector psi"""
-function statespace_covariance(psi::Array{Float64,1}, p::Int, r::Int)
+function statespace_covariance(psi::Vector{T}, p::Int, r::Int) where T <: AbstractFloat
 
     # Observation sqrt-covariance matrix
     if p > 1
@@ -19,7 +19,7 @@ function statespace_covariance(psi::Array{Float64,1}, p::Int, r::Int)
 end
 
 """Computes log-likelihood concerning hyperparameter vector psitilde"""
-function statespace_likelihood(psitilde::Array{Float64,1}, sys::StateSpaceSystem)
+function statespace_likelihood(psitilde::Vector{Float64}, sys::StateSpaceSystem)
 
     sqrtH, sqrtQ = statespace_covariance(psitilde, sys.dim.p, sys.dim.r)
 
@@ -54,9 +54,9 @@ function estimate_statespace(sys::StateSpaceSystem, nseeds::Int; f_tol = 1e-10, 
 
     # Initialization
     npsi          = Int((1 + sys.dim.r/sys.dim.p)*(sys.dim.p*(sys.dim.p + 1)/2))
-    seeds         = Array{Float64, 2}(undef, npsi, nseeds)
-    loglikelihood = Array{Float64, 1}(undef, nseeds)
-    psi           = Array{Float64, 2}(undef, npsi, nseeds)
+    seeds         = Matrix{Float64}(undef, npsi, nseeds)
+    loglikelihood = Vector{Float64}(undef, nseeds)
+    psi           = Matrix{Float64}(undef, npsi, nseeds)
 
     # Initial conditions
     inflim    = -1e3

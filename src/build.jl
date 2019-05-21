@@ -15,7 +15,7 @@ function build_statespace(model::BasicStructuralModel)
     r = 3*p
 
     # Observation equation
-    Z = Vector{Array}(undef, n)
+    Z = Vector{Matrix}(undef, n)
     for t = 1:n
         Z[t] = kron(
             [
@@ -76,7 +76,7 @@ function build_statespace(model::StructuralModelExogenous)
 
     # Observation equation
     N = max(n, n_exp)
-    Z = Vector{Array}(undef, N)
+    Z = Vector{Matrix}(undef, N)
     for t = 1:N
         Z[t] = kron(
             [

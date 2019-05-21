@@ -11,7 +11,7 @@ include("kalmanfilter.jl")
 include("build.jl")
 include("simulation.jl")
 
-function statespace(model::StateSpaceModel; nseeds = 3)
+function statespace(model::StateSpaceModel; nseeds::Int = 3)
 
     # Build state-space system
     sys = build_statespace(model)

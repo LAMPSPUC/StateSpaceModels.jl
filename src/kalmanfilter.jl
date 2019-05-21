@@ -1,9 +1,9 @@
 """
-    sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol::Float64 = 1e-5)
+sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Matrix{T}, sqrtQ::Matrix{T}; tol::Float64 = 1e-5) where T <: AbstractFloat
 
 Square-root Kalman filter with big Kappa initialization.
 """
-function sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Array{Float64}, sqrtQ::Array{Float64}; tol::Float64 = 1e-5)
+function sqrt_kalmanfilter(sys::StateSpaceSystem, sqrtH::Matrix{T}, sqrtQ::Matrix{T}; tol::Float64 = 1e-5) where T <: AbstractFloat
 
     # Load dimensions
     n = sys.dim.n
