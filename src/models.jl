@@ -13,7 +13,7 @@ struct StructuralModelExogenous <: StateSpaceModel
     X::Matrix{T} where T <: AbstractFloat
 end
 
-"""Constructor for structural models"""
+"""Pseudo-constructor for structural models"""
 function StructuralModel(y::VecOrMat{T}, s::Int; X::VecOrMat{T} = Matrix{Float64}(undef, 0, 0)) where T <: AbstractFloat
     if isempty(X)
         BasicStructuralModel(y[:, :], s)
