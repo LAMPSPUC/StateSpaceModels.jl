@@ -1,6 +1,6 @@
 """
     sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
-    
+
 Square-root Kalman filter with big Kappa initialization.
 """
 function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
@@ -58,7 +58,7 @@ function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Ma
             a[t+1] = T * a[t] + Ksteady * v[t]
         else
             # QR decomposition of auxiliary matrix U to obtain Ustar
-            U            = [Z[t]*sqrtP[t] sqrtH zeros(p, r); T*sqrtP[t] zeros(m, p) R*sqrtQ]
+            U            = [Z[t]*sqrtP[t] sqrtH zeros(p, r); T*sqrtP[t] zeros(m, p) R[t]*sqrtQ]
             G            = qr(U').Q
             Ustar        = U*G
             U2star[t]    = Ustar[(p + 1):(p + m), 1:p]
@@ -177,4 +177,47 @@ function sqrt_smoother(model::StateSpaceModel, ss_filter::FilterOutput)
     smoothedstate = SmoothedState(alpha, V)
 
     return smoothedstate
+end
+
+"""
+    sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
+    
+Square-root Kalman filter with big Kappa initialization.
+"""
+function forecasting(ss::StateSpace, N::Int)
+
+    # Load dimensions
+    n = ss.model.dim.n
+    p = ss.model.dim.p
+    m = ss.model.dim.m
+    r = ss.model.dim.r
+
+    # Load system
+    y = ss.model.y
+    Z = ss.model.Z
+    T = ss.model.T
+    R = ss.model.R
+
+    # Compute covariance matrices
+    H = ss.param.sqrtH' * ss.param.sqrtH
+    Q = ss.param.sqrtQ' * ss.param.sqrtQ
+
+    # Recursion variables
+    a = Vector{Matrix{Float64}}(undef, N)
+    P = Vector{Matrix{Float64}}(undef, N)
+    F = Vector{Matrix{Float64}}(undef, N)
+
+    # Initialization
+    a[1] = T*ss.filter.a[end]
+    P[1] = isempty(ss.filter.sqrtPsteady) ? T*(ss.filter.sqrtP[end]' * ss.filter.sqrtP[end])*T' + R*Q*R' :
+                                            T*(ss.filter.sqrtPsteady' * ss.filter.sqrtPsteady)*T' + R*Q*R'
+    F[1] = Z[n+1]*P[1]*Z[n+1]' + H
+
+    # Recursion
+    for t = 1:N-1
+        a[t+1] = T*ss.filter.a[t]
+        P[t+1] = T*P[t]*T' + R*Q*R'
+        F[t+1] = Z[n+t+1]*P[t+1]*Z[n+t+1]' + H
+    end
+
 end

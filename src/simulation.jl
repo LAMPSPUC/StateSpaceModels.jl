@@ -1,16 +1,9 @@
 """
     simulate(ss::StateSpace, N::Int, S::Int)
 
-Simulate S future scenarios up to N steps ahead. Returns an NxS matrix where each line represents an instant and each column a scenario.
+Simulate S future scenarios up to N steps ahead. Returns an N x S matrix where each line represents an instant and each column a scenario.
 """
 function simulate(ss::StateSpace, N::Int, S::Int)
-
-    # Number of observations and exogenous variables
-    n_exp, p_exp = size(ss.model.X)
-
-    if p_exp > 0 && N > n_exp - ss.dim.n
-        error("Simulation period is larger than period of exogenous variables")
-    end
 
     # Distribution of observation error
     dist_ϵ = MvNormal(zeros(ss.dim.p), ss.param.sqrtH*ss.param.sqrtH')
