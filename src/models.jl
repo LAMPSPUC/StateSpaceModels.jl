@@ -1,19 +1,31 @@
 abstract type StateSpaceModel end
 
-"""Basic structural model: stochastic trend, slope and seasonality"""
+"""
+    BasicStructuralModel <: StateSpaceModel
+
+Basic structural model: stochastic trend, slope and seasonality
+"""
 struct BasicStructuralModel <: StateSpaceModel
     y::Matrix{T} where T <: AbstractFloat
     s::Int
 end
 
-"""Structural model with exogenous variables and stochastic trend, slope and seasonality"""
+"""
+    StructuralModelExogenous <: StateSpaceModel
+
+Structural model with exogenous variables and stochastic trend, slope and seasonality
+"""
 struct StructuralModelExogenous <: StateSpaceModel
     y::Matrix{T} where T <: AbstractFloat
     s::Int
     X::Matrix{T} where T <: AbstractFloat
 end
 
-"""Pseudo-constructor for structural models"""
+"""
+    StructuralModel(y::VecOrMat{T}, s::Int; X::VecOrMat{T} = Matrix{T}(undef, 0, 0)) where T <: AbstractFloat
+
+Pseudo-constructor for structural models
+"""
 function StructuralModel(y::VecOrMat{T}, s::Int; X::VecOrMat{T} = Matrix{Float64}(undef, 0, 0)) where T <: AbstractFloat
     if isempty(X)
         BasicStructuralModel(y[:, :], s)
