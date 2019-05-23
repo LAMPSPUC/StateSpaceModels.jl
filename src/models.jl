@@ -12,7 +12,7 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
     n_exp, p_exp = size(X[:, :])
 
     if p_exp > 0 && n_exp < n
-        error("Number of observations in X and y mismatch.")
+        error("Number of observations in X must be greater than or equal to the number of observations in y.")
     end
 
     @info("Creating structural model with $p endogenous variables and $p_exp exogenous variables.")
