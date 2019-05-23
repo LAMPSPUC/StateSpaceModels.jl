@@ -7,7 +7,9 @@
 
         @test isa(model, StateSpaceModels.StateSpaceModel)
 
-        ss = statespace(model; nseeds = 3)
+        ss = statespace(model)
+
+        @test isa(ss, StateSpaceModels.StateSpace)
 
         @test all(ss.param.sqrtH .< 1e-6)
         @test all(ss.param.sqrtQ .< 1e-6)
@@ -21,10 +23,25 @@
 
         @test isa(model, StateSpaceModels.StateSpaceModel)
 
-        ss = statespace(model; nseeds = 3)
+        ss = statespace(model)
+
+        @test isa(ss, StateSpaceModels.StateSpace)
 
         @test all(ss.param.sqrtH .< 1e-6)
         @test all(ss.param.sqrtQ .< 1e-6)
+    end
+
+    @testset "Air passengers" begin
+
+        AP = CSV.read("../example/AirPassengers.csv")
+        logAP = log.(Vector{Float64}(AP[:Passengers]))
+
+        model = structuralmodel(logAP, 12)
+        ss = statespace(model)
+
+        @test isa(model, StateSpaceModels.StateSpaceModel)
+        @test isa(ss, StateSpaceModels.StateSpace)
+
     end
 
 end
