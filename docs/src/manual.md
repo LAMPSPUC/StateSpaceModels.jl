@@ -1,5 +1,16 @@
 # Manual
 
+## Data Structures
+
+```@docs
+StateSpaceModels.StateSpaceDimensions
+StateSpaceModels.StateSpaceModel
+StateSpaceModels.StateSpaceParameters
+StateSpaceModels.SmoothedState
+StateSpaceModels.FilterOutput
+StateSpaceModels.StateSpace
+```
+
 ## Estimation
 The model estimation is made using the function `statespace(y, s; X, nseeds)`. It receives as argument the time series `y` and the desired seasonality `s`. The user can input exogenous variables using optional argument `X` and specify the desired number of random seeds `nseeds` to perform the estimation.
 
