@@ -22,10 +22,15 @@ end
 """
     StateSpaceModel
 
-StateSpaceModel
+Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
+
+* `y` A ``n \\times p`` matrix containing observations
+* `Z` A vector of ``n`` ``p \\times m`` matrices of observation equations
+* `T` A ``m \\times m`` matrix of the first state equations
+* `R` A ``m \\times r`` matrix of the second state equations
 """
 struct StateSpaceModel
-    y::VecOrMat{Float64} # observations
+    y::Matrix{Float64} # observations
     Z::Vector{Matrix{Float64}} # observation matrix
     T::Matrix{Float64} # state matrix
     R::Matrix{Float64} # state error matrix
@@ -35,7 +40,10 @@ end
 """
     StateSpaceParameters
 
-StateSpaceModel
+Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
+
+* `sqrtH` matrix with sqrt-covariance of the observation vector ``H_t``
+* `sqrtQ` matrix with sqrt-covariance of the state vector ``Q_t``
 """
 mutable struct StateSpaceParameters
     sqrtH::Matrix{Float64} # lower triangular matrix with sqrt-covariance of the observation
@@ -45,7 +53,10 @@ end
 """
     SmoothedState
 
-StateSpaceModel
+Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
+
+* `alpha` Expected value of the smoothed state ``E(\\alpha_t|y_1, \\dots , y_n)``
+* `V` Error covariance matrix of smoothed state ``Var(\\alpha_t|y_1, \\dots , y_n)``
 """
 struct SmoothedState
     alpha::Vector{Matrix{Float64}} # smoothed state
@@ -55,7 +66,17 @@ end
 """
     FilterOutput
 
-StateSpaceModel
+Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
+
+* `a` 
+* `v` 
+* `steadystate`
+* `tsteady`
+* `Ksteady`
+* `U2star`
+* `sqrtP`
+* `sqrtF`
+* `sqrtPsteady`
 """
 mutable struct FilterOutput
     a::Vector{Matrix{Float64}} # predictive state

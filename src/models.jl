@@ -2,14 +2,19 @@
     structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0)) where Typ <: AbstractFloat
 
 Build state-space system for a given structural model with observations y, seasonality s, and, optionally, exogenous variables X.
+
+If `y` is proided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`. The same will happen to X, 
+if an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
 """
 function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0)) where Typ <: AbstractFloat
 
     # Number of observations and endogenous variables
-    n, p = size(y[:, :])
+    y = y[:, :]
+    n, p = size(y)
 
     # Number of observations and exogenous variables
-    n_exp, p_exp = size(X[:, :])
+    X = X[:, :]
+    n_exp, p_exp = size(X)
 
     if p_exp > 0 && n_exp < n
         error("Number of observations in X must be greater than or equal to the number of observations in y.")
@@ -22,7 +27,7 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
 
     # Observation equation
     N = max(n, n_exp)
-    Z = Array{Array}(undef, N)
+    Z = Vector{Matrix{Float64}}(undef, N)
     for t = 1:N
         if p_exp > 0
             Z[t] = kron(
