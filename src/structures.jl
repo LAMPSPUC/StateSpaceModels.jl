@@ -4,52 +4,45 @@ struct StateSpaceDimensions
     p::Int
     m::Int
     r::Int
-    p_exp::Int
 end
 
 """Structure with state space matrices and data"""
-struct StateSpaceSystem
-    y::Array{Float64, 2} # observations
-    X::Array{Float64, 2} # exogenous variables
-    s::Int # seasonality
-    Z::Vector{Array{Float64, 2}} # observation matrix
-    T::Array{Float64, 2} # state matrix
-    R::Array{Float64, 2} # state error matrix
+struct StateSpaceModel
+    y::VecOrMat{Float64} # observations
+    Z::Vector{Matrix{Float64}} # observation matrix
+    T::Matrix{Float64} # state matrix
+    R::Matrix{Float64} # state error matrix
+    dim::StateSpaceDimensions
 end
 
 """Structure with state space hyperparameters"""
 mutable struct StateSpaceParameters
-    sqrtH::Array{Float64, 2} # lower triangular matrix with sqrt-covariance of the observation
-    sqrtQ::Array{Float64, 2} # lower triangular matrix with sqrt-covariance of the state
+    sqrtH::Matrix{Float64} # lower triangular matrix with sqrt-covariance of the observation
+    sqrtQ::Matrix{Float64} # lower triangular matrix with sqrt-covariance of the state
 end
 
 """Structure with smoothed state"""
 struct SmoothedState
-    trend::Array{Float64, 2} # smoothed trend
-    slope::Array{Float64, 2} # smoothed slope
-    seasonal::Array{Float64, 2} # smoothed seasonality
-    exogenous::Vector{Array{Float64, 2}} # smoothed regression of exogenous variables
-    V::Vector{Array{Float64, 2}} # variance of smoothed state
-    alpha::Vector{Array{Float64, 2}} # smoothed state matrix
+    alpha::Vector{Matrix{Float64}} # smoothed state
+    V::Vector{Matrix{Float64}} # variance of smoothed state
 end
 
 """Structure with Kalman filter output"""
 mutable struct FilterOutput
-    a::Vector{Array{Float64, 2}} # predictive state
-    v::Vector{Array{Float64, 2}} # innovations
+    a::Vector{Matrix{Float64}} # predictive state
+    v::Vector{Matrix{Float64}} # innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained
-    Ksteady::Array{Float64, 2}
-    U2star::Vector{Array{Float64, 2}}
-    sqrtP::Vector{Array{Float64, 2}} # lower triangular matrix with sqrt-covariance of the predictive state
-    sqrtF::Vector{Array{Float64, 2}} # lower triangular matrix with sqrt-covariance of the innovations
-    sqrtPsteady::Array{Float64, 2}
+    Ksteady::Matrix{Float64}
+    U2star::Vector{Matrix{Float64}}
+    sqrtP::Vector{Matrix{Float64}} # lower triangular matrix with sqrt-covariance of the predictive state
+    sqrtF::Vector{Matrix{Float64}} # lower triangular matrix with sqrt-covariance of the innovations
+    sqrtPsteady::Matrix{Float64}
 end
 
 """General output structure for the user"""
 struct StateSpace
-    sys::StateSpaceSystem
-    dim::StateSpaceDimensions
+    model::StateSpaceModel
     state::SmoothedState
     param::StateSpaceParameters
     filter::FilterOutput

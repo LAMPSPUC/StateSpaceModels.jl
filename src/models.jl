@@ -1,26 +1,15 @@
 """
-    statespace(y::Array{Float64, 1}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
+    structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0)) where Typ <: AbstractFloat
 
-Estimate structural model and calculate smoothed and predictive state.
+Build state-space system for a given structural model with observations y, seasonality s, and, optionally, exogenous variables X.
 """
-function statespace(y::Array{Float64, 1}, s::Int; X = Array{Float64,2}(undef, 0, 0), nseeds::Int = 3)
-    n = length(y)
-    y = reshape(y, (n, 1))
-    statespace(y, s; X = X, nseeds = nseeds)
-end
-
-"""
-    statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
-
-Estimate time series structural model and calculate smoothed and predictive state.
-"""
-function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0, 0), nseeds::Int = 3)
+function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0)) where Typ <: AbstractFloat
 
     # Number of observations and endogenous variables
-    n, p = size(y)
+    n, p = size(y[:, :])
 
     # Number of observations and exogenous variables
-    n_exp, p_exp = size(X)
+    n_exp, p_exp = size(X[:, :])
 
     if p_exp > 0 && n_exp < n
         error("Number of observations in X and y mismatch.")
@@ -85,22 +74,10 @@ function statespace(y::Array{Float64, 2}, s::Int; X = Array{Float64, 2}(undef, 0
         ],
         Matrix{Float64}(I, p, p)
         )
-    
-    # Creating state space data structures
-    dim = StateSpaceDimensions(n, p, m, r, p_exp)
-    sys = StateSpaceSystem(y, X, s, Z, T, R)
-    
-    # Maximum likelihood estimation
-    ss_par = estimate_statespace(sys, dim, nseeds)
 
-    # Kalman filter and smoothing
-    ss_filter = sqrt_kalmanfilter(sys, dim, ss_par.sqrtH, ss_par.sqrtQ)
-    smoothedstate = sqrt_smoother(sys, dim, ss_filter)
+    dim = StateSpaceDimensions(n, p, m, r)
+    model = StateSpaceModel(y, Z, T, R, dim)
 
-    @info("End of structural model estimation.")
-
-    output = StateSpace(sys, dim, smoothedstate, ss_par, ss_filter)
-
-    return output
+    return model
 
 end
