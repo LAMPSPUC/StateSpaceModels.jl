@@ -126,3 +126,10 @@ plot!(p1, newdates, [simulation_q05, simulation_mean, simulation_q95], labels = 
 ```
 
 ![Log of Air Passengers simulation](./assets/simulationlogofairpassengers.png)
+
+## Reference
+
+```@docs
+size
+ztr
+```

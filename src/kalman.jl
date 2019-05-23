@@ -6,16 +6,11 @@ Square-root Kalman filter with big Kappa initialization.
 function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
 
     # Load dimensions
-    n = model.dim.n
-    p = model.dim.p
-    m = model.dim.m
-    r = model.dim.r
+    n, p, m, r = size(model)
 
     # Load system
     y = model.y
-    Z = model.Z
-    T = model.T
-    R = model.R
+    Z, T, R = ztr(model)
 
     # Initial state: big Kappa initialization
     bigkappa = 1e6
@@ -94,13 +89,10 @@ Square-root smoother for state space model.
 function sqrt_smoother(model::StateSpaceModel, ss_filter::FilterOutput)
 
     # Load dimensions data
-    n = model.dim.n
-    m = model.dim.m
-    p = model.dim.p
+    n, p, m, r = size(model)
 
     # Load system data
-    Z = model.Z
-    T = model.T
+    Z, T, R = ztr(model)
 
     # Load filter data
     a           = ss_filter.a
