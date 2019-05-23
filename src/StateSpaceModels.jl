@@ -29,7 +29,6 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3)
     output = StateSpace(model, smoothedstate, param, kfilter)
 
     return output
-
 end
 
 end
