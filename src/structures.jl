@@ -25,9 +25,9 @@ end
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
 * `y` A ``n \\times p`` matrix containing observations
-* `Z` A vector of ``n`` ``p \\times m`` matrices of observation equations
-* `T` A ``m \\times m`` matrix of the first state equations
-* `R` A ``m \\times r`` matrix of the second state equations
+* `Z` A vector of dimension ``n`` where each entry is a ``p \\times m`` matrix
+* `T` A ``m \\times m`` matrix
+* `R` A ``m \\times r`` matrix
 """
 struct StateSpaceModel
     y::Matrix{Float64} # observations

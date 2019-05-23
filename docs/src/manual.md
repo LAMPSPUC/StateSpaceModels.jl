@@ -14,28 +14,26 @@ In this package we consider the following state space model
 ```
 where
 ```math
-\[
-\begin{pmatrix}
+\begin{bmatrix}
     \varepsilon_t \\
     \eta_t \\
     \alpha_1
-\end{pmatrix}
+\end{bmatrix}
 \sim
 NID
 \begin{pmatrix}
-    \begin{pmatrix}
+    \begin{bmatrix}
         0 \\
         0 \\
         a_1
-    \end{pmatrix}
+    \end{bmatrix}
     ,
-    \begin{pmatrix}
+    \begin{bmatrix}
         H_t & 0 & 0\\
         0 & Q_t & 0\\
         0 & 0 & P_1\\
-    \end{pmatrix}
+    \end{bmatrix}
 \end{pmatrix}
-\]
 ```
 
 
