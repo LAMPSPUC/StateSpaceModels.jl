@@ -1,5 +1,44 @@
 # Manual
 
+## Introduction
+
+In this package we consider the following state space model
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_t &= Z_t \alpha_t  + \varepsilon_t \quad \quad \quad t = 1 \dots n\\
+        \alpha_{t+1} &= T_t \alpha_t + R_t \eta_t
+    \end{aligned}
+\end{gather*}
+```
+where
+```math
+\[
+\begin{pmatrix}
+    \varepsilon_t \\
+    \eta_t \\
+    \alpha_1
+\end{pmatrix}
+\sim
+NID
+\begin{pmatrix}
+    \begin{pmatrix}
+        0 \\
+        0 \\
+        a_1
+    \end{pmatrix}
+    ,
+    \begin{pmatrix}
+        H_t & 0 & 0\\
+        0 & Q_t & 0\\
+        0 & 0 & P_1\\
+    \end{pmatrix}
+\end{pmatrix}
+\]
+```
+
+
 ## Data Structures
 
 ```@docs
