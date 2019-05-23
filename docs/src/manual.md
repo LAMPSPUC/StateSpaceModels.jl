@@ -3,12 +3,12 @@
 ## Data Structures
 
 ```@docs
-StateSpaceModels.StateSpaceDimensions
-StateSpaceModels.StateSpaceModel
-StateSpaceModels.StateSpaceParameters
-StateSpaceModels.SmoothedState
-StateSpaceModels.FilterOutput
-StateSpaceModels.StateSpace
+StateSpaceDimensions
+StateSpaceModel
+StateSpaceParameters
+SmoothedState
+FilterOutput
+StateSpace
 ```
 
 ## Estimation

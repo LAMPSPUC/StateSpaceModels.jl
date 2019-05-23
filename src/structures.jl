@@ -1,13 +1,16 @@
+export StateSpaceDimensions, StateSpaceModel, StateSpaceParameters, 
+       SmoothedState, FilterOutput, StateSpace
+
 """
     StateSpaceDimensions
 
 StateSpaceModel dimensions, following the notation of on the book 
-"Time Series Analysis by State Space Methods" (2012) by J. Durbin and S. J. Koopman.
+\"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-* `n` is the number of observations of the y
-* `p` is the dimension of the observation vector $$y_t$$.
-* `m` is the dimension of the state vector $$\alpha_t$$
-* `r` is the dimension of the state covariance matrix $$Q_t$$
+* `n` is the number of observations
+* `p` is the dimension of the observation vector ``y_t``
+* `m` is the dimension of the state vector ``\\alpha_t``
+* `r` is the dimension of the state covariance matrix ``Q_t``
 """
 struct StateSpaceDimensions
     n::Int
@@ -19,7 +22,7 @@ end
 """
     StateSpaceModel
 
-#TODO
+StateSpaceModel
 """
 struct StateSpaceModel
     y::VecOrMat{Float64} # observations
@@ -32,7 +35,7 @@ end
 """
     StateSpaceParameters
 
-#TODO
+StateSpaceModel
 """
 mutable struct StateSpaceParameters
     sqrtH::Matrix{Float64} # lower triangular matrix with sqrt-covariance of the observation
@@ -42,7 +45,7 @@ end
 """
     SmoothedState
 
-#TODO
+StateSpaceModel
 """
 struct SmoothedState
     alpha::Vector{Matrix{Float64}} # smoothed state
@@ -52,7 +55,7 @@ end
 """
     FilterOutput
 
-#TODO
+StateSpaceModel
 """
 mutable struct FilterOutput
     a::Vector{Matrix{Float64}} # predictive state
@@ -69,7 +72,7 @@ end
 """
     StateSpace
 
-#TODO
+StateSpaceModel
 """
 struct StateSpace
     model::StateSpaceModel
