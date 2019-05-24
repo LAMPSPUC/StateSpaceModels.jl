@@ -2,9 +2,12 @@ module StateSpaceModels
 
 using Optim, Distributions, LinearAlgebra
 
+import Base: size
+
 export statespace, simulate, structuralmodel
 
 include("structures.jl")
+include("utils.jl")
 include("models.jl")
 include("estimation.jl")
 include("kalman.jl")
