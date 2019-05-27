@@ -27,23 +27,24 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
 
     # Observation equation
     N = max(n, n_exp)
-    Z = Vector{Matrix{Float64}}(undef, N)
-    for t = 1:N
-        if p_exp > 0
+    Z = []
+    if p_exp > 0 # exogenous variables: Z is time-variant
+        Z = Vector{Matrix{Float64}}(undef, N)
+        for t = 1:N
             Z[t] = kron(
                 [
                     X[t, :]' 1 0 1 zeros(1, s - 2)
                 ],
                 Matrix{Float64}(I, p, p)
                 )
-        else
-            Z[t] = kron(
-                [
-                    1 0 1 zeros(1, s - 2)
-                ],
-                Matrix{Float64}(I, p, p)
-                )
         end
+    else # no exogenous variables: Z is time-invariant
+        Z = kron(
+            [
+                1 0 1 zeros(1, s - 2)
+            ],
+            Matrix{Float64}(I, p, p)
+            )
     end
     
     # State equation

@@ -1,6 +1,6 @@
 @testset "utils.jl" begin
 
-    @test "size_function" begin
+    @testset "size_function" begin
         y = ones(15)
         X = randn(15, 2)
         s = 2
@@ -8,8 +8,8 @@
         n, p, m, r = size(model)
         @test n == 15
         @test p == 1
-        @test n == s + size(X, 2) + 1
-        @test n == 3
+        @test m == s + size(X, 2) + 1
+        @test r == 3
 
         y = ones(15)
         X = randn(15, 15)
@@ -18,11 +18,11 @@
         n, p, m, r = size(model)
         @test n == 15
         @test p == 1
-        @test n == s + size(X, 2) + 1
-        @test n == 3
+        @test m == s + size(X, 2) + 1
+        @test r == 3
     end
 
-    @test "ztr" begin
+    @testset "ztr" begin
         y = ones(15)
         X = randn(15, 2)
         s = 2
