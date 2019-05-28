@@ -84,7 +84,7 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
         )
 
     dim = StateSpaceDimensions(n, p, m, r)
-    model = StateSpaceModel(y, Z, T, R, dim, "time-variant")
+    model = StateSpaceModel(y, Z, T, R, dim)
 
     return model
 
