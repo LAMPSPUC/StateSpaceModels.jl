@@ -2,10 +2,11 @@
 @testset "Strutural model tests" begin
 
     @testset "Constant signal with basic structural model" begin
-        y = ones(15)
+        y = ones(30)
         model = structuralmodel(y, 2)
 
         @test isa(model, StateSpaceModels.StateSpaceModel)
+        @test model.mode == "time-invariant"
 
         ss = statespace(model)
 
@@ -22,6 +23,7 @@
         model = structuralmodel(y, 2; X = X)
 
         @test isa(model, StateSpaceModels.StateSpaceModel)
+        @test model.mode == "time-variant"
 
         ss = statespace(model)
 
@@ -37,9 +39,12 @@
         logAP = log.(Vector{Float64}(AP[:Passengers]))
 
         model = structuralmodel(logAP, 12)
-        ss = statespace(model)
 
         @test isa(model, StateSpaceModels.StateSpaceModel)
+        @test model.mode == "time-invariant"
+
+        ss = statespace(model)
+
         @test isa(ss, StateSpaceModels.StateSpace)
 
     end
