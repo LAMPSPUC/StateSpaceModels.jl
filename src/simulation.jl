@@ -1,3 +1,5 @@
+export simulate
+
 """
     simulate(ss::StateSpace, N::Int, S::Int)
 

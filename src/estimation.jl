@@ -32,24 +32,24 @@ function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) wher
     sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r)
 
     # Obtain innovation v and its variance F
-    ss_filter = sqrt_kalmanfilter(model, sqrtH, sqrtQ)
+    kfilter, U2star, K = sqrt_kalmanfilter(model, sqrtH, sqrtQ)
 
     # Check if steady state was attained
-    if ss_filter.tsteady < model.dim.n
-        for t = ss_filter.tsteady+1:model.dim.n
-            ss_filter.sqrtF[t] = ss_filter.sqrtF[ss_filter.tsteady]
+    if kfilter.tsteady < model.dim.n
+        for t = kfilter.tsteady+1:model.dim.n
+            kfilter.sqrtF[t] = kfilter.sqrtF[kfilter.tsteady]
         end
     end
 
     # Compute log-likelihood based on v and F
     loglikelihood = model.dim.n*model.dim.p*log(2*pi)/2
     for t = model.dim.m:model.dim.n
-        det_sqrtF = det(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]')
+        det_sqrtF = det(kfilter.sqrtF[t]*kfilter.sqrtF[t]')
         if det_sqrtF < 1e-30
             det_sqrtF = 1e-30
         end
         loglikelihood = loglikelihood + .5 * (log(det_sqrtF) +
-                        (ss_filter.v[t]' * pinv(ss_filter.sqrtF[t]*ss_filter.sqrtF[t]') * ss_filter.v[t])[1])
+                        (kfilter.v[t]' * pinv(kfilter.sqrtF[t]*kfilter.sqrtF[t]') * kfilter.v[t])[1])
     end
 
     return loglikelihood

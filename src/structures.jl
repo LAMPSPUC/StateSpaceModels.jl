@@ -93,24 +93,17 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 
 * `a` 
 * `v` 
-* `steadystate`
-* `tsteady`
-* `Ksteady`
-* `U2star`
 * `sqrtP`
 * `sqrtF`
-* `sqrtPsteady`
+* `steadystate`
 """
 mutable struct FilterOutput
     a::Vector{Matrix{Float64}} # predictive state
     v::Vector{Matrix{Float64}} # innovations
-    steadystate::Bool # flag that indicates if steady state was attained
-    tsteady::Int # instant when steady state was attained
-    Ksteady::Matrix{Float64}
-    U2star::Vector{Matrix{Float64}}
     sqrtP::Vector{Matrix{Float64}} # lower triangular matrix with sqrt-covariance of the predictive state
     sqrtF::Vector{Matrix{Float64}} # lower triangular matrix with sqrt-covariance of the innovations
-    sqrtPsteady::Matrix{Float64}
+    steadystate::Bool # flag that indicates if steady state was attained
+    tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
 end
 
 """

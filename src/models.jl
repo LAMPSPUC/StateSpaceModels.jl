@@ -1,3 +1,5 @@
+export structuralmodel
+
 """
     structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0)) where Typ <: AbstractFloat
 
