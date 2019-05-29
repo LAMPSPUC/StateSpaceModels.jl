@@ -34,18 +34,18 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
         Z = Vector{Matrix{Float64}}(undef, N)
         for t = 1:N
             Z[t] = kron(
+                Matrix{Float64}(I, p, p),
                 [
                     X[t, :]' 1 0 1 zeros(1, s - 2)
-                ],
-                Matrix{Float64}(I, p, p)
+                ]
                 )
         end
     else # no exogenous variables: Z is time-invariant
         Z = kron(
+            Matrix{Float64}(I, p, p),
             [
                 1 0 1 zeros(1, s - 2)
-            ],
-            Matrix{Float64}(I, p, p)
+            ]
             )
     end
     
@@ -53,34 +53,34 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
     if p_exp > 0
         T0 = [Matrix{Float64}(I, p_exp, p_exp) zeros(p_exp, 1 + s)]
         T = kron(
+            Matrix{Float64}(I, p, p),
             [
                 T0; 
                 zeros(1, p_exp) 1 1 zeros(1, s - 1); 
                 zeros(1, p_exp) 0 1 zeros(1, s - 1);
                 zeros(1, p_exp) 0 0 -ones(1, s - 1);
                 zeros(s - 2, p_exp) zeros(s - 2, 2) Matrix{Float64}(I, s - 2, s - 2) zeros(s - 2)
-            ],
-            Matrix{Float64}(I, p, p)
+            ]
             )
     else
         T = kron(
+            Matrix{Float64}(I, p, p),
             [
                 1 1 zeros(1, s - 1); 
                 0 1 zeros(1, s - 1);
                 0 0 -ones(1, s - 1);
                 zeros(s - 2, 2) Matrix{Float64}(I, s - 2, s - 2) zeros(s - 2)
-            ],
-            Matrix{Float64}(I, p, p)
+            ]
             )
-    end
+        end
 
     R = kron(
+        Matrix{Float64}(I, p, p),
         [
             zeros(p_exp, 3); 
             Matrix{Float64}(I, 3, 3); 
             zeros(s - 2, 3)
-        ],
-        Matrix{Float64}(I, p, p)
+        ]
         )
 
     dim = StateSpaceDimensions(n, p, m, r)
