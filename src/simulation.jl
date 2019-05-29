@@ -3,44 +3,49 @@ export simulate
 """
     simulate(ss::StateSpace, N::Int, S::Int)
 
-Simulate S future scenarios up to N steps ahead. Returns an N x S matrix where each line represents an instant and each column a scenario.
+Simulate S future scenarios up to N steps ahead. Returns a p x N x S matrix where the dimensions represent, respectively,
+the number of series in the model, the number of steps ahead, and the number of scenarios.
 """
 function simulate(ss::StateSpace, N::Int, S::Int)
 
-    # Distribution of observation error
-    dist_ϵ = MvNormal(zeros(ss.dim.p), ss.param.sqrtH*ss.param.sqrtH')
-    # Distribution of state error
-    dist_η = MvNormal(zeros(ss.dim.r), ss.param.sqrtQ*ss.param.sqrtQ')
+    # Load estimated covariance matrices
+    H = ss.param.sqrtH'*ss.param.sqrtH
+    Q = ss.param.sqrtQ'*ss.param.sqrtQ
 
-    αsim = Array{Array}(undef, N)
-    ysim = Array{Array}(undef, S)
+    # Load system matrices
+    Z, T, R = ztr(ss.model)
+    Z = Z[1]
 
-    for s = 1:S
-        ysim[s] = Array{Float64}(undef, N, ss.dim.p)
+    # Load a, P, and F at last in-sample instant
+    a0 = ss.state.alpha[end]
+    P0 = ss.filter.sqrtP[end]'*ss.filter.sqrtP[end]
+    F0 = ss.filter.sqrtF[end]'*ss.filter.sqrtF[end]
+    
+    # State and variance forecasts
+    a = Vector{Matrix{Float64}}(undef, N)
+    P = Vector{Matrix{Float64}}(undef, N)
+    F = Vector{Matrix{Float64}}(undef, N)
 
-        # Simulating error
-        ϵ = rand(dist_ϵ, N)'
-        η = rand(dist_η, N)'
+    # Probability distribution
+    dist = Vector{Distribution}(undef, N)
 
-        # Generating scenarios from simulated errors
-        for t = 1:N
-            if t == 1
-                αsim[t] = ss.model.T*ss.state.alpha[ss.dim.n] + (ss.model.R*η[t, :])
-                ysim[s][t, :] = p_exp > 0 ? ss.model.Z[ss.dim.n + t]*αsim[t] + ϵ[t, :] :
-                                            ss.model.Z[1]*αsim[t] + ϵ[t, :]
-            else
-                αsim[t] = ss.model.T*αsim[t-1] + (ss.model.R*η[t, :])
-                ysim[s][t, :] = p_exp > 0 ? ss.model.Z[ss.dim.n + t]*αsim[t] + ϵ[t, :] :
-                                            ss.model.Z[1]*αsim[t] + ϵ[t, :]
-            end
-        end
+    # Initialization
+    a[1]    = T*a0
+    P[1]    = T*P0*T' + R*Q*R'
+    F[1]    = Z*P[1]*Z' + H
+    dist[1] = MvNormal(vec(Z*a[1]), Symmetric(F[1]))
+    sim = Array{Float64}(undef, ss.model.dim.p, N, S)
+
+    for t = 2:N
+        a[t] = T*a[t-1]
+        P[t] = T*P[t-1]*T' + R*Q*R'
+        F[t] = Z*P[t]*Z' + H
+        dist[t] = MvNormal(vec(Z*a[t]), Symmetric(F[t]))
     end
 
-    # Organizing scenarios in matrix form
-    scenarios = Array{Float64}(undef, ss.dim.p, N, S)
-    for p = 1:ss.dim.p, t = 1:N, s = 1:S
-        scenarios[p, t, s] = ysim[s][t, p]
+    for t = 1:N
+        sim[:, t, :] = rand(dist[t], S)
     end
 
-    return scenarios
+    return sim
 end

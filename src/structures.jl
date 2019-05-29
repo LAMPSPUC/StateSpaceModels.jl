@@ -29,7 +29,7 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `T` A ``m \\times m`` matrix
 * `R` A ``m \\times r`` matrix
 
-A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, dim::StateSpaceDimensions)`.
+A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, dim::StateSpaceDimensions, mode::String)`.
 
 Alternatively, if `Z` is time-invariant, it can be input as a single ``p \\times m`` matrix.
 """
@@ -39,18 +39,24 @@ struct StateSpaceModel
     T::Matrix{Float64} # state matrix
     R::Matrix{Float64} # state error matrix
     dim::StateSpaceDimensions
+    mode::String
 
-    function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, dim::StateSpaceDimensions)
-        new(y, Z, T, R, dim)
+    function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, 
+                        dim::StateSpaceDimensions, mode::String)
+        if mode != "time-variant" && mode != "time-invariant"
+            error("mode should be either 'time-variant' or 'time-invariant'.")
+        end
+        new(y, Z, T, R, dim, mode)
     end
     
-    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64}, dim::StateSpaceDimensions)
+    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64}, 
+                        dim::StateSpaceDimensions, mode::String)
         n, p = size(y)
         Zvar = Vector{Matrix{Float64}}(undef, n)
         for t = 1:n
             Zvar[t] = Z
         end
-        new(y, Zvar, T, R, dim)
+        new(y, Zvar, T, R, dim, "time-invariant")
     end
 end
 
