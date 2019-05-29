@@ -52,7 +52,7 @@ function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Ma
             sqrtF[t]     = Ustar[1:p, 1:p]
 
             # Kalman gain and predictive state update
-            K[t]       = U2star[t]*pinv(sqrtF[t])
+            K[t]       = U2star[t]*pinv.(sqrtF[t])
             a[t+1]     = T*a[t] + K[t]*v[t]
             sqrtP[t+1] = Ustar[(p + 1):(p + m), (p + 1):(p + m)]
 
@@ -106,10 +106,10 @@ function sqrt_smoother(model::StateSpaceModel, kfilter::FilterOutput, U2star::Ve
     # Iterating backwards
     for t = n:-1:tsteady
         L[t]   = T - K[end]*Z[t]
-        r[t-1] = Z[t]' * pinv(sqrtFsteady*sqrtFsteady') * v[t] + L[t]' * r[t]
+        r[t-1] = Z[t]' * pinv.(sqrtFsteady*sqrtFsteady') * v[t] + L[t]' * r[t]
 
         # QR decomposition of auxiliary matrix Nstar
-        Nstar        = [Z[t]' * pinv(sqrtFsteady) L[t]' * sqrtN[t]]
+        Nstar        = [Z[t]' * pinv.(sqrtFsteady) L[t]' * sqrtN[t]]
         G            = qr(Nstar').Q
         NstarG       = Nstar * G
         sqrtN[t-1]   = NstarG[1:m, 1:m]
@@ -123,9 +123,9 @@ function sqrt_smoother(model::StateSpaceModel, kfilter::FilterOutput, U2star::Ve
     end
 
     for t = tsteady-1:-1:2
-        L[t]   = T - U2star[t] * pinv(sqrtF[t]) * Z[t]
-        r[t-1] = Z[t]' * pinv(sqrtF[t] * sqrtF[t]') * v[t] + L[t]'*r[t]
-        Nstar  = [Z[t]' * pinv(sqrtF[t]) L[t]' * sqrtN[t]]
+        L[t]   = T - U2star[t] * pinv.(sqrtF[t]) * Z[t]
+        r[t-1] = Z[t]' * pinv.(sqrtF[t] * sqrtF[t]') * v[t] + L[t]'*r[t]
+        Nstar  = [Z[t]' * pinv.(sqrtF[t]) L[t]' * sqrtN[t]]
 
         # QR decomposition of auxiliary matrix Nstar
         G          = qr(Nstar').Q
@@ -140,9 +140,9 @@ function sqrt_smoother(model::StateSpaceModel, kfilter::FilterOutput, U2star::Ve
                    (sqrtP[t] * sqrtP[t]')
     end
 
-    L[1]   = T - U2star[1] * pinv(sqrtF[1]) * Z[1]
-    r_0    = Z[1]' * pinv(sqrtF[1] * sqrtF[1]') * v[1] + L[1]' * r[1]
-    Nstar  = [Z[1]' * pinv(sqrtF[1]) L[1]' * sqrtN[1]]
+    L[1]   = T - U2star[1] * pinv.(sqrtF[1]) * Z[1]
+    r_0    = Z[1]' * pinv.(sqrtF[1] * sqrtF[1]') * v[1] + L[1]' * r[1]
+    Nstar  = [Z[1]' * pinv.(sqrtF[1]) L[1]' * sqrtN[1]]
     G      = qr(Nstar').Q
     NstarG = Nstar*G
 
