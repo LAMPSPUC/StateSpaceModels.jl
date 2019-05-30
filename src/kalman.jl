@@ -24,7 +24,6 @@ function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Ma
     K       = Vector{Matrix{Float64}}(undef, n)
 
     # Auxiliary matrices
-    # U      = zeros(p + m, m + p + r)
     U2star = Vector{Matrix{Float64}}(undef, n)
     
     # Steady state initialization
