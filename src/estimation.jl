@@ -29,27 +29,35 @@ Compute log-likelihood concerning hyperparameter vector psitilde
 """
 function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) where T <: AbstractFloat
 
-    sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r)
+    @timeit to "ss_likelihood" begin
 
-    # Obtain innovation v and its variance F
-    kfilter, U2star, K = sqrt_kalmanfilter(model, sqrtH, sqrtQ)
+        @timeit to "ss_covariance" sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r)
 
-    # Check if steady state was attained
-    if kfilter.tsteady < model.dim.n
-        for t = kfilter.tsteady+1:model.dim.n
-            kfilter.sqrtF[t] = kfilter.sqrtF[kfilter.tsteady]
+        # Obtain innovation v and its variance F
+        @timeit to "kalman filter" kfilter, U2star, K = sqrt_kalmanfilter(model, sqrtH, sqrtQ)
+
+        @timeit to "unnecessary operations" begin
+            # Check if steady state was attained
+            if kfilter.tsteady < model.dim.n
+                for t = kfilter.tsteady+1:model.dim.n
+                    kfilter.sqrtF[t] = kfilter.sqrtF[kfilter.tsteady]
+                end
+            end
         end
-    end
 
-    # Compute log-likelihood based on v and F
-    loglikelihood = model.dim.n*model.dim.p*log(2*pi)/2
-    for t = model.dim.m:model.dim.n
-        det_sqrtF = det(kfilter.sqrtF[t]*kfilter.sqrtF[t]')
-        if det_sqrtF < 1e-30
-            det_sqrtF = 1e-30
+        @timeit to "loglik calculation" begin
+            # Compute log-likelihood based on v and F
+            loglikelihood = model.dim.n*model.dim.p*log(2*pi)/2
+            for t = model.dim.m:model.dim.n
+                det_sqrtF = det(kfilter.sqrtF[t]*kfilter.sqrtF[t]')
+                if det_sqrtF < 1e-30
+                    det_sqrtF = 1e-30
+                end
+                loglikelihood = loglikelihood + .5 * (log(det_sqrtF) +
+                                (kfilter.v[t]' * pinv.(kfilter.sqrtF[t]*kfilter.sqrtF[t]') * kfilter.v[t])[1])
+            end
         end
-        loglikelihood = loglikelihood + .5 * (log(det_sqrtF) +
-                        (kfilter.v[t]' * pinv.(kfilter.sqrtF[t]*kfilter.sqrtF[t]') * kfilter.v[t])[1])
+
     end
 
     return loglikelihood
@@ -62,43 +70,49 @@ Estimate structural model hyperparameters
 """
 function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol = 1e-10, g_tol = 1e-10, iterations = 10^5)
 
-    nseeds += 1 # creating additional seed for degenerate cases
+    @timeit to "estimation initialization" begin
 
-    # Initialization
-    npsi          = Int((1 + model.dim.r/model.dim.p)*(model.dim.p*(model.dim.p + 1)/2))
-    seeds         = Matrix{Float64}(undef, npsi, nseeds)
-    loglikelihood = Vector{Float64}(undef, nseeds)
-    psi           = Matrix{Float64}(undef, npsi, nseeds)
+        nseeds += 1 # creating additional seed for degenerate cases
 
-    # Initial conditions
-    seedrange = collect(-1e3:0.1:1e3)
+        # Initialization
+        npsi          = Int((1 + model.dim.r/model.dim.p)*(model.dim.p*(model.dim.p + 1)/2))
+        seeds         = Matrix{Float64}(undef, npsi, nseeds)
+        loglikelihood = Vector{Float64}(undef, nseeds)
+        psi           = Matrix{Float64}(undef, npsi, nseeds)
 
-    # Avoiding zero values for covariance
-    deleteat!(seedrange, findall(x -> x == 0.0, seedrange))
+        # Initial conditions
+        seedrange = collect(-1e3:0.1:1e3)
 
-    @info("Initiating maximum likelihood estimation with $(nseeds-1) seeds.")
+        # Avoiding zero values for covariance
+        deleteat!(seedrange, findall(x -> x == 0.0, seedrange))
 
-    # Generate initial values in [-1e3, 1e3]
-    for iseed = 1:nseeds
-        if iseed == 1
-            seeds[:, iseed] = 1e-8*ones(npsi)
-        else
-            seeds[:, iseed] = rand(seedrange, npsi)
+        @info("Initiating maximum likelihood estimation with $(nseeds-1) seeds.")
+
+        # Generate initial values in [-1e3, 1e3]
+        for iseed = 1:nseeds
+            if iseed == 1
+                seeds[:, iseed] = 1e-8*ones(npsi)
+            else
+                seeds[:, iseed] = rand(seedrange, npsi)
+            end
         end
+
     end
 
-    # Optimization
-    for iseed = 1:nseeds
-        @info("Optimizing likelihood for seed $(iseed-1) of $(nseeds-1)...")
-        if iseed == 1
-            @info("Seed 0 is aimed at degenerate cases.")
+    @timeit to "MLE optimization" begin
+        # Optimization
+        for iseed = 1:nseeds
+            @info("Optimizing likelihood for seed $(iseed-1) of $(nseeds-1)...")
+            if iseed == 1
+                @info("Seed 0 is aimed at degenerate cases.")
+            end
+            optseed = optimize(psitilde -> statespace_likelihood(psitilde, model), seeds[:, iseed],
+                                LBFGS(), Optim.Options(f_tol = f_tol, g_tol = g_tol, iterations = iterations,
+                                show_trace = false))
+            loglikelihood[iseed] = -optseed.minimum
+            psi[:, iseed] = optseed.minimizer
+            @info("Log-likelihood for seed $(iseed-1): $(loglikelihood[iseed])")
         end
-        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model), seeds[:, iseed],
-                            LBFGS(), Optim.Options(f_tol = f_tol, g_tol = g_tol, iterations = iterations,
-                            show_trace = false))
-        loglikelihood[iseed] = -optseed.minimum
-        psi[:, iseed] = optseed.minimizer
-        @info("Log-likelihood for seed $(iseed-1): $(loglikelihood[iseed])")
     end
 
     @info("Maximum likelihood estimation complete.")

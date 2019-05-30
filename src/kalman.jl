@@ -35,31 +35,45 @@ function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Ma
     a[1]        = zeros(m, 1)
     sqrtP[1]    = 1e6.*Matrix(I, m, m)
 
-    # Square-root Kalman filter
-    for t = 1:n
-        v[t] = y[t, :] - Z[t]*a[t]
-        if steadystate
-            sqrtF[t] = sqrtF[t-1]
-            K[t] = K[t-1]
-            a[t+1] = T * a[t] + K[t] * v[t]
-            sqrtP[t+1] = sqrtP[t]
-        else
-            # Manipulation of auxiliary matrices
-            U            = [Z[t]*sqrtP[t] sqrtH zeros(p, r); T*sqrtP[t] zeros(m, p) R*sqrtQ]
-            G            = qr(U').Q
-            Ustar        = U*G
-            U2star[t]    = Ustar[(p + 1):(p + m), 1:p]
-            sqrtF[t]     = Ustar[1:p, 1:p]
+    # Pre-allocating for performance
+    zeros_pr = zeros(p, r)
+    zeros_mp = zeros(m, p)
+    range1   = (p + 1):(p + m)
+    range2   = 1:p
+    sqrtH_zeros_pr  = [sqrtH zeros_pr]
+    zeros_mp_RsqrtQ = [zeros_mp R*sqrtQ]
 
-            # Kalman gain and predictive state update
-            K[t]       = U2star[t]*pinv.(sqrtF[t])
-            a[t+1]     = T*a[t] + K[t]*v[t]
-            sqrtP[t+1] = Ustar[(p + 1):(p + m), (p + 1):(p + m)]
+    @timeit to "filter iterations" begin
+        # Square-root Kalman filter
+        for t = 1:n
+            v[t] = y[t, :] - Z[t]*a[t]
+            if steadystate
+                sqrtF[t] = sqrtF[t-1]
+                K[t] = K[t-1]
+                a[t+1] = T * a[t] + K[t] * v[t]
+                sqrtP[t+1] = sqrtP[t]
+            else
+                @timeit to "U G Ustar U2star" begin
+                    # Manipulation of auxiliary matrices
+                    @timeit to "U" U = [Z[t]*sqrtP[t] sqrtH_zeros_pr; T*sqrtP[t] zeros_mp_RsqrtQ]
+                    @timeit to "qr" G = qr(U').Q
+                    @timeit to "Ustar" Ustar = U*G
+                    U2star[t]    = Ustar[range1, range2]
+                    sqrtF[t]     = Ustar[range2, range2]
+                end
 
-            # Checking if steady state was attained
-            if maximum(abs.((sqrtP[t+1] - sqrtP[t])/sqrtP[t+1])) < tol
-                steadystate = true
-                tsteady     = t
+                @timeit to "K a sqrtP" begin
+                    # Kalman gain and predictive state update
+                    K[t]       = U2star[t]*pinv.(sqrtF[t])
+                    a[t+1]     = T*a[t] + K[t]*v[t]
+                    sqrtP[t+1] = Ustar[range1, range1]
+                end
+
+                # Checking if steady state was attained
+                if maximum(abs.((sqrtP[t+1] - sqrtP[t])/sqrtP[t+1])) < tol
+                    steadystate = true
+                    tsteady     = t
+                end
             end
         end
     end
