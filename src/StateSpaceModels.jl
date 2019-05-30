@@ -1,6 +1,6 @@
 module StateSpaceModels
 
-using Optim, Distributions, LinearAlgebra
+using Optim, Distributions, LinearAlgebra, StaticArrays
 
 import Base: size
 

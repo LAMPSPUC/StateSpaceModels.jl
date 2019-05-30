@@ -24,7 +24,6 @@ function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Ma
     K       = Vector{Matrix{Float64}}(undef, n)
 
     # Auxiliary matrices
-    U      = zeros(p + m, m + p + r)
     U2star = Vector{Matrix{Float64}}(undef, n)
     
     # Steady state initialization
@@ -34,6 +33,14 @@ function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Ma
     # Initial state: big Kappa initialization
     a[1]        = zeros(m, 1)
     sqrtP[1]    = 1e6.*Matrix(I, m, m)
+
+    # Pre-allocating for performance
+    zeros_pr = zeros(p, r)
+    zeros_mp = zeros(m, p)
+    range1   = (p + 1):(p + m)
+    range2   = 1:p
+    sqrtH_zeros_pr  = [sqrtH zeros_pr]
+    zeros_mp_RsqrtQ = [zeros_mp R*sqrtQ]
 
     # Square-root Kalman filter
     for t = 1:n
@@ -45,16 +52,16 @@ function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Ma
             sqrtP[t+1] = sqrtP[t]
         else
             # Manipulation of auxiliary matrices
-            U            = [Z[t]*sqrtP[t] sqrtH zeros(p, r); T*sqrtP[t] zeros(m, p) R*sqrtQ]
-            G            = qr(U').Q
-            Ustar        = U*G
-            U2star[t]    = Ustar[(p + 1):(p + m), 1:p]
-            sqrtF[t]     = Ustar[1:p, 1:p]
+            U         = SMatrix{p + m, m + p + r}([Z[t]*sqrtP[t] sqrtH_zeros_pr; T*sqrtP[t] zeros_mp_RsqrtQ])
+            G         = qr(U').Q
+            Ustar     = U*G
+            U2star[t] = Ustar[range1, range2]
+            sqrtF[t]  = Ustar[range2, range2]
 
             # Kalman gain and predictive state update
             K[t]       = U2star[t]*pinv.(sqrtF[t])
             a[t+1]     = T*a[t] + K[t]*v[t]
-            sqrtP[t+1] = Ustar[(p + 1):(p + m), (p + 1):(p + m)]
+            sqrtP[t+1] = Ustar[range1, range1]
 
             # Checking if steady state was attained
             if maximum(abs.((sqrtP[t+1] - sqrtP[t])/sqrtP[t+1])) < tol
