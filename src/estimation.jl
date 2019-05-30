@@ -34,13 +34,6 @@ function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) wher
     # Obtain innovation v and its variance F
     kfilter, U2star, K = sqrt_kalmanfilter(model, sqrtH, sqrtQ)
 
-    # Check if steady state was attained
-    if kfilter.tsteady < model.dim.n
-        for t = kfilter.tsteady+1:model.dim.n
-            kfilter.sqrtF[t] = kfilter.sqrtF[kfilter.tsteady]
-        end
-    end
-
     # Compute log-likelihood based on v and F
     loglikelihood = model.dim.n*model.dim.p*log(2*pi)/2
     for t = model.dim.m:model.dim.n
