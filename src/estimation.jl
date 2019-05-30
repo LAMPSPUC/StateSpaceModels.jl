@@ -57,7 +57,6 @@ function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) wher
                                 (kfilter.v[t]' * pinv.(kfilter.sqrtF[t]*kfilter.sqrtF[t]') * kfilter.v[t])[1])
             end
         end
-
     end
 
     return loglikelihood
