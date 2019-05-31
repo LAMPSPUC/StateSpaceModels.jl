@@ -109,11 +109,11 @@ function locallevelmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
     r = p
 
     # Observation equation
-    Z = kron(Matrix{Float64}(I, p, p), [1])
+    Z = Matrix{Float64}(I, p, p)
 
     # State equation
-    T = kron(Matrix{Float64}(I, p, p), [1])
-    R = kron(Matrix{Float64}(I, p, p), [1])
+    T = Matrix{Float64}(I, p, p)
+    R = Matrix{Float64}(I, p, p)
 
     dim = StateSpaceDimensions(n, p, m, r)
     model = StateSpaceModel(y, Z, T, R, dim, "time-invariant")
