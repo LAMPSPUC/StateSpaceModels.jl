@@ -108,13 +108,4 @@ y = [0.0     # Deterministic local level generated time series
         ss = statespace(unimodel)
 
         @test isa(ss, StateSpaceModels.StateSpace)
-
-        multimodel = locallevelmodel([y y])
-
-        @test isa(multimodel, StateSpaceModels.StateSpaceModel)
-        @test multimodel.mode == "time-invariant"
-
-        ss = statespace(multimodel)
-
-        @test isa(ss, StateSpaceModels.StateSpace)
 end
