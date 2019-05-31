@@ -33,6 +33,17 @@
         @test all(ss.param.sqrtQ .< 1e-6)
     end
 
+    @testset "Multivariate test" begin
+       
+        y = [ones(20) collect(1:20)]
+        model = structuralmodel(y, 2)
+        ss = statespace(model)
+        sim  = simulate(ss, 10, 1000)
+
+        @test mean(sim, dims = 3)[1, :] ≈ ones(10) rtol = 1e-3
+        @test mean(sim, dims = 3)[2, :] ≈ collect(21:30) rtol = 1e-3
+    end
+
     @testset "Air passengers" begin
 
         AP = CSV.read("../example/AirPassengers.csv")

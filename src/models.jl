@@ -1,4 +1,4 @@
-export structuralmodel
+export structuralmodel, locallevelmodel
 
 """
     structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0)) where Typ <: AbstractFloat
@@ -88,4 +88,35 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
 
     return model
 
+end
+
+"""
+    locallevelmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
+
+Build state-space system for a local level model with observations y.
+
+If `y` is proided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
+"""
+function locallevelmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
+
+    # Number of observations and endogenous variables
+    y = y[:, :]
+    n, p = size(y)
+
+    @info("Creating local level model with $p endogenous variables.")
+
+    m = p
+    r = p
+
+    # Observation equation
+    Z = Matrix{Float64}(I, p, p)
+
+    # State equation
+    T = Matrix{Float64}(I, p, p)
+    R = Matrix{Float64}(I, p, p)
+
+    dim = StateSpaceDimensions(n, p, m, r)
+    model = StateSpaceModel(y, Z, T, R, dim, "time-invariant")
+
+    return model
 end
