@@ -64,7 +64,7 @@ The local level model is defined by
 locallevelmodel
 ```
 
-The local level model is defined by
+The linear trend model is defined by
 
 ```math
 \begin{gather*}
@@ -80,6 +80,9 @@ The local level model is defined by
 lineartrendmodel
 ```
 
+The structural model is defined by
+
+TODO mathematical model
 ```@docs
 structuralmodel
 ```
