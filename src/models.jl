@@ -22,8 +22,6 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
         error("Number of observations in X must be greater than or equal to the number of observations in y.")
     end
 
-    @info("Creating structural model with $p endogenous variables and $p_exp exogenous variables.")
-
     m = (1 + s + p_exp)*p
     r = 3*p
 
@@ -102,8 +100,6 @@ function locallevelmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
     # Number of observations and endogenous variables
     y = y[:, :]
     n, p = size(y)
-
-    @info("Creating local level model with $p endogenous variables.")
 
     m = p
     r = p

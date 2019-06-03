@@ -53,8 +53,8 @@ end
 
 Estimate structural model hyperparameters
 """
-function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol = 1e-10, g_tol = 1e-10, 
-                                iterations = 10^5, verbose::Int = 1)
+function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64 = 1e-10, g_tol::Float64 = 1e-10, 
+                                iterations::Int = 10^5, verbose::Int = 1)
 
     nseeds += 1 # creating additional seed for degenerate cases
 
