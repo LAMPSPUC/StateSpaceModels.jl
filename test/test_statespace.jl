@@ -68,7 +68,6 @@
         T = R = Matrix{Float64}(undef, 2, 2)
 
         @test_throws ErrorException structuralmodel(y, 2; X = ones(10, 2))
-        @test_throws ErrorException StateSpaceModel(y, Z, T, R, dim, "asdf")
 
     end
 

@@ -41,8 +41,7 @@ struct StateSpaceModel
     dim::StateSpaceDimensions
     mode::String
 
-    function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, 
-                        dim::StateSpaceDimensions, mode::String)
+    function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64})
         
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -56,8 +55,7 @@ struct StateSpaceModel
         new(y, Z, T, R, dim, "time-variant")
     end
     
-    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64}, 
-                        dim::StateSpaceDimensions, mode::String)
+    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64})
 
         # Validate StateSpaceDimensions
         ny, py = size(y)
