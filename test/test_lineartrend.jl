@@ -1,4 +1,4 @@
-@testset "Local level model" begin
+@testset "Linear trend model" begin
         y = collect(1:15.0)
         unimodel = lineartrendmodel(y)
 
