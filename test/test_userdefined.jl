@@ -6,4 +6,10 @@
     T = [1 2.0]
     R = [1 2.0]
     @test_throws ErrorException StateSpaceModel(y, Z, T, R)
+
+    y = [1 2.0]
+    Z = [1 2.0]
+    T = [1 2.0]
+    R = [1 2.0]
+    @test_throws ErrorException StateSpaceModel(y, Z, T, R)
 end
