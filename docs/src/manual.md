@@ -48,6 +48,46 @@ FilterOutput
 StateSpace
 ```
 
+## Default models
+The local level model is defined by
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_t &=  \mu_t  + \varepsilon_t \quad \varepsilon_t \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &= \mu_t + \eta_t \quad \eta_t \sim \mathcal{N}(0, \sigma^2_{\eta})\\
+    \end{aligned}
+\end{gather*}
+```
+
+```@docs
+locallevelmodel
+```
+
+The linear trend model is defined by
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_t &=  \mu_t  + \varepsilon_t \quad &\varepsilon_t \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &= \mu_t + \nu_t + \xi_t \quad &\xi_t \sim \mathcal{N}(0, \sigma^2_{\xi})\\
+        \nu_{t+1} &= \nu_t + \zeta_t \quad &\zeta_t \sim \mathcal{N}(0, \sigma^2_{\zeta})\\
+    \end{aligned}
+\end{gather*}
+```
+
+```@docs
+lineartrendmodel
+```
+
+The structural model is defined by
+
+TODO mathematical model
+```@docs
+structuralmodel
+```
+
+
 ## Estimation
 The model estimation is made using the function `statespace(y, s; X, nseeds)`. It receives as argument the time series `y` and the desired seasonality `s`. The user can input exogenous variables using optional argument `X` and specify the desired number of random seeds `nseeds` to perform the estimation.
 
