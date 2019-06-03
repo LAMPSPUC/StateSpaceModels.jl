@@ -130,8 +130,6 @@ function lineartrendmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
     y = y[:, :]
     n, p = size(y)
 
-    @info("Creating linear trend model with $p endogenous variables.")
-
     m = 2*p
     r = 2*p
 
