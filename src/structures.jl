@@ -43,17 +43,35 @@ struct StateSpaceModel
 
     function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, 
                         dim::StateSpaceDimensions, mode::String)
-        if mode != "time-variant" && mode != "time-invariant"
-            error("mode should be either 'time-variant' or 'time-invariant'.")
+        
+        # Validate StateSpaceDimensions
+        ny, py = size(y)
+        pz, mz = size(Z[1])
+        mt, mt = size(T)
+        mr, rr = size(R)
+        if !((mm == mt == mr) && (pz = py))
+            error("StateSpaceModel dimension mismatch")
         end
-        new(y, Z, T, R, dim, mode)
+        dim = StateSpaceDimensions(ny, py, mr, rr)
+        new(y, Z, T, R, dim, "time-variant")
     end
     
     function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64}, 
                         dim::StateSpaceDimensions, mode::String)
-        n, p = size(y)
-        Zvar = Vector{Matrix{Float64}}(undef, n)
-        for t = 1:n
+
+        # Validate StateSpaceDimensions
+        ny, py = size(y)
+        pz, mz = size(Z)
+        mt, mt = size(T)
+        mr, rr = size(R)
+        if !((mm == mt == mr) && (pz = py))
+            error("StateSpaceModel dimension mismatch")
+        end
+        dim = StateSpaceDimensions(ny, py, mr , rr)
+
+        # Build Z
+        Zvar = Vector{Matrix{Float64}}(undef, ny)
+        for t = 1:ny
             Zvar[t] = Z
         end
         new(y, Zvar, T, R, dim, "time-invariant")
