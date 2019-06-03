@@ -25,7 +25,7 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
     end
 
     # Maximum likelihood estimation
-    param = estimate_statespace(model, nseeds)
+    param = estimate_statespace(model, nseeds; verbose = verbose)
 
     if verbose > 0
         @info("End of estimation.")
