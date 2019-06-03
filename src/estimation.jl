@@ -53,7 +53,8 @@ end
 
 Estimate structural model hyperparameters
 """
-function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol = 1e-10, g_tol = 1e-10, iterations = 10^5)
+function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol = 1e-10, g_tol = 1e-10, 
+                                iterations = 10^5, verbose::Int = 1)
 
     nseeds += 1 # creating additional seed for degenerate cases
 
@@ -69,7 +70,9 @@ function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol = 1e-10,
     # Avoiding zero values for covariance
     deleteat!(seedrange, findall(x -> x == 0.0, seedrange))
 
-    @info("Initiating maximum likelihood estimation with $(nseeds-1) seeds.")
+    if verbose > 0
+        @info("Initiating maximum likelihood estimation with $(nseeds-1) seeds.")
+    end
 
     # Generate initial values in [-1e3, 1e3]
     for iseed = 1:nseeds
@@ -82,20 +85,29 @@ function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol = 1e-10,
 
     # Optimization
     for iseed = 1:nseeds
-        @info("Optimizing likelihood for seed $(iseed-1) of $(nseeds-1)...")
-        if iseed == 1
-            @info("Seed 0 is aimed at degenerate cases.")
+
+        if verbose > 0
+            @info("Optimizing likelihood for seed $(iseed-1) of $(nseeds-1)...")
+            if iseed == 1
+                @info("Seed 0 is aimed at degenerate cases.")
+            end
         end
+
         optseed = optimize(psitilde -> statespace_likelihood(psitilde, model), seeds[:, iseed],
                             LBFGS(), Optim.Options(f_tol = f_tol, g_tol = g_tol, iterations = iterations,
-                            show_trace = false))
+                            show_trace = verbose == 2 ? true : false))
         loglikelihood[iseed] = -optseed.minimum
         psi[:, iseed] = optseed.minimizer
-        @info("Log-likelihood for seed $(iseed-1): $(loglikelihood[iseed])")
+
+        if verbose > 0
+            @info("Log-likelihood for seed $(iseed-1): $(loglikelihood[iseed])")
+        end
     end
 
-    @info("Maximum likelihood estimation complete.")
-    @info("Log-likelihood: $(maximum(loglikelihood))")
+    if verbose > 0
+        @info("Maximum likelihood estimation complete.")
+        @info("Log-likelihood: $(maximum(loglikelihood))")
+    end
 
     bestpsi      = psi[:, argmax(loglikelihood)]
     sqrtH, sqrtQ = statespace_covariance(bestpsi, model.dim.p, model.dim.r)
