@@ -49,7 +49,7 @@ struct StateSpaceModel
         pz, mz = size(Z[1])
         mt, mt = size(T)
         mr, rr = size(R)
-        if !((mm == mt == mr) && (pz = py))
+        if !((mz == mt == mr) && (pz == py))
             error("StateSpaceModel dimension mismatch")
         end
         dim = StateSpaceDimensions(ny, py, mr, rr)
@@ -64,10 +64,10 @@ struct StateSpaceModel
         pz, mz = size(Z)
         mt, mt = size(T)
         mr, rr = size(R)
-        if !((mm == mt == mr) && (pz = py))
+        if !((mz == mt == mr) && (pz == py))
             error("StateSpaceModel dimension mismatch")
         end
-        dim = StateSpaceDimensions(ny, py, mr , rr)
+        dim = StateSpaceDimensions(ny, py, mr, rr)
 
         # Build Z
         Zvar = Vector{Matrix{Float64}}(undef, ny)
