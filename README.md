@@ -32,9 +32,9 @@ Current features:
 * Monte Carlo simulation
 * Maximum likelihood estimation
 * Multivariate modeling
+* User-defined model
 
 Future features (work in progress):
-* User-defined model
 * Forecasting and confidence intervals
 * Completion of missing values
 
