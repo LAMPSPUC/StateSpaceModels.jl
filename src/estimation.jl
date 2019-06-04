@@ -49,7 +49,7 @@ function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) wher
 end
 
 """
-    estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol = 1e-10, g_tol = 1e-10, iterations = 10^5)
+    estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64 = 1e-10, g_tol::Float64 = 1e-10, iterations::Int = 10^5)
 
 Estimate structural model hyperparameters
 """
