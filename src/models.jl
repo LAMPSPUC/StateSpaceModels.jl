@@ -81,8 +81,7 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
         ]
         )
 
-    dim = StateSpaceDimensions(n, p, m, r)
-    model = StateSpaceModel(y, Z, T, R, dim, "time-variant")
+    model = StateSpaceModel(y, Z, T, R)
 
     return model
 
@@ -111,8 +110,7 @@ function locallevelmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
     T = Matrix{Float64}(I, p, p)
     R = Matrix{Float64}(I, p, p)
 
-    dim = StateSpaceDimensions(n, p, m, r)
-    model = StateSpaceModel(y, Z, T, R, dim, "time-invariant")
+    model = StateSpaceModel(y, Z, T, R)
 
     return model
 end
@@ -140,8 +138,7 @@ function lineartrendmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
     T = kron(Matrix{Float64}(I, p, p),[1 1; 0 1])
     R = kron(Matrix{Float64}(I, p, p),[1 0; 0 1])
 
-    dim = StateSpaceDimensions(n, p, m, r)
-    model = StateSpaceModel(y, Z, T, R, dim, "time-invariant")
+    model = StateSpaceModel(y, Z, T, R)
 
     return model
 end

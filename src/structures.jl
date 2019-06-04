@@ -29,7 +29,7 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `T` A ``m \\times m`` matrix
 * `R` A ``m \\times r`` matrix
 
-A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, dim::StateSpaceDimensions, mode::String)`.
+A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64})`.
 
 Alternatively, if `Z` is time-invariant, it can be input as a single ``p \\times m`` matrix.
 """
@@ -41,19 +41,39 @@ struct StateSpaceModel
     dim::StateSpaceDimensions
     mode::String
 
-    function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, 
-                        dim::StateSpaceDimensions, mode::String)
-        if mode != "time-variant" && mode != "time-invariant"
-            error("mode should be either 'time-variant' or 'time-invariant'.")
+    function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64})
+        
+        # Check if Z has the same dimensions for all instants
+        if any([size(Z[i]) != size(Z[1]) for i = 2:length(Z)])
+            error("Z does not have the same dimensions for every instant")
         end
-        new(y, Z, T, R, dim, mode)
+        # Validate StateSpaceDimensions
+        ny, py = size(y)
+        pz, mz = size(Z[1])
+        mt, mt = size(T)
+        mr, rr = size(R)
+        if !((mz == mt == mr) && (pz == py))
+            error("StateSpaceModel dimension mismatch")
+        end
+        dim = StateSpaceDimensions(ny, py, mr, rr)
+        new(y, Z, T, R, dim, "time-variant")
     end
     
-    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64}, 
-                        dim::StateSpaceDimensions, mode::String)
-        n, p = size(y)
-        Zvar = Vector{Matrix{Float64}}(undef, n)
-        for t = 1:n
+    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64})
+
+        # Validate StateSpaceDimensions
+        ny, py = size(y)
+        pz, mz = size(Z)
+        mt, mt = size(T)
+        mr, rr = size(R)
+        if !((mz == mt == mr) && (pz == py))
+            error("StateSpaceModel dimension mismatch")
+        end
+        dim = StateSpaceDimensions(ny, py, mr, rr)
+
+        # Build Z
+        Zvar = Vector{Matrix{Float64}}(undef, ny)
+        for t = 1:ny
             Zvar[t] = Z
         end
         new(y, Zvar, T, R, dim, "time-invariant")
