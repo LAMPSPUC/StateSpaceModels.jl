@@ -25,34 +25,30 @@ end
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
 * `y` A ``n \\times p`` matrix containing observations
-* `Z` A vector of dimension ``n`` where each entry is a ``p \\times m`` matrix
+* `Z` A ``p \\times m \\times n`` matrix
 * `T` A ``m \\times m`` matrix
 * `R` A ``m \\times r`` matrix
 
-A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64})`.
+A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64})`.
 
 Alternatively, if `Z` is time-invariant, it can be input as a single ``p \\times m`` matrix.
 """
 struct StateSpaceModel
     y::Matrix{Float64} # observations
-    Z::Vector{Matrix{Float64}} # observation matrix
+    Z::Array{Float64, 3} # observation matrix
     T::Matrix{Float64} # state matrix
     R::Matrix{Float64} # state error matrix
     dim::StateSpaceDimensions
     mode::String
 
-    function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64})
+    function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64})
         
-        # Check if Z has the same dimensions for all instants
-        if any([size(Z[i]) != size(Z[1]) for i = 2:length(Z)])
-            error("Z does not have the same dimensions for every instant")
-        end
         # Validate StateSpaceDimensions
         ny, py = size(y)
-        pz, mz = size(Z[1])
-        mt, mt = size(T)
+        pz, mz, nz = size(Z)
+        mt1, mt2 = size(T)
         mr, rr = size(R)
-        if !((mz == mt == mr) && (pz == py))
+        if !((mz == mt1 == mt2 == mr) && (pz == py))
             error("StateSpaceModel dimension mismatch")
         end
         dim = StateSpaceDimensions(ny, py, mr, rr)
@@ -72,9 +68,9 @@ struct StateSpaceModel
         dim = StateSpaceDimensions(ny, py, mr, rr)
 
         # Build Z
-        Zvar = Vector{Matrix{Float64}}(undef, ny)
+        Zvar = Array{Float64, 3}(undef, pz, mz, ny)
         for t = 1:ny
-            Zvar[t] = Z
+            Zvar[:, :, t] = Z
         end
         new(y, Zvar, T, R, dim, "time-invariant")
     end
@@ -102,8 +98,8 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `V` Error covariance matrix of smoothed state ``Var(\\alpha_t|y_1, \\dots , y_n)``
 """
 struct SmoothedState
-    alpha::Vector{Matrix{Float64}} # smoothed state
-    V::Vector{Matrix{Float64}} # variance of smoothed state
+    alpha::Matrix{Float64} # smoothed state
+    V::Array{Float64, 3} # variance of smoothed state
 end
 
 """
@@ -118,10 +114,10 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `steadystate`
 """
 mutable struct FilterOutput
-    a::Vector{Matrix{Float64}} # predictive state
-    v::Vector{Matrix{Float64}} # innovations
-    sqrtP::Vector{Matrix{Float64}} # lower triangular matrix with sqrt-covariance of the predictive state
-    sqrtF::Vector{Matrix{Float64}} # lower triangular matrix with sqrt-covariance of the innovations
+    a::Matrix{Float64} # predictive state
+    v::Matrix{Float64} # innovations
+    sqrtP::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
+    sqrtF::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
 end

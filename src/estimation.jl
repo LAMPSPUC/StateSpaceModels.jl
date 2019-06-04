@@ -37,19 +37,19 @@ function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) wher
     # Compute log-likelihood based on v and F
     loglikelihood = model.dim.n*model.dim.p*log(2*pi)/2
     for t = model.dim.m:model.dim.n
-        det_sqrtF = det(kfilter.sqrtF[t]*kfilter.sqrtF[t]')
+        det_sqrtF = det(kfilter.sqrtF[:, :, t]*kfilter.sqrtF[:, :, t]')
         if det_sqrtF < 1e-30
             det_sqrtF = 1e-30
         end
         loglikelihood = loglikelihood + .5 * (log(det_sqrtF) +
-                        (kfilter.v[t]' * pinv(kfilter.sqrtF[t]*kfilter.sqrtF[t]') * kfilter.v[t])[1])
+                        (kfilter.v[t, :]' * pinv(kfilter.sqrtF[:, :, t]*kfilter.sqrtF[:, :, t]') * kfilter.v[t, :]))
     end
 
     return loglikelihood
 end
 
 """
-    estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol = 1e-10, g_tol = 1e-10, iterations = 10^5)
+    estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64 = 1e-10, g_tol::Float64 = 1e-10, iterations::Int = 10^5)
 
 Estimate structural model hyperparameters
 """
