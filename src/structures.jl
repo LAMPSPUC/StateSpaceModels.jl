@@ -44,7 +44,7 @@ struct StateSpaceModel
     function StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64})
         
         # Check if Z has the same dimensions for all instants
-        if !all([size(Z[i]) == size(Z[1]) for i = 2:length(Z)])
+        if any([size(Z[i]) != size(Z[1]) for i = 2:length(Z)])
             error("Z does not have the same dimensions for every instant")
         end
         # Validate StateSpaceDimensions
