@@ -98,7 +98,7 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `V` Error covariance matrix of smoothed state ``Var(\\alpha_t|y_1, \\dots , y_n)``
 """
 struct SmoothedState
-    alpha::Array{Float64, 3} # smoothed state
+    alpha::Matrix{Float64} # smoothed state
     V::Array{Float64, 3} # variance of smoothed state
 end
 
@@ -114,8 +114,8 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `steadystate`
 """
 mutable struct FilterOutput
-    a::Array{Float64, 3} # predictive state
-    v::Array{Float64, 3} # innovations
+    a::Matrix{Float64} # predictive state
+    v::Matrix{Float64} # innovations
     sqrtP::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
     sqrtF::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
     steadystate::Bool # flag that indicates if steady state was attained

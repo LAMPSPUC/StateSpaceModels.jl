@@ -8,5 +8,5 @@
         ss = statespace(unimodel)
 
         @test isa(ss, StateSpaceModels.StateSpace)
-        @test hcat(ss.state.alpha...)'[:, 2] == ones(15)
+        @test ss.state.alpha[:, 2] == ones(15)
 end
