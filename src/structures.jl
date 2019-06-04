@@ -25,11 +25,11 @@ end
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
 * `y` A ``n \\times p`` matrix containing observations
-* `Z` A vector of dimension ``n`` where each entry is a ``p \\times m`` matrix
+* `Z` A ``p \\times m \\times n`` matrix
 * `T` A ``m \\times m`` matrix
 * `R` A ``m \\times r`` matrix
 
-A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64})`.
+A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64})`.
 
 Alternatively, if `Z` is time-invariant, it can be input as a single ``p \\times m`` matrix.
 """
