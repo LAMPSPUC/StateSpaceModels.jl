@@ -29,7 +29,7 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `T` A ``m \\times m`` matrix
 * `R` A ``m \\times r`` matrix
 
-A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64}, dim::StateSpaceDimensions, mode::String)`.
+A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Float64}, Z::Vector{Matrix{Float64}}, T::Matrix{Float64}, R::Matrix{Float64})`.
 
 Alternatively, if `Z` is time-invariant, it can be input as a single ``p \\times m`` matrix.
 """
