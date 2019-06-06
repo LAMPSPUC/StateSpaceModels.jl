@@ -133,3 +133,49 @@ struct StateSpace
     param::StateSpaceParameters
     filter::FilterOutput
 end
+
+
+mutable struct AuxiliarySqrtKalman
+
+    a::Matrix{Float64}
+    sqrtP::Array{Float64, 3}
+    v::Matrix{Float64}
+    sqrtF::Array{Float64, 3}
+    K::Array{Float64, 3}
+    U::Array{Float64, 2}
+    G::Array{Float64, 2}
+    U2star::Array{Float64, 3}
+    zeros_pr::Array{Float64, 2}
+    zeros_mp::Array{Float64, 2}
+    range1::UnitRange{Int64}
+    range2::UnitRange{Int64}
+    sqrtH_zeros_pr::Array{Float64, 2}
+    zeros_mp_RsqrtQ::Array{Float64, 2}
+
+    function AuxiliarySqrtKalman(model::StateSpaceModel)
+        aux = new()
+        # Load dimensions
+        n, p, m, r = size(model)
+        # Predictive state and its sqrt-covariance
+        aux.a     = Matrix{Float64}(undef, n+1, m)
+        aux.sqrtP = Array{Float64, 3}(undef, m, m, n+1)
+        # Innovation and its sqrt-covariance
+        aux.v     = Matrix{Float64}(undef, n, p)
+        aux.sqrtF = Array{Float64, 3}(undef, p, p, n)
+        # Kalman gain
+        aux.K     = Array{Float64, 3}(undef, m, p, n)
+        # Auxiliary matrices
+        aux.U = Array{Float64, 2}(undef, p + m, m + p + r)
+        aux.G = Array{Float64, 2}(undef, m + p + r, p + m)
+        aux.U2star = Array{Float64, 3}(undef, m, p, n)
+        # Pre-allocating for performance
+        aux.zeros_pr = zeros(Float64, p, r)
+        aux.zeros_mp = zeros(Float64, m, p)
+        aux.range1   = (p + 1):(p + m)
+        aux.range2   = 1:p
+        aux.sqrtH_zeros_pr  = zeros(Float64, p, p + r)
+        aux.zeros_mp_RsqrtQ = zeros(Float64, m, p + m)
+
+        return aux
+    end
+end

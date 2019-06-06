@@ -27,12 +27,12 @@ end
 
 Compute log-likelihood concerning hyperparameter vector psitilde
 """
-function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) where T <: AbstractFloat
+function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, aux::AuxiliarySqrtKalman) where T <: AbstractFloat
 
     sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r)
 
     # Obtain innovation v and its variance F
-    kfilter, U2star, K = sqrt_kalmanfilter(model, sqrtH, sqrtQ)
+    kfilter, U2star, K = sqrt_kalmanfilter(model, aux, sqrtH, sqrtQ)
 
     # Compute log-likelihood based on v and F
     loglikelihood = model.dim.n*model.dim.p*log(2*pi)/2
@@ -53,7 +53,7 @@ end
 
 Estimate structural model hyperparameters
 """
-function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64 = 1e-10, g_tol::Float64 = 1e-10, 
+function estimate_statespace(model::StateSpaceModel, aux::AuxiliarySqrtKalman, nseeds::Int; f_tol::Float64 = 1e-10, g_tol::Float64 = 1e-10, 
                                 iterations::Int = 10^5, verbose::Int = 1)
 
     nseeds += 1 # creating additional seed for degenerate cases
@@ -93,7 +93,7 @@ function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64
             end
         end
 
-        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model), seeds[:, iseed],
+        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model, aux), seeds[:, iseed],
                             LBFGS(), Optim.Options(f_tol = f_tol, g_tol = g_tol, iterations = iterations,
                             show_trace = verbose == 2 ? true : false))
         loglikelihood[iseed] = -optseed.minimum
