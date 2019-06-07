@@ -33,32 +33,32 @@
     #     @test all(ss.param.sqrtQ .< 1e-6)
     # end
 
-    @testset "Multivariate test" begin
+    # @testset "Multivariate test" begin
        
-        y = [ones(20) collect(1:20)]
-        model = structuralmodel(y, 2)
+    #     y = [ones(20) collect(1:20)]
+    #     model = structuralmodel(y, 2)
+    #     ss = statespace(model)
+    #     sim  = simulate(ss, 10, 1000)
+
+    #     @test mean(sim, dims = 3)[1, :] ≈ ones(10) rtol = 1e-3
+    #     @test mean(sim, dims = 3)[2, :] ≈ collect(21:30) rtol = 1e-3
+    # end
+
+    @testset "Air passengers" begin
+
+        AP = CSV.read("./example/AirPassengers.csv")
+        logAP = log.(Vector{Float64}(AP[:Passengers]))
+
+        model = structuralmodel(logAP, 12)
+
+        @test isa(model, StateSpaceModels.StateSpaceModel)
+        @test model.mode == "time-invariant"
+
         ss = statespace(model)
-        sim  = simulate(ss, 10, 1000)
 
-        @test mean(sim, dims = 3)[1, :] ≈ ones(10) rtol = 1e-3
-        @test mean(sim, dims = 3)[2, :] ≈ collect(21:30) rtol = 1e-3
+        @test isa(ss, StateSpaceModels.StateSpace)
+
     end
-
-#     @testset "Air passengers" begin
-
-#         AP = CSV.read("../example/AirPassengers.csv")
-#         logAP = log.(Vector{Float64}(AP[:Passengers]))
-
-#         model = structuralmodel(logAP, 12)
-
-#         @test isa(model, StateSpaceModels.StateSpaceModel)
-#         @test model.mode == "time-invariant"
-
-#         ss = statespace(model)
-
-#         @test isa(ss, StateSpaceModels.StateSpace)
-
-#     end
 
 #     @testset "Error tests" begin
 

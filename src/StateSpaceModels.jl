@@ -2,6 +2,8 @@ module StateSpaceModels
 
 using Optim, Distributions, LinearAlgebra, StaticArrays
 
+using TimerOutputs
+
 import Base: size
 
 export statespace
@@ -14,6 +16,8 @@ include("kalman.jl")
 include("simulation.jl")
 
 function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
+
+    reset_timer!()
 
     if !(verbose in [0, 1, 2])
         @warn("Incorrect verbose value input (should be 0, 1, or 2): switching to default value 1")
@@ -33,14 +37,16 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
     end
 
     # Kalman filter and smoothing
-    kfilter, U2star, K = sqrt_kalmanfilter(model, param.sqrtH, param.sqrtQ)
-    smoothedstate = sqrt_smoother(model, kfilter, U2star, K)
+    @timeit "kalman" kfilter, U2star, K = sqrt_kalmanfilter(model, param.sqrtH, param.sqrtQ)
+    @timeit "smoother" smoothedstate = sqrt_smoother(model, kfilter, U2star, K)
 
     if verbose > 0
         @info("Filtering and smoothing completed.")
     end
 
     output = StateSpace(model, smoothedstate, param, kfilter)
+
+    print_timer()
 
     return output
 end
