@@ -97,9 +97,19 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `alpha` Expected value of the smoothed state ``E(\\alpha_t|y_1, \\dots , y_n)``
 * `V` Error covariance matrix of smoothed state ``Var(\\alpha_t|y_1, \\dots , y_n)``
 """
-struct SmoothedState
+mutable struct SmoothedState
     alpha::Matrix{Float64} # smoothed state
     V::Array{Float64, 3} # variance of smoothed state
+
+    function SmoothedState(model::StateSpaceModel)
+        ss = new()
+        # Load dimensions
+        n, p, m, r = size(model)
+        ss.alpha = Matrix{Float64}(undef, n, m)
+        ss.V     = Array{Float64, 3}(undef, m, m, n)
+
+        return ss
+    end
 end
 
 """
@@ -120,6 +130,22 @@ mutable struct FilterOutput
     sqrtF::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
+
+    function FilterOutput(model::StateSpaceModel)
+        fo = new()
+        # Load dimensions
+        n, p, m, r = size(model)
+        # Predictive state and its sqrt-covariance
+        fo.a     = Matrix{Float64}(undef, n+1, m)
+        fo.sqrtP = Array{Float64, 3}(undef, m, m, n+1)
+        # Innovation and its sqrt-covariance
+        fo.v     = Matrix{Float64}(undef, n, p)
+        fo.sqrtF = Array{Float64, 3}(undef, p, p, n)
+        # Steady state info
+        steadystate, tsteady = false, n+1
+        
+        return fo
+    end
 end
 
 """
@@ -134,13 +160,19 @@ struct StateSpace
     filter::FilterOutput
 end
 
+"""
+    FilterOutput
 
-mutable struct AuxiliarySqrtKalman
+Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-    a::Matrix{Float64}
-    sqrtP::Array{Float64, 3}
-    v::Matrix{Float64}
-    sqrtF::Array{Float64, 3}
+* `a` 
+* `v` 
+* `sqrtP`
+* `sqrtF`
+* `steadystate`
+"""
+mutable struct AuxiliaryDataSqrtKalman
+
     K::Array{Float64, 3}
     U::Array{Float64, 2}
     G::Array{Float64, 2}
@@ -151,31 +183,38 @@ mutable struct AuxiliarySqrtKalman
     range2::UnitRange{Int64}
     sqrtH_zeros_pr::Array{Float64, 2}
     zeros_mp_RsqrtQ::Array{Float64, 2}
+    L::Array{Float64, 3}
+    r::Array{Float64, 2}
+    sqrtN::Array{Float64, 3}
+    sqrtPsteady::Array{Float64, 2}
+    sqrtFsteady::Array{Float64, 2}
+    F_aux::Array{Float64, 2}
 
-    function AuxiliarySqrtKalman(model::StateSpaceModel)
-        aux = new()
+    function AuxiliaryDataSqrtKalman(model::StateSpaceModel)
+        aux_data = new()
         # Load dimensions
         n, p, m, r = size(model)
-        # Predictive state and its sqrt-covariance
-        aux.a     = Matrix{Float64}(undef, n+1, m)
-        aux.sqrtP = Array{Float64, 3}(undef, m, m, n+1)
-        # Innovation and its sqrt-covariance
-        aux.v     = Matrix{Float64}(undef, n, p)
-        aux.sqrtF = Array{Float64, 3}(undef, p, p, n)
         # Kalman gain
-        aux.K     = Array{Float64, 3}(undef, m, p, n)
+        aux_data.K     = Array{Float64, 3}(undef, m, p, n)
         # Auxiliary matrices
-        aux.U = Array{Float64, 2}(undef, p + m, m + p + r)
-        aux.G = Array{Float64, 2}(undef, m + p + r, p + m)
-        aux.U2star = Array{Float64, 3}(undef, m, p, n)
-        # Pre-allocating for performance
-        aux.zeros_pr = zeros(Float64, p, r)
-        aux.zeros_mp = zeros(Float64, m, p)
-        aux.range1   = (p + 1):(p + m)
-        aux.range2   = 1:p
-        aux.sqrtH_zeros_pr  = zeros(Float64, p, p + r)
-        aux.zeros_mp_RsqrtQ = zeros(Float64, m, p + m)
+        aux_data.U = Array{Float64, 2}(undef, p + m, m + p + r)
+        aux_data.G = Array{Float64, 2}(undef, m + p + r, p + m)
+        aux_data.U2star = Array{Float64, 3}(undef, m, p, n)
+        # Pre-allocating for performance (filter)
+        aux_data.zeros_pr = zeros(Float64, p, r)
+        aux_data.zeros_mp = zeros(Float64, m, p)
+        aux_data.range1   = (p + 1):(p + m)
+        aux_data.range2   = 1:p
+        aux_data.sqrtH_zeros_pr  = zeros(Float64, p, p + r)
+        aux_data.zeros_mp_RsqrtQ = zeros(Float64, m, p + m)
+        # Pre-allocating for performance (smoother)
+        aux_data.L     = Array{Float64, 3}(undef, m, m, n)
+        aux_data.r     = zeros(Float64, n, m)
+        aux_data.sqrtN = zeros(Float64, m, m, n)
+        aux_data.sqrtPsteady = Array{Float64, 2}(undef, m, m)
+        aux_data.sqrtFsteady = Array{Float64, 2}(undef, p, p)
+        aux_data.F_aux = Array{Float64, 2}(undef, p, p)
 
-        return aux
+        return aux_data
     end
 end

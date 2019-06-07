@@ -24,10 +24,13 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
         @info("Starting state-space model estimation...")
     end
 
-    aux = AuxiliarySqrtKalman(model)
-
+    # Prealocated data
+    filter_data = FilterOutput(model)
+    smoother_data = SmoothedState(model)
+    aux_data = AuxiliaryDataSqrtKalman(model)
+    
     # Maximum likelihood estimation
-    param = estimate_statespace(model, aux, nseeds; verbose = verbose)
+    param = estimate_statespace(model, filter_data, aux_data, nseeds; verbose = verbose)
 
     if verbose > 0
         @info("End of estimation.")
@@ -35,14 +38,14 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
     end
 
     # Kalman filter and smoothing
-    kfilter, U2star, K = sqrt_kalmanfilter(model, aux, param.sqrtH, param.sqrtQ)
-    smoothedstate = sqrt_smoother(model, kfilter, U2star, K)
+    sqrt_kalmanfilter!(model, filter_data, aux_data, param.sqrtH, param.sqrtQ)
+    sqrt_smoother!(model, filter_data, smoother_data, aux_data)
 
     if verbose > 0
         @info("Filtering and smoothing completed.")
     end
 
-    output = StateSpace(model, smoothedstate, param, kfilter)
+    output = StateSpace(model, smoother_data, param, filter_data)
 
     return output
 end

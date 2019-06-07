@@ -4,69 +4,80 @@
 
 Square-root Kalman filter with big Kappa initialization.
 """
-function sqrt_kalmanfilter(model::StateSpaceModel, aux::AuxiliarySqrtKalman, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
+function sqrt_kalmanfilter!(model::StateSpaceModel, filter_data::FilterOutput, aux_data::AuxiliaryDataSqrtKalman, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
 
     # Load dimensions
     n, p, m, r = size(model)
 
     # Load system
-    y = model.y
+    y       = model.y
     Z, T, R = ztr(model)
+
+    # Load filter data
+    a, v         = filter_data.a, filter_data.v
+    sqrtF, sqrtP = filter_data.sqrtF, filter_data.sqrtP
+
+    # Load smoother auxiliary prealocated variables
+    sqrtH_zeros_pr  = aux_data.sqrtH_zeros_pr
+    zeros_pr        = aux_data.zeros_pr
+    zeros_mp_RsqrtQ = aux_data.zeros_mp_RsqrtQ
+    zeros_mp        = aux_data.zeros_mp
+    K, G            = aux_data.K, aux_data.G
+    U, U2star       = aux_data.U, aux_data.U2star
+    range1, range2  = aux_data.range1, aux_data.range2
     
     # Steady state initialization
     steadystate  = false
-    tsteady      = n+1
+    tsteady      = n + 1
 
     # Initial state: big Kappa initialization
-    aux.a[1, :]        = zeros(m, 1)
-    aux.sqrtP[:, :, 1]    = 1e6 .* Matrix(I, m, m)
+    a[1, :]        .= zeros(m)
+    sqrtP[:, :, 1] .= 1e6 .* Matrix(I, m, m)
 
     # Pre-allocating for performance (check if it is memory efficient)
-    aux.sqrtH_zeros_pr  .= [sqrtH aux.zeros_pr]
-    aux.zeros_mp_RsqrtQ .= [aux.zeros_mp R*sqrtQ]
+    sqrtH_zeros_pr  .= [sqrtH zeros_pr]
+    zeros_mp_RsqrtQ .= [zeros_mp R * sqrtQ]
 
     # Square-root Kalman filter
     for t = 1:n
-        aux.v[t, :] = y[t, :] - Z[:, :, t] * aux.a[t, :]
+        v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
 
         if steadystate
-            aux.sqrtF[:, :, t] = aux.sqrtF[:, :, t-1]
-            aux.K[:, :, t] = aux.K[:, :, t-1]
-            aux.a[t+1, :] = T * aux.a[t, :] + aux.K[:, :, t] * aux.v[t, :]
+            sqrtF[:, :, t] = sqrtF[:, :, t-1]
+            K[:, :, t] = K[:, :, t-1]
+            a[t+1, :] = T * a[t, :] + K[:, :, t] * v[t, :]
             # No need to keep storing
-            aux.sqrtP[:, :, t+1] = aux.sqrtP[:, :, t]
+            sqrtP[:, :, t+1] = sqrtP[:, :, t]
 
         else
             # Manipulation of auxiliary matrices
-            # bla = [Z[:, :, t] * aux.sqrtP[:, :, t] aux.sqrtH_zeros_pr]
-            # ble = [T * aux.sqrtP[:, :, t] aux.zeros_mp_RsqrtQ]
-            aux.U .= [Z[:, :, t] * aux.sqrtP[:, :, t] aux.sqrtH_zeros_pr; T * aux.sqrtP[:, :, t] aux.zeros_mp_RsqrtQ]
-            aux.G .= aux.U'
+            U .= [Z[:, :, t] * sqrtP[:, :, t] sqrtH_zeros_pr; T * sqrtP[:, :, t] zeros_mp_RsqrtQ]
+            G .= U'
             # Inplace QR factorization
-            bla= qr(aux.G).Q
-            aux.U *= bla
-            aux.U2star[:, :, t] = aux.U[aux.range1, aux.range2]
-            aux.sqrtF[:, :, t]  = aux.U[aux.range2, aux.range2]
+            bla = qr(G).Q
+            U *= bla
+            U2star[:, :, t] .= U[range1, range2]
+            sqrtF[:, :, t]  .= U[range2, range2]
 
             # Kalman gain and predictive state update
             # Note: sqrtF[:, :, t] is lower triangular
-            aux.K[:, :, t] = aux.U2star[:, :, t] * pinv(aux.sqrtF[:, :, t])
+            K[:, :, t] .= U2star[:, :, t] * pinv(sqrtF[:, :, t])
             # forward_substitution()
-            aux.a[t+1, :]        = T * aux.a[t, :] + aux.K[:, :, t] * aux.v[t, :]
-            aux.sqrtP[:, :, t+1] = aux.U[aux.range1, aux.range1]
+            a[t+1, :]        .= T * a[t, :] + K[:, :, t] * v[t, :]
+            sqrtP[:, :, t+1] .= U[range1, range1]
 
             # Checking if steady state was attained
-            if maximum(abs.((aux.sqrtP[:, :, t+1] - aux.sqrtP[:, :, t]) / aux.sqrtP[:, :, t+1])) < tol
+            if maximum(abs.((sqrtP[:, :, t+1] - sqrtP[:, :, t]) / sqrtP[:, :, t+1])) < tol
                 steadystate = true
                 tsteady     = t
             end
         end
     end
 
-    # Saving in filter structure
-    kfilter = FilterOutput(aux.a[1:end-1, :], aux.v, aux.sqrtP, aux.sqrtF, steadystate, tsteady)
+    # Saving steady state info
+    filter_data.steadystate, filter_data.tsteady = steadystate, tsteady
 
-    return kfilter, aux.U2star, aux.K
+    return nothing
 end
 
 """
@@ -74,7 +85,7 @@ end
 
 Square-root smoother for state space model.
 """
-function sqrt_smoother(model::StateSpaceModel, kfilter::FilterOutput, U2star::Array{Float64, 3}, K::Array{Float64, 3})
+function sqrt_smoother!(model::StateSpaceModel, filter_data::FilterOutput, smoother_data::SmoothedState, aux_data::AuxiliaryDataSqrtKalman)
 
     # Load dimensions data
     n, p, m, r = size(model)
@@ -83,28 +94,28 @@ function sqrt_smoother(model::StateSpaceModel, kfilter::FilterOutput, U2star::Ar
     Z, T, R = ztr(model)
 
     # Load filter data
-    a           = kfilter.a
-    v           = kfilter.v
-    tsteady     = kfilter.tsteady
-    sqrtF       = kfilter.sqrtF
-    sqrtP       = kfilter.sqrtP
+    a, v         = filter_data.a, filter_data.v
+    sqrtF, sqrtP = filter_data.sqrtF, filter_data.sqrtP
+    tsteady      = filter_data.tsteady
 
-    # Smoothed state and its covariance
-    alpha = Matrix{Float64}(undef, n, m)
-    V     = Array{Float64, 3}(undef, m, m, n)
-    L     = Array{Float64, 3}(undef, m, m, n)
-    r     = Matrix{Float64}(undef, n, m)
-    sqrtN = Array{Float64, 3}(undef, m, m, n)
+    # Load smoother prealocated variables
+    alpha, V = smoother_data.alpha, smoother_data.V
+
+    # Load smoother auxiliary prealocated variables
+    U2star      = aux_data.U2star
+    K           = aux_data.K
+    r, L        = aux_data.r, aux_data.L
+    sqrtN       = aux_data.sqrtN
+    sqrtPsteady = aux_data.sqrtPsteady
+    sqrtFsteady = aux_data.sqrtFsteady
 
     # Initialization
-    sqrtN[:, :, end]  = zeros(m, m)
-    r[end, :]      = zeros(m, 1)
     sqrtPsteady = sqrtP[:, :, end]
     sqrtFsteady = sqrtF[:, :, end]
 
     # Iterating backwards
     for t = n:-1:tsteady
-        L[:, :, t]   = T - K[:, :, end]*Z[:, :, t]
+        L[:, :, t]   = T - K[:, :, end] * Z[:, :, t]
         r[t-1, :] = Z[:, :, t]' * pinv(sqrtFsteady*sqrtFsteady') * v[t, :] + L[:, :, t]' * r[t, :]
 
         # QR decomposition of auxiliary matrix Nstar
@@ -115,10 +126,7 @@ function sqrt_smoother(model::StateSpaceModel, kfilter::FilterOutput, U2star::Ar
 
         # Smoothed state and its covariance
         alpha[t, :] = a[t, :] + (sqrtPsteady*sqrtPsteady') * r[t-1, :]
-        V[:, :, t]     = (sqrtPsteady*sqrtPsteady') - 
-                   (sqrtPsteady*sqrtPsteady') *
-                   (sqrtN[:, :, t]*sqrtN[:, :, t]') * 
-                   (sqrtPsteady*sqrtPsteady')
+        V[:, :, t]  = sqrtPsteady * sqrtPsteady' - sqrtPsteady * sqrtPsteady' * sqrtN[:, :, t] * sqrtN[:, :, t]' * sqrtPsteady * sqrtPsteady'
     end
 
     for t = tsteady-1:-1:2
@@ -153,7 +161,7 @@ function sqrt_smoother(model::StateSpaceModel, kfilter::FilterOutput, U2star::Ar
                   (sqrtP[:, :, 1] * sqrtP[:, :, 1]')
 
     # Smoothed state structure
-    smoothedstate = SmoothedState(alpha, V)
+    smoother_data.alpha .= alpha
+    smoother_data.V     .= V
 
-    return smoothedstate
 end
