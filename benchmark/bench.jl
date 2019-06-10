@@ -1,6 +1,4 @@
-push!(LOAD_PATH, "/home/guilhermebodin/Documents/Github/StateSpaceModels.jl/src")
 using StateSpaceModels, BenchmarkTools, CSV
-cd("benchmark")
 # Local level series
 locallevel_series = CSV.read("locallevel.csv"; header = false)
 locallevel = locallevelmodel(Matrix{Float64}(locallevel_series))
