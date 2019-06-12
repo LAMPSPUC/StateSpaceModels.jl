@@ -13,7 +13,7 @@ pkg> add StateSpaceModels
 
 ## Notes
 
-StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state space framework based on structural models of Harvey (1989), in which a time series is decomposed in trend, slope and seasonals. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by J. Durbin and S. J. Koopman.
+StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state-space framework. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by J. Durbin and S. J. Koopman. The notation of the variables in the code also follows the book.
 
 Works using this package:
 
@@ -25,14 +25,16 @@ In: L Simpósio Brasileiro de Pesquisa Operacional, Rio de Janeiro, Brazil.
 ## Features
 
 Current features:
-* Basic structural model (trend, slope, seasonal)
-* Exogenous variables
-* Square-root Kalman Filter and smoother
-* Big Kappa initialization
+* Square-root Kalman filter and smoother
 * Monte Carlo simulation
 * Maximum likelihood estimation
 * Multivariate modeling
-* User-defined model
+* User-defined model (input any `Z`, `T`, and `R`)
+* Several pre-defined models, including:
+  1. Basic structural model (trend, slope, seasonal)
+  2. Structural model with exogenous variables
+  3. Linear trend model
+  4. Local level model
 
 Future features (work in progress):
 * Forecasting and confidence intervals
