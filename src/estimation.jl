@@ -35,17 +35,34 @@ function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) wher
     kfilter, U2star, K = sqrt_kalmanfilter(model, sqrtH, sqrtQ)
 
     # Compute log-likelihood based on v and F
-    loglikelihood = model.dim.n*model.dim.p*log(2*pi)/2
-    for t = model.dim.m:model.dim.n
-        det_sqrtF = det(kfilter.sqrtF[:, :, t]*kfilter.sqrtF[:, :, t]')
-        if det_sqrtF < 1e-30
-            det_sqrtF = 1e-30
-        end
-        loglikelihood = loglikelihood + .5 * (log(det_sqrtF) +
-                        (kfilter.v[t, :]' * pinv(kfilter.sqrtF[:, :, t]*kfilter.sqrtF[:, :, t]') * kfilter.v[t, :]))
-    end
+    F =  
 
+    return evaluate_likelihood(model.dim.n, model.dim.p, kfilter.v, F)
+end
+
+"""
+"""
+function evaluate_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}) where T <: AbstractFloat
+    loglikelihood::Float64 = n*p*log(2*pi)/2
+    for t = 1:n
+        loglikelihood = loglikelihood + 0.5 * (logdet(F) + (v[t, :]' * inv(F[:, :, t]) * v[t, :]))
+    end
     return loglikelihood
+end
+
+"""
+
+"""
+function evaluate_F(sqrtF::Array{T, 3}, n::Int) where T <: AbstractFloat
+    F = similar(sqrtF)
+    for t = 1:n
+
+        F[:, :, t] = LinearAlgebra.BLAS.trmm('R', 'L', 'T', 'N', 1.0, sqrtF[:, :, t], sqrtF[:, :, t])
+    end
+end
+
+function fast_X_Xtranspose(X::Matrix{Float64})
+    return LinearAlgebra.BLAS.trmm('R', 'L', 'T', 'N', 1.0, X, X)
 end
 
 """
