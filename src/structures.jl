@@ -1,5 +1,33 @@
-export StateSpaceDimensions, StateSpaceModel, StateSpaceParameters, 
-       SmoothedState, FilterOutput, StateSpace
+export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, 
+       SmoothedState, FilteredState, StateSpace
+
+# Abstract types
+"""
+TODO
+"""
+abstract type AbstractKalmanFilter end
+
+"""
+TODO
+"""
+abstract type AbstractKalmanSmoother end
+
+# Auxiliary tructures to square root kalman filter and smoother
+mutable struct SquareRootFilter <: AbstractKalmanFilter
+    a::Matrix{Float64} # predictive state
+    v::Matrix{Float64} # innovations
+    sqrtP::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
+    sqrtF::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
+    steadystate::Bool # flag that indicates if steady state was attained
+    tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
+    K::Array{Float64, 3} # Kalman gain
+    U2star::Array{Float64, 3} # Auxiliary sqrtKalman filter matrix
+end
+
+mutable struct SquareRootSmoother <: AbstractKalmanSmoother
+    alpha::Matrix{Float64} # smoothed state
+    V::Array{Float64, 3} # variance of smoothed state
+end
 
 """
     StateSpaceDimensions
@@ -40,8 +68,10 @@ struct StateSpaceModel
     R::Matrix{Float64} # state error matrix
     dim::StateSpaceDimensions
     mode::String
+    filter_type
 
-    function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64})
+    function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64}; 
+                             filter_type = Type{SquareRootFilter})
         
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -52,10 +82,11 @@ struct StateSpaceModel
             error("StateSpaceModel dimension mismatch")
         end
         dim = StateSpaceDimensions(ny, py, mr, rr)
-        new(y, Z, T, R, dim, "time-variant")
+        new(y, Z, T, R, dim, "time-variant", filter_type)
     end
     
-    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64})
+    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64};
+                             filter_type = Type{SquareRootFilter})
 
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -72,21 +103,21 @@ struct StateSpaceModel
         for t = 1:ny
             Zvar[:, :, t] = Z
         end
-        new(y, Zvar, T, R, dim, "time-invariant")
+        new(y, Zvar, T, R, dim, "time-invariant", filter_type)
     end
 end
 
 """
-    StateSpaceParameters
+    StateSpaceCovariance
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-* `sqrtH` matrix with sqrt-covariance of the observation vector ``H_t``
-* `sqrtQ` matrix with sqrt-covariance of the state vector ``Q_t``
+* `H` covariance matrix of the observation vector ``H_t``
+* `Q` covariance matrix of the state vector ``Q_t``
 """
-mutable struct StateSpaceParameters
-    sqrtH::Matrix{Float64} # lower triangular matrix with sqrt-covariance of the observation
-    sqrtQ::Matrix{Float64} # lower triangular matrix with sqrt-covariance of the state
+struct StateSpaceCovariance
+    H::Matrix{Float64} 
+    Q::Matrix{Float64}
 end
 
 """
@@ -103,7 +134,7 @@ struct SmoothedState
 end
 
 """
-    FilterOutput
+    FilteredState
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
@@ -111,9 +142,10 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `v` 
 * `P`
 * `F`
-* `steadystate`
+* `steadystate` Boolean to indicate if steady state was attained
+* `tstady` Instant when steady state was attained; in case it wasn't, `tsteady = n+1`
 """
-mutable struct FilteredState
+struct FilteredState
     a::Matrix{Float64} # predictive state
     v::Matrix{Float64} # innovations
     P::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
@@ -130,6 +162,6 @@ StateSpaceModel
 struct StateSpace
     model::StateSpaceModel
     state::SmoothedState
-    param::StateSpaceParameters
+    covariance::StateSpaceCovariance
     filter::FilteredState
 end

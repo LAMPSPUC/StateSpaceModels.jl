@@ -10,7 +10,7 @@ include("structures.jl")
 include("utils.jl")
 include("models.jl")
 include("estimation.jl")
-include("kalman.jl")
+include("sqrt_kalman.jl")
 include("simulation.jl")
 
 function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)

@@ -1,67 +1,29 @@
-"""
-    statespace_covariance(psi::Vector{T}, p::Int, r::Int) where T <: AbstractFloat
-
-Compute sqrt-covariance matrices of the errors from hyperparameter vector psi
-"""
-function statespace_covariance(psi::Vector{T}, p::Int, r::Int) where T <: AbstractFloat
-
-    # Observation sqrt-covariance matrix
-    if p > 1
-        sqrtH     = tril!(ones(p, p))
-        unknownsH = Int(p*(p + 1)/2)
-        sqrtH[findall(x -> x == 1, sqrtH)] = psi[1:unknownsH]
-    else
-        sqrtH = psi[1].*ones(1, 1)
-        unknownsH = 1
+function compute_log_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}) where T <: AbstractFloat
+    log_likelihood::Float64 = n*p*log(2*pi)/2
+    for t = 1:n
+        log_likelihood = log_likelihood + 0.5 * (logdet(F) + (v[t, :]' * inv(F[:, :, t]) * v[t, :]))
     end
+    return log_likelihood
+end
 
-    # State sqrt-covariance matrix
-    sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
-    sqrtQ[findall(x -> x == 1, sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
-
-    return sqrtH, sqrtQ
+function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel, filter_type) where T <: AbstractFloat
+    error(filter_type , " not implemented") # Returns an error if it cannot 
+                                            # find a specialized get_log_likelihood_params
 end
 
 """
     statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) where T <: AbstractFloat
 
 Compute log-likelihood concerning hyperparameter vector psitilde
+
+Evaluate ``\\ell(\\psi)...`` TODO
 """
 function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) where T <: AbstractFloat
-
-    sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r)
-
-    # Obtain innovation v and its variance F
-    kfilter, U2star, K = sqrt_kalmanfilter(model, sqrtH, sqrtQ)
-
+    # Calculate v and F 
+    v, F = get_log_likelihood_params(psitilde, model, model.filter_type)
     # Compute log-likelihood based on v and F
-    F =  
-
-    return evaluate_likelihood(model.dim.n, model.dim.p, kfilter.v, F)
+    return compute_log_likelihood(model.dim.n, model.dim.p, v, F)
 end
-
-"""
-"""
-function evaluate_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}) where T <: AbstractFloat
-    loglikelihood::Float64 = n*p*log(2*pi)/2
-    for t = 1:n
-        loglikelihood = loglikelihood + 0.5 * (logdet(F) + (v[t, :]' * inv(F[:, :, t]) * v[t, :]))
-    end
-    return loglikelihood
-end
-
-"""
-
-"""
-function evaluate_F(sqrtF::Array{T, 3}, n::Int) where T <: AbstractFloat
-    F = similar(sqrtF)
-    for t = 1:n
-
-        F[:, :, t] = LinearAlgebra.BLAS.trmm('R', 'L', 'T', 'N', 1.0, sqrtF[:, :, t], sqrtF[:, :, t])
-    end
-end
-
-
 
 """
     estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64 = 1e-10, g_tol::Float64 = 1e-10, iterations::Int = 10^5)
@@ -128,7 +90,7 @@ function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64
     sqrtH, sqrtQ = statespace_covariance(bestpsi, model.dim.p, model.dim.r)
 
     # Parameter structure
-    param = StateSpaceParameters(sqrtH, sqrtQ)
+    param = StateSpaceCovariance(gram(sqrtH), gram(sqrtQ))
 
     return param
 end

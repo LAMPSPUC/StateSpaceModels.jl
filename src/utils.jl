@@ -18,7 +18,16 @@ function ztr(model::StateSpaceModel)
     return model.Z, model.T, model.R
 end
 
-function fast_triangular_X_Xtranspose(X::Matrix{Float64})
-    return LinearAlgebra.BLAS.trmm('R', 'L', 'T', 'N', 1.0, X, X)
+
+# Linar Algebra wrappers
+function gram_in_time(mat::Array{Float64, 3})
+    gram_in_time = similar(mat)
+    for t = 1:size(gram_mat, 3)
+        gram_in_time[:, :, t] = gram(mat)
+    end
+    return gram_in_time
 end
 
+function gram(mat::Matrix{T}) where T <: AbstractFloat
+    return mat*mat'    
+end
