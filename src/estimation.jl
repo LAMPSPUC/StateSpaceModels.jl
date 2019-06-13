@@ -61,9 +61,7 @@ function evaluate_F(sqrtF::Array{T, 3}, n::Int) where T <: AbstractFloat
     end
 end
 
-function fast_X_Xtranspose(X::Matrix{Float64})
-    return LinearAlgebra.BLAS.trmm('R', 'L', 'T', 'N', 1.0, X, X)
-end
+
 
 """
     estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64 = 1e-10, g_tol::Float64 = 1e-10, iterations::Int = 10^5)
