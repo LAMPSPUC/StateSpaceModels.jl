@@ -1,3 +1,12 @@
+mutable struct SquareRootFilteredState
+    a::Matrix{Float64} # predictive state
+    v::Matrix{Float64} # innovations
+    sqrtP::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
+    sqrtF::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
+    steadystate::Bool # flag that indicates if steady state was attained
+    tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
+end
+
 """
     sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
 
@@ -73,7 +82,7 @@ function sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Ma
     end
 
     # Saving in filter structure
-    kfilter = FilterOutput(a[1:end-1, :], v, sqrtP, sqrtF, steadystate, tsteady)
+    kfilter = SquareRootFilteredState(a[1:end-1, :], v, sqrtP, sqrtF, steadystate, tsteady)
 
     return kfilter, U2star, K
 end

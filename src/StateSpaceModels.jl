@@ -45,4 +45,4 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
     return output
 end
 
-end
+end # end module

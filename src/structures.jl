@@ -107,17 +107,17 @@ end
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-* `a` 
+* `a`
 * `v` 
-* `sqrtP`
-* `sqrtF`
+* `P`
+* `F`
 * `steadystate`
 """
-mutable struct FilterOutput
+mutable struct FilteredState
     a::Matrix{Float64} # predictive state
     v::Matrix{Float64} # innovations
-    sqrtP::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
-    sqrtF::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
+    P::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
+    F::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
 end
@@ -131,5 +131,5 @@ struct StateSpace
     model::StateSpaceModel
     state::SmoothedState
     param::StateSpaceParameters
-    filter::FilterOutput
+    filter::FilteredState
 end
