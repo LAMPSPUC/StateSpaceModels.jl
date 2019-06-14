@@ -8,5 +8,5 @@
         ss = statespace(unimodel)
 
         @test isa(ss, StateSpaceModels.StateSpace)
-        @test ss.state.alpha[:, 2] == ones(15)
+        @test ss.smoother.alpha[:, 2] == ones(15)
 end

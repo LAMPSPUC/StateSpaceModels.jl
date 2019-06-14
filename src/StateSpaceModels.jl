@@ -25,24 +25,22 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
     end
 
     # Maximum likelihood estimation
-    param = estimate_statespace(model, nseeds; verbose = verbose)
+    covariance = estimate_statespace(model, nseeds; verbose = verbose)
 
     if verbose > 0
         @info("End of estimation.")
-        @info("Starting filtering and smoothing...")
     end
 
     # Kalman filter and smoothing
-    kfilter, U2star, K = sqrt_kalmanfilter(model, param.sqrtH, param.sqrtQ)
-    smoothedstate = sqrt_smoother(model, kfilter, U2star, K)
+    filtered_state, smoothed_state = kalman_filter_and_smoother(model, covariance, model.filter_type)
 
-    if verbose > 0
-        @info("Filtering and smoothing completed.")
-    end
+    return StateSpace(model, filtered_state, smoothed_state, covariance)
+end
 
-    output = StateSpace(model, smoothedstate, param, kfilter)
-
-    return output
+function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
+                                    filter_type::DataType)
+    error(filter_type , " not implemented") # Returns an error if it cannot 
+                                            # find a specialized kalman_filter_and_smoother
 end
 
 end # end module

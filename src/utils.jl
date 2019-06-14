@@ -22,8 +22,8 @@ end
 # Linar Algebra wrappers
 function gram_in_time(mat::Array{Float64, 3})
     gram_in_time = similar(mat)
-    for t = 1:size(gram_mat, 3)
-        gram_in_time[:, :, t] = gram(mat)
+    for t = 1:size(gram_in_time, 3)
+        gram_in_time[:, :, t] = gram(mat[:, :, t])
     end
     return gram_in_time
 end

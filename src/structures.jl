@@ -12,7 +12,7 @@ TODO
 """
 abstract type AbstractKalmanSmoother end
 
-# Auxiliary tructures to square root kalman filter and smoother
+# Auxiliary structures to square root kalman filter and smoother
 mutable struct SquareRootFilter <: AbstractKalmanFilter
     a::Matrix{Float64} # predictive state
     v::Matrix{Float64} # innovations
@@ -71,7 +71,7 @@ struct StateSpaceModel
     filter_type
 
     function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64}; 
-                             filter_type = Type{SquareRootFilter})
+                             filter_type::DataType = SquareRootFilter)
         
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -86,7 +86,7 @@ struct StateSpaceModel
     end
     
     function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64};
-                             filter_type = Type{SquareRootFilter})
+                             filter_type::DataType = SquareRootFilter)
 
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -118,6 +118,11 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 struct StateSpaceCovariance
     H::Matrix{Float64} 
     Q::Matrix{Float64}
+
+    function StateSpaceCovariance(sqrtH::Matrix{Float64}, sqrtQ::Matrix{Float64}, 
+                                  filter_type::Type{SquareRootFilter})
+        return new(gram(sqrtH), gram(sqrtQ))
+    end
 end
 
 """
@@ -161,7 +166,7 @@ StateSpaceModel
 """
 struct StateSpace
     model::StateSpaceModel
-    state::SmoothedState
-    covariance::StateSpaceCovariance
     filter::FilteredState
+    smoother::SmoothedState
+    covariance::StateSpaceCovariance
 end

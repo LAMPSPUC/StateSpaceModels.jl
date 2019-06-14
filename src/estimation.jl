@@ -1,14 +1,21 @@
 function compute_log_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}) where T <: AbstractFloat
     log_likelihood::Float64 = n*p*log(2*pi)/2
     for t = 1:n
-        log_likelihood = log_likelihood + 0.5 * (logdet(F) + (v[t, :]' * inv(F[:, :, t]) * v[t, :]))
+        log_likelihood = log_likelihood + 0.5 * (logdet(F[:, :, t]) + (v[t, :]' * inv(F[:, :, t]) * v[t, :]))
     end
     return log_likelihood
 end
 
-function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel, filter_type) where T <: AbstractFloat
+function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
+                                   filter_type::DataType) where T <: AbstractFloat
     error(filter_type , " not implemented") # Returns an error if it cannot 
                                             # find a specialized get_log_likelihood_params
+end
+
+function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
+                               filter_type::DataType) where T <: AbstractFloat
+    error(filter_type , " not implemented") # Returns an error if it cannot 
+                                            # find a specialized statespace_covariance
 end
 
 """
@@ -45,7 +52,7 @@ function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64
     seedrange = collect(-1e3:0.1:1e3)
 
     # Avoiding zero values for covariance
-    deleteat!(seedrange, findall(x -> x == 0.0, seedrange))
+    deleteat!(seedrange, findall(iszero, seedrange))
 
     if verbose > 0
         @info("Initiating maximum likelihood estimation with $(nseeds-1) seeds.")
@@ -86,11 +93,8 @@ function estimate_statespace(model::StateSpaceModel, nseeds::Int; f_tol::Float64
         @info("Log-likelihood: $(maximum(loglikelihood))")
     end
 
-    bestpsi      = psi[:, argmax(loglikelihood)]
-    sqrtH, sqrtQ = statespace_covariance(bestpsi, model.dim.p, model.dim.r)
+    bestpsi = psi[:, argmax(loglikelihood)]
+    H, Q    = statespace_covariance(bestpsi, model.dim.p, model.dim.r, model.filter_type)
 
-    # Parameter structure
-    param = StateSpaceCovariance(gram(sqrtH), gram(sqrtQ))
-
-    return param
+    return StateSpaceCovariance(H, Q, model.filter_type)
 end

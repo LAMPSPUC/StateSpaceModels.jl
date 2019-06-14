@@ -32,7 +32,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
 
     # Initial state: big Kappa initialization
     a[1, :]        = zeros(m, 1)
-    sqrtP[:, :, 1]    = 1e6.*Matrix(I, m, m)
+    sqrtP[:, :, 1]    = 1e6 .* Matrix(I, m, m)
 
     # Pre-allocating for performance
     zeros_pr = zeros(p, r)
@@ -77,7 +77,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
 end
 
 function check_sqrt_kalman_steady_state(sqrtP_t1::Matrix{T}, sqrtP_t::Matrix{T}, tol::T) where T <: AbstractFloat
-    return maximum(abs.((sqrtP_t1 - sqrtP_t)/sqrtP_t1)) < tol : true : false
+    return maximum(abs.((sqrtP_t1 - sqrtP_t)/sqrtP_t1)) < tol ? true : false
 end
 
 """
@@ -99,6 +99,8 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     tsteady     = sqrt_filter.tsteady
     sqrtF       = sqrt_filter.sqrtF
     sqrtP       = sqrt_filter.sqrtP
+    U2star      = sqrt_filter.U2star
+    K           = sqrt_filter.K
 
     # Smoothed state and its covariance
     alpha = Matrix{Float64}(undef, n, m)
@@ -157,24 +159,30 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     G      = qr(Nstar').Q
     NstarG = Nstar*G
     
+    sqrtN_0  = NstarG[1:m, 1:m]
     P_1 = gram(sqrtP[:, :, 1])
     N_0 = gram(sqrtN_0)
     sqrtN_0  = NstarG[1:m, 1:m]
     alpha[1, :] = a[1, :] + P_1 * r_0
-    V[:, :, 1]  = P_1 - (P_1 * N_0 * P)
+    V[:, :, 1]  = P_1 - (P_1 * N_0 * P_1)
 
     # Return the Square Root kalman filter smoothed state
     return SquareRootSmoother(alpha, V)
 end
 
-# Functions to estimate via Maximum likelihood
-function sqrt_filter_covariance(psi::Vector{T}, p::Int, r::Int) where T <: AbstractFloat
 
+# All filters have to have implemented the following functions
+# *
+# *
+# *
+
+function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
+                               filter_type::Type{SquareRootFilter}) where T <: AbstractFloat
     # Observation sqrt-covariance matrix
     if p > 1
         sqrtH     = tril!(ones(p, p))
         unknownsH = Int(p*(p + 1)/2)
-        sqrtH[findall(x -> x == 1, sqrtH)] = psi[1:unknownsH]
+        sqrtH[findall(isequal(1), sqrtH)] = psi[1:unknownsH]
     else
         sqrtH = psi[1].*ones(1, 1)
         unknownsH = 1
@@ -187,14 +195,27 @@ function sqrt_filter_covariance(psi::Vector{T}, p::Int, r::Int) where T <: Abstr
     return sqrtH, sqrtQ
 end
 
-# All implementations of the different Kalman Filters have to define the function get_log_likelihood_params
-# to build v and F that are inputs of the Maximum Likelihood Estimation Algorithm
 function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel, 
-                                   filter_type::Type{StateSpaceModels.SquareRootFilter}) where T <: AbstractFloat
+                                   filter_type::Type{SquareRootFilter}) where T <: AbstractFloat
 
-    sqrtH, sqrtQ = sqrt_filter_covariance(psitilde, model.dim.p, model.dim.r)
+    sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
     # Obtain innovation v and its variance F
     sqrt_kfilter = sqrt_kalman_filter(model, sqrtH, sqrtQ)
     # Return v and F
     return sqrt_kfilter.v, gram_in_time(sqrt_kfilter.sqrtF)
+end
+
+function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
+                                    filter_type::Type{SquareRootFilter})
+    # Compute sqrt matrices                                
+    sqrtH = cholesky(covariance.H).L # .L stands for Lower triangular
+    sqrtQ = cholesky(covariance.Q).L # .L stands for Lower triangular
+
+    # Do the SquareRootFilter 
+    filtered_state = sqrt_kalman_filter(model, sqrtH.data, sqrtQ.data)
+    smoothed_state = sqrt_smoother(model, filtered_state)
+    return FilteredState(filtered_state.a, filtered_state.v, 
+                         gram_in_time(filtered_state.sqrtP), gram_in_time(filtered_state.sqrtF),
+                         filtered_state.steadystate, filtered_state.tsteady) ,
+           SmoothedState(smoothed_state.alpha, smoothed_state.V) 
 end
