@@ -5,15 +5,15 @@ export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance,
 """
 TODO
 """
-abstract type AbstractKalmanFilter end
+abstract type AbstractFilter end
 
 """
 TODO
 """
-abstract type AbstractKalmanSmoother end
+abstract type AbstractSmoother end
 
 # Auxiliary structures to square root kalman filter and smoother
-mutable struct SquareRootFilter <: AbstractKalmanFilter
+mutable struct SquareRootFilter <: AbstractFilter
     a::Matrix{Float64} # predictive state
     v::Matrix{Float64} # innovations
     sqrtP::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
@@ -24,7 +24,7 @@ mutable struct SquareRootFilter <: AbstractKalmanFilter
     U2star::Array{Float64, 3} # Auxiliary sqrtKalman filter matrix
 end
 
-mutable struct SquareRootSmoother <: AbstractKalmanSmoother
+mutable struct SquareRootSmoother <: AbstractSmoother
     alpha::Matrix{Float64} # smoothed state
     V::Array{Float64, 3} # variance of smoothed state
 end
