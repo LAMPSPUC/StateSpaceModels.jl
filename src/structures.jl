@@ -12,6 +12,11 @@ TODO
 """
 abstract type AbstractSmoother end
 
+"""
+TODO
+"""
+abstract type AbstractOptimizationMethod end
+
 # Auxiliary structures to square root kalman filter and smoother
 mutable struct SquareRootFilter <: AbstractFilter
     a::Matrix{Float64} # predictive state
@@ -28,6 +33,28 @@ mutable struct SquareRootSmoother <: AbstractSmoother
     alpha::Matrix{Float64} # smoothed state
     V::Array{Float64, 3} # variance of smoothed state
 end
+
+
+
+
+
+# Concrete structs for optimization methods
+"""
+TODO
+"""
+mutable struct RandomSeedsLBFGS <: AbstractOptimizationMethod
+    f_tol::Float64
+    g_tol::Float64
+    iterations::Int
+    nseeds::Int
+
+    function RandomSeedsLBFGS()
+        return new(1e-10, 1e-10, 1e5, 3)
+    end
+end
+
+
+
 
 """
     StateSpaceDimensions
@@ -68,10 +95,12 @@ struct StateSpaceModel
     R::Matrix{Float64} # state error matrix
     dim::StateSpaceDimensions
     mode::String
-    filter_type
+    filter_type::DataType
+    optimization_method::AbstractOptimizationMethod
 
     function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64}; 
-                             filter_type::DataType = SquareRootFilter)
+                             filter_type::DataType = SquareRootFilter, 
+                             optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS())
         
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -82,11 +111,12 @@ struct StateSpaceModel
             error("StateSpaceModel dimension mismatch")
         end
         dim = StateSpaceDimensions(ny, py, mr, rr)
-        new(y, Z, T, R, dim, "time-variant", filter_type)
+        new(y, Z, T, R, dim, "time-variant", filter_type, optimization_method)
     end
     
     function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64};
-                             filter_type::DataType = SquareRootFilter)
+                             filter_type::DataType = SquareRootFilter, 
+                             optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS())
 
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -103,7 +133,7 @@ struct StateSpaceModel
         for t = 1:ny
             Zvar[:, :, t] = Z
         end
-        new(y, Zvar, T, R, dim, "time-invariant", filter_type)
+        new(y, Zvar, T, R, dim, "time-invariant", filter_type, optimization_method)
     end
 end
 

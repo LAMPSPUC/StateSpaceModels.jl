@@ -10,6 +10,7 @@ include("structures.jl")
 include("utils.jl")
 include("models.jl")
 include("estimation.jl")
+include("random_seeds_lbfgs.jl")
 include("sqrt_kalman.jl")
 include("simulation.jl")
 
@@ -25,7 +26,7 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
     end
 
     # Maximum likelihood estimation
-    covariance = estimate_statespace(model, nseeds; verbose = verbose)
+    covariance = estimate_statespace(model, model.optimization_method; verbose = verbose)
 
     if verbose > 0
         @info("End of estimation.")
