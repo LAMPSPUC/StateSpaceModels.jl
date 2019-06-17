@@ -56,6 +56,9 @@ function estimate_statespace(model::StateSpaceModel,
         @info("Log-likelihood: $(maximum(loglikelihood))")
     end
 
+    # Put seeds in the model struct
+    model.optimization_method.seeds = seeds
+
     bestpsi = psi[:, argmax(loglikelihood)]
     H, Q    = statespace_covariance(bestpsi, model.dim.p, model.dim.r, model.filter_type)
 

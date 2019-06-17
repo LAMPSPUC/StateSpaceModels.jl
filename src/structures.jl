@@ -47,6 +47,7 @@ mutable struct RandomSeedsLBFGS <: AbstractOptimizationMethod
     g_tol::Float64
     iterations::Int
     nseeds::Int
+    seeds::Array{Float64}
 
     function RandomSeedsLBFGS()
         return new(1e-10, 1e-10, 1e5, 3)
