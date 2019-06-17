@@ -60,7 +60,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
             sqrtF[:, :, t]  = Ustar[range2, range2]
 
             # Kalman gain and predictive state update
-            K[:, :, t]       = U2star[:, :, t]*pinv(sqrtF[:, :, t])
+            K[:, :, t]       = U2star[:, :, t]*inv(sqrtF[:, :, t])
             a[t+1, :]     = T*a[t, :] + K[:, :, t]*v[t, :]
             sqrtP[:, :, t+1] = Ustar[range1, range1]
 
@@ -124,7 +124,7 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
         r[t-1, :] = Z[:, :, t]' * pinv(Fsteady) * v[t, :] + L[:, :, t]' * r[t, :]
 
         # QR decomposition of auxiliary matrix Nstar
-        Nstar        = [Z[:, :, t]' * pinv(sqrtF[:, :, end]) L[:, :, t]' * sqrtN[:, :, t]]
+        Nstar        = [Z[:, :, t]' * inv(sqrtF[:, :, end]) L[:, :, t]' * sqrtN[:, :, t]]
         G            = qr(Nstar').Q
         NstarG       = Nstar * G
         sqrtN[:, :, t-1]   = NstarG[1:m, 1:m]
@@ -136,13 +136,12 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     end
 
     for t = tsteady-1:-1:2
-        L[:, :, t]   = T - U2star[:, :, t] * pinv(sqrtF[:, :, t]) * Z[:, :, t]
-        r[t-1, :] = Z[:, :, t]' * pinv(sqrtF[:, :, t] * sqrtF[:, :, t]') * v[t, :] + L[:, :, t]'*r[t, :]
-        Nstar  = [Z[:, :, t]' * pinv(sqrtF[:, :, t]) L[:, :, t]' * sqrtN[:, :, t]]
+        L[:, :, t]   = T - U2star[:, :, t] * inv(sqrtF[:, :, t]) * Z[:, :, t]
+        r[t-1, :] = Z[:, :, t]' * inv(sqrtF[:, :, t] * sqrtF[:, :, t]') * v[t, :] + L[:, :, t]'*r[t, :]
+        Nstar  = [Z[:, :, t]' * inv(sqrtF[:, :, t]) L[:, :, t]' * sqrtN[:, :, t]]
 
         # QR decomposition of auxiliary matrix Nstar
-        G          = qr(Nstar').Q
-        NstarG     = Nstar*G
+        NstarG     = Nstar*qr(Nstar').Q
         sqrtN[:, :, t-1] = NstarG[1:m, 1:m]
 
         # Smoothed state and its covariance
@@ -152,19 +151,16 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
         V[:, :, t]  = P - (P * N * P)
     end
 
-    F_1 = gram(sqrtF[:, :, 1])
-    L[:, :, 1]   = T - U2star[:, :, 1] * pinv(sqrtF[:, :, 1]) * Z[:, :, 1]
-    r_0    = Z[:, :, 1]' * pinv(F_1) * v[1, :] + L[:, :, 1]' * r[1, :]
-    Nstar  = [Z[:, :, 1]' * pinv(sqrtF[:, :, 1]) L[:, :, 1]' * sqrtN[:, :, 1]]
+    L[:, :, 1]   = T - U2star[:, :, 1] * inv(sqrtF[:, :, 1]) * Z[:, :, 1]
+    r_0    = Z[:, :, 1]' * inv(gram(sqrtF[:, :, 1])) * v[1, :] + L[:, :, 1]' * r[1, :]
+    Nstar  = [Z[:, :, 1]' * inv(sqrtF[:, :, 1]) L[:, :, 1]' * sqrtN[:, :, 1]]
     G      = qr(Nstar').Q
     NstarG = Nstar*G
     
     sqrtN_0  = NstarG[1:m, 1:m]
     P_1 = gram(sqrtP[:, :, 1])
-    N_0 = gram(sqrtN_0)
-    sqrtN_0  = NstarG[1:m, 1:m]
     alpha[1, :] = a[1, :] + P_1 * r_0
-    V[:, :, 1]  = P_1 - (P_1 * N_0 * P_1)
+    V[:, :, 1]  = P_1 - (P_1 * gram(sqrtN_0) * P_1)
 
     # Return the Square Root kalman filter smoothed state
     return SquareRootSmoother(alpha, V)

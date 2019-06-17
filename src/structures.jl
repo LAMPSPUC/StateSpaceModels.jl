@@ -50,7 +50,7 @@ mutable struct RandomSeedsLBFGS <: AbstractOptimizationMethod
     seeds::Array{Float64}
 
     function RandomSeedsLBFGS()
-        return new(1e-10, 1e-10, 1e5, 3)
+        return new(1e-6, 1e-6, 1e5, 3)
     end
 end
 

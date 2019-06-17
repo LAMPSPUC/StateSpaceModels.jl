@@ -22,7 +22,7 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
     end
 
     if verbose > 0
-        @info("Starting state-space model estimation...")
+        @info("Starting state-space model estimation.")
     end
 
     # Maximum likelihood estimation
@@ -30,6 +30,7 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
 
     if verbose > 0
         @info("End of estimation.")
+        @info("Starting filtering and smoothing.")
     end
 
     # Kalman filter and smoothing
