@@ -121,7 +121,7 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
         Fsteady = gram(sqrtF[:, :, end])
         sqrtN_t = gram(sqrtN[:, :, t])
         L[:, :, t]   = T - K[:, :, end]*Z[:, :, t]
-        r[t-1, :] = Z[:, :, t]' * pinv(Fsteady) * v[t, :] + L[:, :, t]' * r[t, :]
+        r[t-1, :] = Z[:, :, t]' * inv(Fsteady) * v[t, :] + L[:, :, t]' * r[t, :]
 
         # QR decomposition of auxiliary matrix Nstar
         Nstar        = [Z[:, :, t]' * inv(sqrtF[:, :, end]) L[:, :, t]' * sqrtN[:, :, t]]
