@@ -1,5 +1,6 @@
 @testset "User defined model" begin
-    y = [1 2; 1 2.0]
+    y = [1 2; 1 2.0] # y definition
+    
     Z = [1 2.0; 2.0 1.0]
     T = [1 2.0]
     R = [1 2.0]

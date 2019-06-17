@@ -9,8 +9,8 @@ the number of series in the model, the number of steps ahead, and the number of 
 function simulate(ss::StateSpace, N::Int, S::Int)
 
     # Load estimated covariance matrices
-    H = ss.param.sqrtH'*ss.param.sqrtH
-    Q = ss.param.sqrtQ'*ss.param.sqrtQ
+    H = ss.covariance.H
+    Q = ss.covariance.Q
 
     # Load system matrices
     n, p, m, r = size(ss.model)
@@ -18,9 +18,9 @@ function simulate(ss::StateSpace, N::Int, S::Int)
     Z = Z[:, :, 1]
 
     # Load a, P, and F at last in-sample instant
-    a0 = ss.state.alpha[end, :]
-    P0 = ss.filter.sqrtP[:, :, end]'*ss.filter.sqrtP[:, :, end]
-    F0 = ss.filter.sqrtF[:, :, end]'*ss.filter.sqrtF[:, :, end]
+    a0 = ss.smoother.alpha[end, :]
+    P0 = ss.filter.P[:, :, end]
+    F0 = ss.filter.F[:, :, end]
     
     # State and variance forecasts
     a = Matrix{Float64}(undef, N, m)

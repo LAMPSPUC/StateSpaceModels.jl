@@ -17,3 +17,17 @@ Return the state space model arrays `Z`, `T` and `R` of the `StateSpaceModel`
 function ztr(model::StateSpaceModel)
     return model.Z, model.T, model.R
 end
+
+
+# Linar Algebra wrappers
+function gram_in_time(mat::Array{Float64, 3})
+    gram_in_time = similar(mat)
+    for t = 1:size(gram_in_time, 3)
+        gram_in_time[:, :, t] = gram(mat[:, :, t])
+    end
+    return gram_in_time
+end
+
+function gram(mat::Matrix{T}) where T <: AbstractFloat
+    return mat*mat'    
+end
