@@ -3,7 +3,7 @@
         y = ones(15)
         X = randn(15, 2)
         s = 2
-        model = structuralmodel(y, s; X = X)
+        model = structural(y, s; X = X)
         n, p, m, r = size(model)
         @test n == 15
         @test p == 1
@@ -13,7 +13,7 @@
         y = ones(15)
         X = randn(15, 15)
         s = 2
-        model = structuralmodel(y, s; X = X)
+        model = structural(y, s; X = X)
         n, p, m, r = size(model)
         @test n == 15
         @test p == 1
@@ -23,7 +23,7 @@
 
     @testset "ztr" begin
         y = ones(15)
-        model = locallevelmodel(y)
+        model = local_level(y)
         Z, T, R = ztr(model)
         @test all(Z .== [1.0])
         @test T == [1.0][:, :]

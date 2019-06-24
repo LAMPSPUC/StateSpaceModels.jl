@@ -1,5 +1,5 @@
 """
-    sqrt_kalmanfilter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
+    sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
 
 Square-root Kalman filter with big Kappa initialization.
 """
@@ -61,11 +61,11 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
 
             # Kalman gain and predictive state update
             K[:, :, t]       = U2star[:, :, t]*inv(sqrtF[:, :, t])
-            a[t+1, :]     = T*a[t, :] + K[:, :, t]*v[t, :]
+            a[t+1, :]        = T*a[t, :] + K[:, :, t]*v[t, :]
             sqrtP[:, :, t+1] = Ustar[range1, range1]
 
             # Checking if steady state was attained
-            if check_sqrt_kalman_steady_state(sqrtP[:, :, t+1], sqrtP[:, :, t], tol)
+            if check_steady_state(sqrtP[:, :, t+1], sqrtP[:, :, t], tol)
                 steadystate = true
                 tsteady     = t
             end
@@ -73,15 +73,11 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
     end
 
     # Return the auxiliary filter structre
-    return SquareRootFilter(a[1:end-1, :], v, sqrtP, sqrtF, steadystate, tsteady, K, U2star)
-end
-
-function check_sqrt_kalman_steady_state(sqrtP_t1::Matrix{T}, sqrtP_t::Matrix{T}, tol::T) where T <: AbstractFloat
-    return maximum(abs.((sqrtP_t1 - sqrtP_t)/sqrtP_t1)) < tol ? true : false
+    return SquareRootFilter(a[1:end-1, :], v, sqrtP, sqrtF, steadystate, tsteady, K)
 end
 
 """
-    sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilteredState)
+    sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
 
 Square-root smoother for state space model.
 """
@@ -99,7 +95,6 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     tsteady     = sqrt_filter.tsteady
     sqrtF       = sqrt_filter.sqrtF
     sqrtP       = sqrt_filter.sqrtP
-    U2star      = sqrt_filter.U2star
     K           = sqrt_filter.K
 
     # Smoothed state and its covariance
@@ -119,8 +114,8 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     for t = n:-1:tsteady
         Psteady = gram(sqrtP[:, :, end])
         Fsteady = gram(sqrtF[:, :, end])
-        sqrtN_t = gram(sqrtN[:, :, t])
-        L[:, :, t]   = T - K[:, :, end]*Z[:, :, t]
+        N_t     = gram(sqrtN[:, :, t])
+        L[:, :, t]   = T - K[:, :, end] * Z[:, :, t]
         r[t-1, :] = Z[:, :, t]' * inv(Fsteady) * v[t, :] + L[:, :, t]' * r[t, :]
 
         # QR decomposition of auxiliary matrix Nstar
@@ -131,12 +126,11 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
 
         # Smoothed state and its covariance
         alpha[t, :] = a[t, :] + Psteady * r[t-1, :]
-        V[:, :, t]     = Psteady - 
-                        Psteady *sqrtN_t * Psteady
+        V[:, :, t]  = Psteady - Psteady * N_t * Psteady
     end
 
     for t = tsteady-1:-1:2
-        L[:, :, t]   = T - U2star[:, :, t] * inv(sqrtF[:, :, t]) * Z[:, :, t]
+        L[:, :, t]   = T - K[:, :, t] * Z[:, :, t]
         r[t-1, :] = Z[:, :, t]' * inv(sqrtF[:, :, t] * sqrtF[:, :, t]') * v[t, :] + L[:, :, t]'*r[t, :]
         Nstar  = [Z[:, :, t]' * inv(sqrtF[:, :, t]) L[:, :, t]' * sqrtN[:, :, t]]
 
@@ -151,7 +145,7 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
         V[:, :, t]  = P - (P * N * P)
     end
 
-    L[:, :, 1]   = T - U2star[:, :, 1] * inv(sqrtF[:, :, 1]) * Z[:, :, 1]
+    L[:, :, 1]   = T - K[:, :, 1] * Z[:, :, 1]
     r_0    = Z[:, :, 1]' * inv(gram(sqrtF[:, :, 1])) * v[1, :] + L[:, :, 1]' * r[1, :]
     Nstar  = [Z[:, :, 1]' * inv(sqrtF[:, :, 1]) L[:, :, 1]' * sqrtN[:, :, 1]]
     G      = qr(Nstar').Q
@@ -163,7 +157,7 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     V[:, :, 1]  = P_1 - (P_1 * gram(sqrtN_0) * P_1)
 
     # Return the Square Root kalman filter smoothed state
-    return SquareRootSmoother(alpha, V)
+    return Smoother(alpha, V)
 end
 
 

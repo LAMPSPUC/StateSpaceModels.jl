@@ -11,6 +11,7 @@ include("utils.jl")
 include("models.jl")
 include("estimation.jl")
 include("random_seeds_lbfgs.jl")
+include("kalman.jl")
 include("sqrt_kalman.jl")
 include("simulation.jl")
 

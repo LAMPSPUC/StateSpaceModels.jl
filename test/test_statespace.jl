@@ -2,7 +2,7 @@
 @testset "Strutural model tests" begin
     @testset "Constant signal with basic structural model" begin
         y = ones(30)
-        model = structuralmodel(y, 2)
+        model = structural(y, 2)
 
         @test isa(model, StateSpaceModels.StateSpaceModel)
         @test model.mode == "time-invariant"
@@ -20,7 +20,7 @@
         y = ones(15)
         X = randn(15, 2)
 
-        model = structuralmodel(y, 2; X = X)
+        model = structural(y, 2; X = X)
 
         @test isa(model, StateSpaceModels.StateSpaceModel)
         @test model.mode == "time-variant"
@@ -36,7 +36,7 @@
     @testset "Multivariate test" begin
        
         y = [ones(20) collect(1:20)]
-        model = structuralmodel(y, 2)
+        model = structural(y, 2)
         ss = statespace(model)
         sim  = simulate(ss, 10, 1000)
 
@@ -49,6 +49,6 @@
         dim = StateSpaceModels.StateSpaceDimensions(1, 1, 1, 1)
         Z = Vector{Matrix{Float64}}(undef, 3)
         T = R = Matrix{Float64}(undef, 2, 2)
-        @test_throws ErrorException structuralmodel(y, 2; X = ones(10, 2))
+        @test_throws ErrorException structural(y, 2; X = ones(10, 2))
     end
 end

@@ -1,7 +1,7 @@
 @testset "Simulation tests" begin
     @testset "Affine series simulation" begin
         y = collect(1.:30)
-        model = structuralmodel(y, 2)
+        model = structural(y, 2)
         ss = statespace(model)
         sim = simulate(ss, 20, 100)
         media_sim = mean(sim, dims = 3)[1, :]

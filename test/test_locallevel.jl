@@ -100,7 +100,7 @@ y = [0.0     # Deterministic local level generated time series
 8.366964896750876]
 
 @testset "Local level model" begin
-        unimodel = locallevelmodel(y)
+        unimodel = local_level(y)
 
         @test isa(unimodel, StateSpaceModels.StateSpaceModel)
         @test unimodel.mode == "time-invariant"

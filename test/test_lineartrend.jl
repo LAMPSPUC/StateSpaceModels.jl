@@ -1,6 +1,6 @@
 @testset "Linear trend model" begin
         y = collect(1:15.0)
-        unimodel = lineartrendmodel(y)
+        unimodel = linear_trend(y)
 
         @test isa(unimodel, StateSpaceModels.StateSpaceModel)
         @test unimodel.mode == "time-invariant"
