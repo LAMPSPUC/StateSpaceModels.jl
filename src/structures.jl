@@ -1,5 +1,5 @@
-export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, 
-       SmoothedState, FilteredState, StateSpace
+export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, SmoothedState, 
+        FilteredState, StateSpace, KalmanFilter, SquareRootFilter
 
 # Abstract types
 """
@@ -17,7 +17,7 @@ TODO
 """
 abstract type AbstractOptimizationMethod end
 
-# Auxiliary structures to square root kalman filter and smoother
+# Auxiliary structure for square-root Kalman filter
 mutable struct SquareRootFilter <: AbstractFilter
     a::Matrix{Float64} # predictive state
     v::Matrix{Float64} # innovations
@@ -26,16 +26,24 @@ mutable struct SquareRootFilter <: AbstractFilter
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
     K::Array{Float64, 3} # Kalman gain
-    U2star::Array{Float64, 3} # Auxiliary sqrtKalman filter matrix
 end
 
-mutable struct SquareRootSmoother <: AbstractSmoother
+# Auxiliary structure for Kalman filter
+mutable struct KalmanFilter <: AbstractFilter
+    a::Matrix{Float64} # predictive state
+    v::Matrix{Float64} # innovations
+    P::Array{Float64, 3} # covariance matrix of the predictive state
+    F::Array{Float64, 3} # covariance matrix of the innovations
+    steadystate::Bool # flag that indicates if steady state was attained
+    tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
+    K::Array{Float64, 3} # Kalman gain
+end
+
+# Auxiliary structure for smoother
+mutable struct Smoother <: AbstractSmoother
     alpha::Matrix{Float64} # smoothed state
     V::Array{Float64, 3} # variance of smoothed state
 end
-
-
-
 
 
 # Concrete structs for optimization methods
@@ -53,8 +61,6 @@ mutable struct RandomSeedsLBFGS <: AbstractOptimizationMethod
         return new(1e-6, 1e-6, 1e5, 3)
     end
 end
-
-
 
 
 """
@@ -100,7 +106,7 @@ struct StateSpaceModel
     optimization_method::AbstractOptimizationMethod
 
     function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64}; 
-                             filter_type::DataType = SquareRootFilter, 
+                             filter_type::DataType = KalmanFilter, 
                              optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS())
         
         # Validate StateSpaceDimensions
@@ -116,7 +122,7 @@ struct StateSpaceModel
     end
     
     function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64};
-                             filter_type::DataType = SquareRootFilter, 
+                             filter_type::DataType = KalmanFilter, 
                              optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS())
 
         # Validate StateSpaceDimensions
@@ -153,6 +159,11 @@ struct StateSpaceCovariance
     function StateSpaceCovariance(sqrtH::Matrix{Float64}, sqrtQ::Matrix{Float64}, 
                                   filter_type::Type{SquareRootFilter})
         return new(gram(sqrtH), gram(sqrtQ))
+    end
+
+    function StateSpaceCovariance(H::Matrix{Float64}, Q::Matrix{Float64}, 
+                                    filter_type::Type{KalmanFilter})
+        return new(H, Q)
     end
 end
 

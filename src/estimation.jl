@@ -1,6 +1,6 @@
-function compute_log_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}) where T <: AbstractFloat
-    log_likelihood::Float64 = n*p*log(2*pi)/2
-    for t = 1:n
+function compute_log_likelihood(n::Int, p::Int, m::Int, v::Matrix{T}, F::Array{T, 3}) where T <: AbstractFloat
+    log_likelihood = n*p*log(2*pi)/2
+    for t = m+1:n
         log_likelihood = log_likelihood + 0.5 * (logdet(F[:, :, t]) + (v[t, :]' * inv(F[:, :, t]) * v[t, :]))
     end
     return log_likelihood
@@ -29,7 +29,7 @@ function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) wher
     # Calculate v and F 
     v, F = get_log_likelihood_params(psitilde, model, model.filter_type)
     # Compute log-likelihood based on v and F
-    return compute_log_likelihood(model.dim.n, model.dim.p, v, F)
+    return compute_log_likelihood(model.dim.n, model.dim.p, model.dim.m, v, F)
 end
 
 """
