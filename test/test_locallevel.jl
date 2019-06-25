@@ -99,11 +99,24 @@ y = [0.0     # Deterministic local level generated time series
 6.165810835928076
 8.366964896750876]
 
-@testset "Local level model" begin
+@testset "Local level model with Kalman filter" begin
         unimodel = local_level(y)
 
         @test isa(unimodel, StateSpaceModels.StateSpaceModel)
         @test unimodel.mode == "time-invariant"
+        @test unimodel.filter_type == KalmanFilter
+
+        ss = statespace(unimodel)
+
+        @test isa(ss, StateSpaceModels.StateSpace)
+end
+
+@testset "Local level model with square-root Kalman filter" begin
+        unimodel = local_level(y; filter_type = SquareRootFilter)
+
+        @test isa(unimodel, StateSpaceModels.StateSpaceModel)
+        @test unimodel.mode == "time-invariant"
+        @test unimodel.filter_type == SquareRootFilter
 
         ss = statespace(unimodel)
 

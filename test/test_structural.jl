@@ -4,13 +4,13 @@
         y = ones(30)
         model = structural(y, 2)
 
-        @test isa(model, StateSpaceModels.StateSpaceModel)
+        @test isa(model, StateSpaceModel)
         @test model.mode == "time-invariant"
-        @test model.filter_type == StateSpaceModels.SquareRootFilter
+        @test model.filter_type == KalmanFilter
 
         ss = statespace(model)
 
-        @test isa(ss, StateSpaceModels.StateSpace)
+        @test isa(ss, StateSpace)
 
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
@@ -22,12 +22,13 @@
 
         model = structural(y, 2; X = X)
 
-        @test isa(model, StateSpaceModels.StateSpaceModel)
+        @test isa(model, StateSpaceModel)
         @test model.mode == "time-variant"
+        @test model.filter_type == KalmanFilter
 
         ss = statespace(model)
 
-        @test isa(ss, StateSpaceModels.StateSpace)
+        @test isa(ss, StateSpace)
 
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
@@ -37,6 +38,11 @@
        
         y = [ones(20) collect(1:20)]
         model = structural(y, 2)
+
+        @test isa(model, StateSpaceModel)
+        @test model.mode == "time-invariant"
+        @test model.filter_type == KalmanFilter
+
         ss = statespace(model)
         sim  = simulate(ss, 10, 1000)
 

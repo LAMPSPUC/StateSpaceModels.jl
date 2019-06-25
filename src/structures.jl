@@ -161,9 +161,9 @@ struct StateSpaceCovariance
         return new(gram(sqrtH), gram(sqrtQ))
     end
 
-    function StateSpaceCovariance(sqrtH::Symmetric{Float64}, sqrtQ::Symmetric{Float64}, 
+    function StateSpaceCovariance(H::Matrix{Float64}, Q::Matrix{Float64}, 
                                     filter_type::Type{KalmanFilter})
-        return new(Matrix{Float64}(H), Matrix{Float64}(Q))
+        return new(H, Q)
     end
 end
 

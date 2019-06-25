@@ -1,7 +1,6 @@
 function compute_log_likelihood(n::Int, p::Int, m::Int, v::Matrix{T}, F::Array{T, 3}) where T <: AbstractFloat
     log_likelihood = n*p*log(2*pi)/2
     for t = m+1:n
-        @info("F: ", F[:, :, t])
         log_likelihood = log_likelihood + 0.5 * (logdet(F[:, :, t]) + (v[t, :]' * inv(F[:, :, t]) * v[t, :]))
     end
     return log_likelihood

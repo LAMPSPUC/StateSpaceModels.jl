@@ -45,8 +45,8 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
             P[:, :, t+1] = T * P[:, :, t] * (T - K[:, :, t] * Z[:, :, t])' + R*Q*R'
 
-            # Ensure symmetry
-            P[:, :, t+1] = (P[:, :, t+1] + P[:, :, t+1]')/2
+            # Avoid numerical errors by ensuring positivity and symmetry
+            P[:, :, t+1] = (P[:, :, t+1] + P[:, :, t+1]')/2 + 1e-8.*Matrix{Float64}(I, m, m)
 
             # Checking if steady state was attained
             if check_steady_state(P[:, :, t+1], P[:, :, t], tol)
@@ -77,8 +77,8 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     a       = kfilter.a
     v       = kfilter.v
     tsteady = kfilter.tsteady
-    F       = kfilter.sqrtF
-    P       = kfilter.sqrtP
+    F       = kfilter.F
+    P       = kfilter.P
     K       = kfilter.K
 
     # Smoothed state and its covariance
@@ -158,10 +158,6 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
 
     H, Q = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
 
-    @warn(H)
-
-    @warn(Q)
-
     # Obtain innovation v and its variance F
     kfilter = kalman_filter(model, H, Q)
     
@@ -173,7 +169,7 @@ function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpa
                                     filter_type::Type{KalmanFilter})
 
     # Run filter and smoother 
-    filtered_state = kalman_filter(model, H, Q)
+    filtered_state = kalman_filter(model, covariance.H, covariance.Q)
     smoothed_state = smoother(model, filtered_state)
     return FilteredState(filtered_state.a, filtered_state.v, 
                          filtered_state.P, filtered_state.F,
