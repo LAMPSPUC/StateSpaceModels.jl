@@ -1,9 +1,9 @@
 """
-    kalman_filter(model::StateSpaceModel, H::Symmetric{Typ}, Q::Symmetric{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
+    kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
 
 Kalman filter with big Kappa initialization.
 """
-function kalman_filter(model::StateSpaceModel, H::Symmetric{Typ}, Q::Symmetric{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
+function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
     # Load dimensions
     n, p, m, r = size(model)
@@ -44,6 +44,9 @@ function kalman_filter(model::StateSpaceModel, H::Symmetric{Typ}, Q::Symmetric{T
             K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
             a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
             P[:, :, t+1] = T * P[:, :, t] * (T - K[:, :, t] * Z[:, :, t])' + R*Q*R'
+
+            # Ensure symmetry
+            P[:, :, t+1] = (P[:, :, t+1] + P[:, :, t+1]')/2
 
             # Checking if steady state was attained
             if check_steady_state(P[:, :, t+1], P[:, :, t], tol)
@@ -132,20 +135,20 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
 
     # Build lower triangular matrices
     if p > 1
-        lowerH     = tril!(ones(p, p))
+        sqrtH     = tril!(ones(p, p))
         unknownsH = Int(p*(p + 1)/2)
-        lowerH[findall(isequal(1), sqrtH)] = psi[1:unknownsH]
+        sqrtH[findall(isequal(1), sqrtH)] = psi[1:unknownsH]
     else
-        lowerH = psi[1].*ones(1, 1)
+        sqrtH = psi[1].*ones(1, 1)
         unknownsH = 1
     end
 
-    lowerQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
-    lowerQ[findall(x -> x == 1, lowerQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
+    sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
+    sqrtQ[findall(x -> x == 1, sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
     # Obtain full matrices
-    H = Symmetric(lowerH)
-    Q = Symmetric(lowerQ)
+    H = gram(sqrtH)
+    Q = gram(sqrtQ)
 
     return H, Q
 end
@@ -154,6 +157,10 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
                                    filter_type::Type{KalmanFilter}) where T <: AbstractFloat
 
     H, Q = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
+
+    @warn(H)
+
+    @warn(Q)
 
     # Obtain innovation v and its variance F
     kfilter = kalman_filter(model, H, Q)
