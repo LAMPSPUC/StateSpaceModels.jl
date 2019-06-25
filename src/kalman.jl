@@ -121,7 +121,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     alpha[1, :] = a[1, :] + P[:, :, 1] * r_0
     V[:, :, 1]  = P[:, :, 1] - (P[:, :, 1] * N_0 * P[:, :, 1])
 
-    # Return the Square Root kalman filter smoothed state
+    # Return the smoothed state structure
     return Smoother(alpha, V)
 end
 
