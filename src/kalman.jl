@@ -57,7 +57,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     end
 
     # Return the auxiliary filter structre
-    return KalmanFilter(a[1:end-1, :], v, P, F, steadystate, tsteady, K)
+    return KalmanFilter(a, v, P, F, steadystate, tsteady, K)
 end
 
 """

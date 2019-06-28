@@ -73,7 +73,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
     end
 
     # Return the auxiliary filter structre
-    return SquareRootFilter(a[1:end-1, :], v, sqrtP, sqrtF, steadystate, tsteady, K)
+    return SquareRootFilter(a, v, sqrtP, sqrtF, steadystate, tsteady, K)
 end
 
 """
