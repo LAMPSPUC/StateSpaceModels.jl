@@ -22,7 +22,7 @@ function simulate(ss::StateSpace, N::Int, S::Int)
             Z[:, :, t] = Z0[:, :, 1]
         end
     else
-        size(Z, 3) < n+N && error("Time-variant Z too short for simulating $N steps ahead")
+        size(Z0, 3) < n+N && error("Time-variant Z too short for simulating $N steps ahead")
         for t = 1:N
             Z[:, :, t] = Z0[:, :, n+t]
         end
