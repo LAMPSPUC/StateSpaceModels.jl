@@ -18,7 +18,7 @@
 
     @testset "Constant signal with exogenous variables" begin
         y = ones(15)
-        X = randn(15, 2)
+        X = randn(30, 2)
 
         model = structural(y, 2; X = X)
 
@@ -29,9 +29,12 @@
         ss = statespace(model)
 
         @test isa(ss, StateSpace)
-
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
+
+        sim = simulate(ss, 10, 1000)
+        pred = mean(sim[1, :, :], dims = 2)
+        @test all(abs.(pred .- ones(10)) .< 1e-3)
     end
 
     @testset "Multivariate test" begin
