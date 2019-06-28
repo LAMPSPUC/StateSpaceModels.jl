@@ -73,7 +73,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
     end
 
     # Return the auxiliary filter structre
-    return SquareRootFilter(a[1:end-1, :], v, sqrtP, sqrtF, steadystate, tsteady, K)
+    return SquareRootFilter(a, v, sqrtP, sqrtF, steadystate, tsteady, K)
 end
 
 """
@@ -204,8 +204,8 @@ function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpa
     # Do the SquareRootFilter 
     filtered_state = sqrt_kalman_filter(model, sqrtH.data, sqrtQ.data)
     smoothed_state = sqrt_smoother(model, filtered_state)
-    return FilteredState(filtered_state.a, filtered_state.v, 
-                         gram_in_time(filtered_state.sqrtP), gram_in_time(filtered_state.sqrtF),
+    return FilteredState(filtered_state.a[2:end, :], filtered_state.v, 
+                         gram_in_time(filtered_state.sqrtP[:, :, 2:end]), gram_in_time(filtered_state.sqrtF),
                          filtered_state.steadystate, filtered_state.tsteady) ,
            SmoothedState(smoothed_state.alpha, smoothed_state.V) 
 end

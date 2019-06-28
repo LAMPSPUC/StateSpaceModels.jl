@@ -57,7 +57,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     end
 
     # Return the auxiliary filter structre
-    return KalmanFilter(a[1:end-1, :], v, P, F, steadystate, tsteady, K)
+    return KalmanFilter(a, v, P, F, steadystate, tsteady, K)
 end
 
 """
@@ -171,8 +171,8 @@ function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpa
     # Run filter and smoother 
     filtered_state = kalman_filter(model, covariance.H, covariance.Q)
     smoothed_state = smoother(model, filtered_state)
-    return FilteredState(filtered_state.a, filtered_state.v, 
-                         filtered_state.P, filtered_state.F,
+    return FilteredState(filtered_state.a[2:end, :], filtered_state.v, 
+                         filtered_state.P[:, :, 2:end], filtered_state.F,
                          filtered_state.steadystate, filtered_state.tsteady),
            SmoothedState(smoothed_state.alpha, smoothed_state.V) 
 end
