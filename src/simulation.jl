@@ -18,14 +18,10 @@ function simulate(ss::StateSpace, N::Int, S::Int)
 
     Z = Array{Float64, 3}(undef, p, m, N)
     if ss.model.mode == "time-invariant"
-        for t = 1:N
-            Z[:, :, t] = Z0[:, :, 1]
-        end
+        Z[:, :, 1:N] .= Z0[:, :, 1]
     else
         size(Z0, 3) < n+N && error("Time-variant Z too short for simulating $N steps ahead")
-        for t = 1:N
-            Z[:, :, t] = Z0[:, :, n+t]
-        end
+        Z[:, :, 1:N] .= Z0[:, :, n+1:n+N]
     end
 
     # Load a, P, and F at last in-sample instant
