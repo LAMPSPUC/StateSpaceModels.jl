@@ -18,7 +18,7 @@
 
     @testset "Constant signal with exogenous variables" begin
         y = ones(15)
-        X = randn(15, 2)
+        X = randn(30, 2)
 
         model = structural(y, 2; X = X)
 
@@ -29,9 +29,12 @@
         ss = statespace(model)
 
         @test isa(ss, StateSpace)
-
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
+
+        sim = simulate(ss, 10, 1000)
+        pred = mean(sim[1, :, :], dims = 2)
+        @test all(abs.(pred .- ones(10)) .< 1e-3)
     end
 
     @testset "Multivariate test" begin
@@ -52,9 +55,17 @@
 
     @testset "Error tests" begin
         y = ones(15, 1)
-        dim = StateSpaceModels.StateSpaceDimensions(1, 1, 1, 1)
-        Z = Vector{Matrix{Float64}}(undef, 3)
-        T = R = Matrix{Float64}(undef, 2, 2)
         @test_throws ErrorException structural(y, 2; X = ones(10, 2))
+
+        Z = Array{Float64, 3}(undef, 1, 2, 20)
+        for t = 1:20
+            Z[:, :, t] = [1 0]
+        end
+        T = [1. 1; 0 1]
+        R = [1. 0; 0 1]
+        
+        model = StateSpaceModel(y, Z, T, R)
+        ss = statespace(model)
+        @test_throws ErrorException sim  = simulate(ss, 10, 1000)
     end
 end
