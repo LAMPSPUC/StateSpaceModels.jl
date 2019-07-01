@@ -1,4 +1,5 @@
 
+using StateSpaceModels
 using Distributions, LinearAlgebra, Random
 
 # Number of observations
@@ -23,7 +24,7 @@ R = kron(Matrix{Float64}(I, p, p), [.5 * Δ^2.; Δ])
 Z = kron(Matrix{Float64}(I, p, p), [1. 0])
 
 # Generate random actuators
-Q = 1.5 * Matrix{Float64}(I, q, q)
+Q = .5 * Matrix{Float64}(I, q, q)
 η = MvNormal(zeros(q), Q)
 
 # Generate random measurement noise
@@ -31,12 +32,15 @@ H = .1 * Matrix{Float64}(I, p, p)
 ε = MvNormal(zeros(p), H)
 
 # Simulate vehicle trajectory
-α = zeros(m, n + 1)
-y = zeros(p, n)
-
+α = zeros(n + 1, m)
+y = zeros(n, p)
 for t in 1:n
-    y[:, t] = Z * α[:, t] + rand(ε)
-    α[:, t + 1] = T * α[:, t] + R * rand(η)  
+    y[t, :] = Z * α[t, :] + rand(ε)
+    α[t + 1, :] = T * α[t, :] + R * rand(η)  
 end
 
+# User defined model
+model = StateSpaceModel(y, Z, T, R)
 
+# Estimate vehicle speed and position
+ss = statespace(model)
