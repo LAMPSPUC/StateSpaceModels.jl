@@ -14,7 +14,7 @@
     ss = statespace(model)
 
     @test isa(ss, StateSpaceModels.StateSpace)
-    # We should test what is the covariance it returns
+    compare_forecast_simulation(ss, 20, 1000, 1e-3)
 end
 
 @testset "Air passengers with square-root Kalman filter" begin
@@ -31,5 +31,5 @@ end
     ss = statespace(model)
 
     @test isa(ss, StateSpaceModels.StateSpace)
-    # We should test what is the covariance it returns
+    compare_forecast_simulation(ss, 20, 1000, 1e-3)
 end

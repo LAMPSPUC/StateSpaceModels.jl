@@ -10,6 +10,7 @@
 
         @test isa(ss, StateSpaceModels.StateSpace)
         @test ss.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
+        compare_forecast_simulation(ss, 20, 1000, 1e-3)
 end
 
 @testset "Linear trend model with square-root Kalman filter" begin
@@ -24,4 +25,5 @@ end
 
         @test isa(ss, StateSpaceModels.StateSpace)
         @test ss.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
+        compare_forecast_simulation(ss, 20, 1000, 1e-3)
 end

@@ -13,7 +13,7 @@ include("estimation.jl")
 include("random_seeds_lbfgs.jl")
 include("kalman.jl")
 include("sqrt_kalman.jl")
-include("simulation.jl")
+include("forecast.jl")
 
 function statespace(model::StateSpaceModel; verbose::Int = 1)
 
