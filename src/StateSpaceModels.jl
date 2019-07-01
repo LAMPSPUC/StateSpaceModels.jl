@@ -12,10 +12,12 @@ include("structures.jl")
 include("utils.jl")
 include("models.jl")
 include("estimation.jl")
+include("random_seeds_lbfgs.jl")
 include("kalman.jl")
+include("sqrt_kalman.jl")
 include("simulation.jl")
 
-function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
+function statespace(model::StateSpaceModel; verbose::Int = 1)
 
     reset_timer!()
 
@@ -25,30 +27,27 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3, verbose::Int = 1)
     end
 
     if verbose > 0
-        @info("Starting state-space model estimation...")
+        @info("Starting state-space model estimation.")
     end
 
     # Maximum likelihood estimation
-    param = estimate_statespace(model, nseeds; verbose = verbose)
+    covariance = estimate_statespace(model, model.optimization_method; verbose = verbose)
 
     if verbose > 0
         @info("End of estimation.")
-        @info("Starting filtering and smoothing...")
+        @info("Starting filtering and smoothing.")
     end
 
     # Kalman filter and smoothing
-    @timeit "kalman" kfilter, U2star, K = sqrt_kalmanfilter(model, param.sqrtH, param.sqrtQ)
-    @timeit "smoother" smoothedstate = sqrt_smoother(model, kfilter, U2star, K)
+    filtered_state, smoothed_state = kalman_filter_and_smoother(model, covariance, model.filter_type)
 
-    if verbose > 0
-        @info("Filtering and smoothing completed.")
-    end
-
-    output = StateSpace(model, smoothedstate, param, kfilter)
-
-    print_timer()
-
-    return output
+    return StateSpace(model, filtered_state, smoothed_state, covariance)
 end
 
+function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
+                                    filter_type::DataType)
+    error(filter_type , " not implemented") # Returns an error if it cannot 
+                                            # find a specialized kalman_filter_and_smoother
 end
+
+end # end module
