@@ -14,6 +14,7 @@
 
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
+        compare_forecast_simulation(ss, 20, 1000, 1e-3)
     end
 
     @testset "Constant signal with exogenous variables" begin
@@ -32,9 +33,7 @@
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
 
-        sim = simulate(ss, 10, 1000)
-        pred = mean(sim[1, :, :], dims = 2)
-        @test all(abs.(pred .- ones(10)) .< 1e-3)
+        compare_forecast_simulation(ss, 10, 1000, 1e-3)
     end
 
     @testset "Multivariate test" begin
@@ -49,8 +48,9 @@
         ss = statespace(model)
         sim  = simulate(ss, 10, 1000)
 
-        @test mean(sim, dims = 3)[1, :] ≈ ones(10) rtol = 1e-3
-        @test mean(sim, dims = 3)[2, :] ≈ collect(21:30) rtol = 1e-3
+        @test mean(sim, dims = 3)[:, 1] ≈ ones(10) rtol = 1e-3
+        @test mean(sim, dims = 3)[:, 2] ≈ collect(21:30) rtol = 1e-3
+        compare_forecast_simulation(ss, 20, 1000, 1e-3)
     end
 
     @testset "Error tests" begin

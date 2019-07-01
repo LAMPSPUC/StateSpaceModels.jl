@@ -45,3 +45,10 @@
         @test StateSpaceModels.gram_in_time(C)[:, :, 2] == StateSpaceModels.gram_in_time(C)[:, :, 1]
     end
 end
+
+function compare_forecast_simulation(ss::StateSpace, N::Int, S::Int, rtol::Float64)
+    sim = simulate(ss, N, S)
+    forec, dist = forecast(ss, N)
+
+    @test forec ≈ mean(sim, dims = 3) rtol = rtol
+end
