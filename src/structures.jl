@@ -1,5 +1,5 @@
 export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, SmoothedState, 
-        FilteredState, StateSpace, KalmanFilter, SquareRootFilter
+        FilteredState, StateSpace, KalmanFilter, SquareRootFilter, RandomSeedsLBFGS
 
 # Abstract types
 """
@@ -57,8 +57,8 @@ mutable struct RandomSeedsLBFGS <: AbstractOptimizationMethod
     nseeds::Int
     seeds::Array{Float64}
 
-    function RandomSeedsLBFGS()
-        return new(1e-6, 1e-6, 1e5, 3)
+    function RandomSeedsLBFGS(; nseeds::Int = 3)
+        return new(1e-6, 1e-6, 1e5, nseeds)
     end
 end
 
