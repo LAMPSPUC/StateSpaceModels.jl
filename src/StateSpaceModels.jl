@@ -2,8 +2,6 @@ module StateSpaceModels
 
 using Optim, Distributions, LinearAlgebra, StaticArrays
 
-using TimerOutputs
-
 import Base: size
 
 export statespace
