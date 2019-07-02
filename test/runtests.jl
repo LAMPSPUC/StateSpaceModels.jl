@@ -1,7 +1,4 @@
 
-path = joinpath(dirname(@__FILE__), "..", "..")
-push!(Base.LOAD_PATH, path)
-
 using Test, StateSpaceModels, Statistics, CSV
 
 # Run tests
