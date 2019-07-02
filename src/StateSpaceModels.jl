@@ -15,11 +15,9 @@ include("estimation.jl")
 include("random_seeds_lbfgs.jl")
 include("kalman.jl")
 include("sqrt_kalman.jl")
-include("simulation.jl")
+include("forecast.jl")
 
 function statespace(model::StateSpaceModel; verbose::Int = 1)
-
-    reset_timer!()
 
     if !(verbose in [0, 1, 2])
         @warn("Incorrect verbose value input (should be 0, 1, or 2): switching to default value 1")

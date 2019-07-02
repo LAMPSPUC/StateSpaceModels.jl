@@ -26,10 +26,11 @@ In: L Simpósio Brasileiro de Pesquisa Operacional, Rio de Janeiro, Brazil.
 
 Current features:
 * Square-root Kalman filter and smoother
-* Monte Carlo simulation
 * Maximum likelihood estimation
+* Forecasting
+* Monte Carlo simulation
 * Multivariate modeling
-* User-defined model (input any `Z`, `T`, and `R`)
+* User-defined models (input any `Z`, `T`, and `R`)
 * Several pre-defined models, including:
   1. Basic structural model (trend, slope, seasonal)
   2. Structural model with exogenous variables
@@ -37,7 +38,6 @@ Current features:
   4. Local level model
 
 Future features (work in progress):
-* Forecasting and confidence intervals
 * Completion of missing values
 
 [build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
