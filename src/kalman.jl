@@ -17,11 +17,11 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     P = Array{Float64, 3}(undef, m, m, n+1)
 
     # Innovation and its covariance
-    v = Matrix{Float64}(undef, n, p)
-    F = Array{Float64, 3}(undef, p, p, n)
+    v = Matrix{Float64}(undef, n+1, p)
+    F = Array{Float64, 3}(undef, p, p, n+1)
 
     # Kalman gain
-    K = Array{Float64, 3}(undef, m, p, n)
+    K = Array{Float64, 3}(undef, m, p, n+1)
     
     # Steady state initialization
     steadystate = false
@@ -67,8 +67,11 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
         end
     end
 
+    F[:, :, t]   = Z[:, :, t] * P[:, :, t] * Z[:, :, t]' + H
+    K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
+
     # Return the auxiliary filter structre
-    return KalmanFilter(a[1:end-1, :], v, P, F, steadystate, tsteady, K)
+    return KalmanFilter(a, v, P, F, steadystate, tsteady, K)
 end
 
 """
@@ -120,7 +123,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
 
         # Smoothed state and its covariance
         alpha[t, :] = a[t, :] + Psteady * r[t-1, :]
-        V[:, :, t]  = Psteady - Psteady * N[:, :, t] * Psteady
+        V[:, :, t]  = Psteady - Psteady * N[:, :, t-1] * Psteady
     end
 
     for t = tsteady-1:-1:2
@@ -136,7 +139,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
 
         # Smoothed state and its covariance
         alpha[t, :]  = a[t, :] + P[:, :, t] * r[t-1, :]
-        V[:, :, t]   = P[:, :, t] - (P[:, :, t] * N[:, :, t] * P[:, :, t])
+        V[:, :, t]   = P[:, :, t] - (P[:, :, t] * N[:, :, t-1] * P[:, :, t])
     end
 
     if any(isnan.(v[1, :]))
@@ -202,7 +205,7 @@ function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpa
     # Run filter and smoother 
     filtered_state = kalman_filter(model, covariance.H, covariance.Q)
     smoothed_state = smoother(model, filtered_state)
-    return FilteredState(filtered_state.a, filtered_state.v, 
+    return FilteredState(filtered_state.a[2:end, :], filtered_state.v, 
                          filtered_state.P[:, :, 2:end], filtered_state.F,
                          filtered_state.steadystate, filtered_state.tsteady),
            SmoothedState(smoothed_state.alpha, smoothed_state.V) 

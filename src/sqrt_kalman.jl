@@ -74,7 +74,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
     end
 
     # Return the auxiliary filter structre
-    return SquareRootFilter(a[1:end-1, :], v, sqrtP, sqrtF, steadystate, tsteady, K)
+    return SquareRootFilter(a, v, sqrtP, sqrtF, steadystate, tsteady, K)
 end
 
 """
@@ -115,7 +115,7 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     for t = n:-1:tsteady
         Psteady = gram(sqrtP[:, :, end])
         Fsteady = gram(sqrtF[:, :, end])
-        N_t     = gram(sqrtN[:, :, t])
+        N_t_1   = gram(sqrtN[:, :, t-1])
         L[:, :, t]   = T - K[:, :, end] * Z[:, :, t]
         r[t-1, :] = Z[:, :, t]' * inv(Fsteady) * v[t, :] + L[:, :, t]' * r[t, :]
 
@@ -127,7 +127,7 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
 
         # Smoothed state and its covariance
         alpha[t, :] = a[t, :] + Psteady * r[t-1, :]
-        V[:, :, t]  = Psteady - Psteady * N_t * Psteady
+        V[:, :, t]  = Psteady - Psteady * N_t_1 * Psteady
     end
 
     for t = tsteady-1:-1:2
@@ -141,7 +141,7 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
 
         # Smoothed state and its covariance
         P = gram(sqrtP[:, :, t])
-        N = gram(sqrtN[:, :, t])
+        N = gram(sqrtN[:, :, t-1])
         alpha[t, :] = a[t, :] + P * r[t-1, :]
         V[:, :, t]  = P - (P * N * P)
     end
@@ -206,7 +206,7 @@ function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpa
     filtered_state = sqrt_kalman_filter(model, sqrtH.data, sqrtQ.data)
     smoothed_state = sqrt_smoother(model, filtered_state)
     return FilteredState(filtered_state.a, filtered_state.v, 
-                         gram_in_time(filtered_state.sqrtP[:, :, 2:end]), gram_in_time(filtered_state.sqrtF),
+                         gram_in_time(filtered_state.sqrtP), gram_in_time(filtered_state.sqrtF),
                          filtered_state.steadystate, filtered_state.tsteady) ,
            SmoothedState(smoothed_state.alpha, smoothed_state.V) 
 end
