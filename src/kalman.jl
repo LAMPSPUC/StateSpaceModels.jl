@@ -67,9 +67,6 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
         end
     end
 
-    F[:, :, t]   = Z[:, :, t] * P[:, :, t] * Z[:, :, t]' + H
-    K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
-
     # Return the auxiliary filter structre
     return KalmanFilter(a, v, P, F, steadystate, tsteady, K)
 end
