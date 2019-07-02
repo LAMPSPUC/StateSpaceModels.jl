@@ -1,6 +1,8 @@
 
+path = joinpath(dirname(@__FILE__), "..", "..")
+push!(Base.LOAD_PATH, path)
 using StateSpaceModels
-using Distributions, LinearAlgebra, Random
+using Distributions, LinearAlgebra, Plots, Random
 
 # Number of observations
 n = 100
@@ -17,7 +19,7 @@ damping = .05
 Δ = 1.
 
 # State transition matrix
-T = kron(Matrix{Float64}(I, p, p), [1. (1. - damping * Δ / 2.) * Δ; 0. (1. - damping* Δ)])
+T = kron(Matrix{Float64}(I, p, p), [1. (1. - damping * Δ / 2.) * Δ; 0. (1. - damping * Δ)])
 # Input matrix
 R = kron(Matrix{Float64}(I, p, p), [.5 * Δ^2.; Δ])
 # Output (measurement) matrix
@@ -28,7 +30,7 @@ Q = .5 * Matrix{Float64}(I, q, q)
 η = MvNormal(zeros(q), Q)
 
 # Generate random measurement noise
-H = .1 * Matrix{Float64}(I, p, p)
+H = 1.5 * Matrix{Float64}(I, p, p)
 ε = MvNormal(zeros(p), H)
 
 # Simulate vehicle trajectory
@@ -44,3 +46,7 @@ model = StateSpaceModel(y, Z, T, R)
 
 # Estimate vehicle speed and position
 ss = statespace(model)
+
+plot(ss.smoother.alpha[:, 1], ss.smoother.alpha[:, 3], title="Vehicle tracking", lw=3, label="Estimate position")
+plot!(y[:, 1], y[:, 2], label="Measured position", lw=3)
+plot!(α[:, 1], α[:, 3], label="True position", lw=3)
