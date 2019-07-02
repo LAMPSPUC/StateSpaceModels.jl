@@ -33,25 +33,36 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
 
     # Kalman filter
     for t = 1:n
-        v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
-        if steadystate
-            F[:, :, t]   = F[:, :, t-1]
-            K[:, :, t]   = K[:, :, t-1]
-            a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
-            P[:, :, t+1] = P[:, :, t]
-        else
-            F[:, :, t]   = Z[:, :, t] * P[:, :, t] * Z[:, :, t]' + H
+        # Check for missing values
+        if any(isnan.(y[t, :]))
+            steadystate  = false
+            v[t, :]      = NaN*ones(p)
+            F[:, :, t]   = Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H
             K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
-            a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
-            P[:, :, t+1] = T * P[:, :, t] * (T - K[:, :, t] * Z[:, :, t])' + R*Q*R'
+            a[t+1, :]    = T*a[t, :]
+            P[:, :, t+1] = T*P[:, :, t]*T' + R*Q*R'
+            P[:, :, t+1] = ensure_pos_sym(P[:, :, t+1])
+        else
+            v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
+            if steadystate
+                F[:, :, t]   = F[:, :, t-1]
+                K[:, :, t]   = K[:, :, t-1]
+                a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
+                P[:, :, t+1] = P[:, :, t]
+            else
+                F[:, :, t]   = Z[:, :, t] * P[:, :, t] * Z[:, :, t]' + H
+                K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
+                a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
+                P[:, :, t+1] = T * P[:, :, t] * (T - K[:, :, t] * Z[:, :, t])' + R*Q*R'
 
-            # Avoid numerical errors by ensuring positivity and symmetry
-            P[:, :, t+1] = (P[:, :, t+1] + P[:, :, t+1]')/2 + 1e-8.*Matrix{Float64}(I, m, m)
+                # Avoid numerical errors by ensuring positivity and symmetry
+                P[:, :, t+1] = ensure_pos_sym(P[:, :, t+1])
 
-            # Checking if steady state was attained
-            if check_steady_state(P[:, :, t+1], P[:, :, t], tol)
-                steadystate = true
-                tsteady     = t
+                # Checking if steady state was attained
+                if check_steady_state(P[:, :, t+1], P[:, :, t], tol)
+                    steadystate = true
+                    tsteady     = t
+                end
             end
         end
     end

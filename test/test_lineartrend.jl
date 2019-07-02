@@ -27,3 +27,11 @@ end
         @test ss.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
         compare_forecast_simulation(ss, 20, 1000, 1e-3)
 end
+
+# TODO
+# @testset "Linear trend model with missing values" begin
+#         y = collect(1:30.0) .+ 0.1*randn(30)
+#         y[4:8] .= NaN
+#         model = linear_trend(y)
+#         ss = statespace(model)
+# end
