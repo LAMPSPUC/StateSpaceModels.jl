@@ -68,7 +68,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     end
 
     # Return the auxiliary filter structre
-    return KalmanFilter(a, v, P, F, steadystate, tsteady, K)
+    return KalmanFilter(a[1:end-1, :], v, P, F, steadystate, tsteady, K)
 end
 
 """
@@ -107,9 +107,16 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
 
     # Iterating backwards
     for t = n:-1:tsteady
-        L[:, :, t]   = T - K[:, :, end] * Z[:, :, t]
-        r[t-1, :]    = Z[:, :, t]' * inv(Fsteady) * v[t, :] + L[:, :, t]' * r[t, :]
-        N[:, :, t-1] = Z[:, :, t]' * inv(Fsteady) * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
+        # Check for missing values
+        if any(isnan.(v[t, :]))
+            L[:, :, t]   = T
+            r[t-1, :]    = L[:, :, t]' * r[t, :]
+            N[:, :, t-1] = L[:, :, t]' * N[:, :, t] * L[:, :, t]
+        else
+            L[:, :, t]   = T - K[:, :, end] * Z[:, :, t]
+            r[t-1, :]    = Z[:, :, t]' * inv(Fsteady) * v[t, :] + L[:, :, t]' * r[t, :]
+            N[:, :, t-1] = Z[:, :, t]' * inv(Fsteady) * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
+        end
 
         # Smoothed state and its covariance
         alpha[t, :] = a[t, :] + Psteady * r[t-1, :]
@@ -117,18 +124,31 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     end
 
     for t = tsteady-1:-1:2
-        L[:, :, t]   = T - K[:, :, t] * Z[:, :, t]
-        r[t-1, :]    = Z[:, :, t]' * inv(F[:, :, t]) * v[t, :] + L[:, :, t]' * r[t, :]
-        N[:, :, t-1] = Z[:, :, t]' * inv(F[:, :, t]) * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
+        if any(isnan.(v[t, :]))
+            L[:, :, t]   = T
+            r[t-1, :]    = L[:, :, t]' * r[t, :]
+            N[:, :, t-1] = L[:, :, t]' * N[:, :, t] * L[:, :, t]
+        else
+            L[:, :, t]   = T - K[:, :, t] * Z[:, :, t]
+            r[t-1, :]    = Z[:, :, t]' * inv(F[:, :, t]) * v[t, :] + L[:, :, t]' * r[t, :]
+            N[:, :, t-1] = Z[:, :, t]' * inv(F[:, :, t]) * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
+        end
 
         # Smoothed state and its covariance
         alpha[t, :]  = a[t, :] + P[:, :, t] * r[t-1, :]
         V[:, :, t]   = P[:, :, t] - (P[:, :, t] * N[:, :, t] * P[:, :, t])
     end
 
-    L[:, :, 1]  = T - K[:, :, 1] * Z[:, :, 1]
-    r_0         = Z[:, :, 1]' * inv(F[:, :, 1]) * v[1, :] + L[:, :, 1]' * r[1, :]
-    N_0         = Z[:, :, 1]' * inv(F[:, :, 1]) * Z[:, :, 1] + L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]
+    if any(isnan.(v[1, :]))
+        L[:, :, 1]  = T
+        r_0         = L[:, :, 1]' * r[1, :]
+        N_0         = L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]
+    else
+        L[:, :, 1]  = T - K[:, :, 1] * Z[:, :, 1]
+        r_0         = Z[:, :, 1]' * inv(F[:, :, 1]) * v[1, :] + L[:, :, 1]' * r[1, :]
+        N_0         = Z[:, :, 1]' * inv(F[:, :, 1]) * Z[:, :, 1] + L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]
+    end
+
     alpha[1, :] = a[1, :] + P[:, :, 1] * r_0
     V[:, :, 1]  = P[:, :, 1] - (P[:, :, 1] * N_0 * P[:, :, 1])
 
@@ -182,7 +202,7 @@ function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpa
     # Run filter and smoother 
     filtered_state = kalman_filter(model, covariance.H, covariance.Q)
     smoothed_state = smoother(model, filtered_state)
-    return FilteredState(filtered_state.a[2:end, :], filtered_state.v, 
+    return FilteredState(filtered_state.a, filtered_state.v, 
                          filtered_state.P[:, :, 2:end], filtered_state.F,
                          filtered_state.steadystate, filtered_state.tsteady),
            SmoothedState(smoothed_state.alpha, smoothed_state.V) 

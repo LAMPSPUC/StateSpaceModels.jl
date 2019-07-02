@@ -28,10 +28,14 @@ end
         compare_forecast_simulation(ss, 20, 1000, 1e-3)
 end
 
-# TODO
-# @testset "Linear trend model with missing values" begin
-#         y = collect(1:30.0) .+ 0.1*randn(30)
-#         y[4:8] .= NaN
-#         model = linear_trend(y)
-#         ss = statespace(model)
-# end
+@testset "Linear trend model with missing values" begin
+        y = collect(1:30.0)
+        y[4:8] .= NaN
+        model = linear_trend(y)
+        ss = statespace(model)
+
+        @test y[9:end] ≈ ss.filter.a[9:end, 1] rtol = 1e-3
+        @test y[9:end] ≈ ss.smoother.alpha[9:end, 1] rtol = 1e-3
+        @test sum(ss.filter.P[:, :, 8]) > sum(ss.filter.P[:, :, 7]) > sum(ss.filter.P[:, :, 6]) > 
+                        sum(ss.filter.P[:, :, 5]) > sum(ss.filter.P[:, :, 4])
+end
