@@ -36,9 +36,10 @@ Current features:
   2. Structural model with exogenous variables
   3. Linear trend model
   4. Local level model
+* Completion of missing values
 
 Future features (work in progress):
-* Completion of missing values
+* Exact initialization of Kalman filter
 
 [build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
 [build-url]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl
