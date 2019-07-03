@@ -1,4 +1,4 @@
-using Test, StateSpaceModels, Statistics, CSV
+using Test, StateSpaceModels, Statistics, CSV, LinearAlgebra
 
 const SSM = StateSpaceModels
 # Run tests
