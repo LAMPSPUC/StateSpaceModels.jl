@@ -40,3 +40,12 @@ Return `true` if steady state was attained with respect to tolerance `tol`, `fal
 function check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T <: AbstractFloat
     return maximum(abs.((P_t1 - P_t)./P_t1)) < tol ? true : false
 end
+
+"""
+    ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
+
+Ensure that matrix `M` is positive and symmetric to avoid numerical errors when numbers are small
+"""
+function ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
+    return (M + M')/2 + ϵ*I
+end

@@ -32,14 +32,14 @@ function forecast(ss::StateSpace, N::Int)
     # Initialization
     a[1, :]    = T*a0
     P[:, :, 1] = T*P0*T' + R*Q*R'
-    F[:, :, 1] = Z[:, :, 1]*P[:, :, 1]*Z[:, :, 1]' + H
-    dist[1]    = MvNormal(vec(Z[:, :, 1]*a[1, :]), Symmetric(F[:, :, 1]))
+    F[:, :, 1] = ensure_pos_sym(Z[:, :, 1]*P[:, :, 1]*Z[:, :, 1]' + H)
+    dist[1]    = MvNormal(vec(Z[:, :, 1]*a[1, :]), F[:, :, 1])
 
     for t = 2:N
         a[t, :]    = T*a[t-1, :]
         P[:, :, t] = T*P[:, :, t-1]*T' + R*Q*R'
-        F[:, :, t] = Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H
-        dist[t]    = MvNormal(vec(Z[:, :, t]*a[t, :]), Symmetric(F[:, :, t]))
+        F[:, :, t] = ensure_pos_sym(Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H)
+        dist[t]    = MvNormal(vec(Z[:, :, t]*a[t, :]), F[:, :, t])
     end
 
     forec = Matrix{Float64}(undef, N, p)

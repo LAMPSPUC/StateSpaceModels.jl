@@ -1,5 +1,4 @@
-# Tests
-@testset "Strutural model tests" begin
+@testset "Structural model tests" begin
     @testset "Constant signal with basic structural model" begin
         y = ones(30)
         model = structural(y, 2)
