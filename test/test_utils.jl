@@ -32,17 +32,23 @@
 
     @testset "gram" begin
         A = [1.0][:, :]
-        @test A == StateSpaceModels.gram(A)
+        @test A == SSM.gram(A)
         B = [1 1.0;0 1]
-        @test B*B' == StateSpaceModels.gram(B)
+        @test B*B' == SSM.gram(B)
     end
 
     @testset "gram_in_time" begin
         C = Array{Float64, 3}(undef, 2, 2, 5)
         B = [1 1.0;0 1]
         C[:, :, 1:5] .= B
-        @test B*B' == StateSpaceModels.gram_in_time(C)[:, :, 1]
-        @test StateSpaceModels.gram_in_time(C)[:, :, 2] == StateSpaceModels.gram_in_time(C)[:, :, 1]
+        @test B*B' == SSM.gram_in_time(C)[:, :, 1]
+        @test SSM.gram_in_time(C)[:, :, 2] == SSM.gram_in_time(C)[:, :, 1]
+    end
+
+    @testset "ensure_pos_sym" begin
+        A = randn(3,3)
+        B = SSM.ensure_pos_sym(A)
+        @test issymmetric(B)
     end
 end
 

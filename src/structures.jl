@@ -25,7 +25,7 @@ mutable struct SquareRootFilter <: AbstractFilter
     sqrtF::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
-    K::Array{Float64, 3} # Kalman gain
+    K::Array{Float64, 3} # Kalman gain  
 end
 
 # Auxiliary structure for Kalman filter
@@ -102,12 +102,8 @@ struct StateSpaceModel
     R::Matrix{Float64} # state error matrix
     dim::StateSpaceDimensions
     mode::String
-    filter_type::DataType
-    optimization_method::AbstractOptimizationMethod
 
-    function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64}; 
-                             filter_type::DataType = KalmanFilter, 
-                             optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS())
+    function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64})
         
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -118,12 +114,10 @@ struct StateSpaceModel
             error("StateSpaceModel dimension mismatch")
         end
         dim = StateSpaceDimensions(ny, py, mr, rr)
-        new(y, Z, T, R, dim, "time-variant", filter_type, optimization_method)
+        new(y, Z, T, R, dim, "time-variant")
     end
     
-    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64};
-                             filter_type::DataType = KalmanFilter, 
-                             optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS())
+    function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64})
 
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -140,7 +134,7 @@ struct StateSpaceModel
         for t = 1:ny
             Zvar[:, :, t] = Z
         end
-        new(y, Zvar, T, R, dim, "time-invariant", filter_type, optimization_method)
+        new(y, Zvar, T, R, dim, "time-invariant")
     end
 end
 
@@ -211,4 +205,6 @@ struct StateSpace
     filter::FilteredState
     smoother::SmoothedState
     covariance::StateSpaceCovariance
+    filter_type::DataType
+    optimization_method::AbstractOptimizationMethod
 end

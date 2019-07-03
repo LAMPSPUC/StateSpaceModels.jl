@@ -35,9 +35,9 @@ Compute log-likelihood concerning hyperparameter vector psitilde
 
 Evaluate ``\\ell(\\psi)...`` TODO
 """
-function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel) where T <: AbstractFloat
+function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, filter_type::DataType) where T <: AbstractFloat
     # Calculate v and F 
-    v, F = get_log_likelihood_params(psitilde, model, model.filter_type)
+    v, F = get_log_likelihood_params(psitilde, model, filter_type)
     # Compute log-likelihood based on v and F
     return compute_log_likelihood(model.dim.n, model.dim.p, v, F, valid_instants(model))
 end
@@ -45,7 +45,7 @@ end
 """
 TODO
 """
-function estimate_statespace(model::StateSpaceModel, 
+function estimate_statespace(model::StateSpaceModel, filter_type::DataType,
                              optimization_method::AbstractOptimizationMethod; verbose::Int = 1)
     error(optimization_method , " not implemented") # Returns an error if it cannot 
                                                     # find a specialized estimate_statespace

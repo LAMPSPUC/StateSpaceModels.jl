@@ -2,11 +2,12 @@
     y = collect(1.:30)
     model = structural(y, 2)
 
-    @test isa(model, StateSpaceModels.StateSpaceModel)
+    @test isa(model, StateSpaceModel)
     @test model.mode == "time-invariant"
-    @test model.filter_type == KalmanFilter
-
+    
     ss = statespace(model)
+    @test ss.filter_type == KalmanFilter
+
     sim = simulate(ss, 20, 100)
     media_sim = mean(sim, dims = 3)[:, 1]
 

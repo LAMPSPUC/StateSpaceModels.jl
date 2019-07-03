@@ -21,7 +21,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     F = Array{Float64, 3}(undef, p, p, n)
 
     # Kalman gain
-    K = Array{Float64, 3}(undef, m, p, n+1)
+    K = Array{Float64, 3}(undef, m, p, n)
     
     # Steady state initialization
     steadystate = false

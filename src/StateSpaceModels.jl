@@ -15,7 +15,8 @@ include("kalman.jl")
 include("sqrt_kalman.jl")
 include("forecast.jl")
 
-function statespace(model::StateSpaceModel; verbose::Int = 1)
+function statespace(model::StateSpaceModel; filter_type::DataType = KalmanFilter,
+                    optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1)
 
     if !(verbose in [0, 1, 2])
         @warn("Incorrect verbose value input (should be 0, 1, or 2): switching to default value 1")
@@ -27,7 +28,7 @@ function statespace(model::StateSpaceModel; verbose::Int = 1)
     end
 
     # Maximum likelihood estimation
-    covariance = estimate_statespace(model, model.optimization_method; verbose = verbose)
+    covariance = estimate_statespace(model, filter_type, optimization_method; verbose = verbose)
 
     if verbose > 0
         @info("End of estimation.")
@@ -35,9 +36,9 @@ function statespace(model::StateSpaceModel; verbose::Int = 1)
     end
 
     # Kalman filter and smoothing
-    filtered_state, smoothed_state = kalman_filter_and_smoother(model, covariance, model.filter_type)
+    filtered_state, smoothed_state = kalman_filter_and_smoother(model, covariance, filter_type)
 
-    return StateSpace(model, filtered_state, smoothed_state, covariance)
+    return StateSpace(model, filtered_state, smoothed_state, covariance, filter_type, optimization_method)
 end
 
 function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
