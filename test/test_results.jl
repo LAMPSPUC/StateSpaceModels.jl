@@ -1,5 +1,3 @@
-# Here we should put tests that obtained the same results in other softwares
-
 @testset "Air passengers with Kalman filter" begin
 
     AP = CSV.read("../example/AirPassengers.csv")
@@ -14,7 +12,7 @@
     ss = statespace(model)
 
     @test isa(ss, StateSpaceModels.StateSpace)
-    compare_forecast_simulation(ss, 20, 1000, 1e-3)
+    compare_forecast_simulation(ss, 20, 1000, 1e-2)
 end
 
 @testset "Air passengers with square-root Kalman filter" begin
@@ -31,5 +29,5 @@ end
     ss = statespace(model)
 
     @test isa(ss, StateSpaceModels.StateSpace)
-    compare_forecast_simulation(ss, 20, 1000, 1e-3)
+    compare_forecast_simulation(ss, 20, 1000, 1e-2)
 end
