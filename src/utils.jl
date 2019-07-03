@@ -47,8 +47,5 @@ end
 Ensure that matrix `M` is positive and symmetric to avoid numerical errors when numbers are small
 """
 function ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
-    m, n = size(M)
-    m != n && error("Dimension error: not a square matrix")
-    M = (M + M')/2 + ϵ.*Matrix{Float64}(I, n, n)
-    return M
+    return (M + M')/2 + ϵ*I
 end

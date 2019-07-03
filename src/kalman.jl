@@ -17,8 +17,8 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     P = Array{Float64, 3}(undef, m, m, n+1)
 
     # Innovation and its covariance
-    v = Matrix{Float64}(undef, n+1, p)
-    F = Array{Float64, 3}(undef, p, p, n+1)
+    v = Matrix{Float64}(undef, n, p)
+    F = Array{Float64, 3}(undef, p, p, n)
 
     # Kalman gain
     K = Array{Float64, 3}(undef, m, p, n+1)
@@ -40,8 +40,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             F[:, :, t]   = Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H
             K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
             a[t+1, :]    = T*a[t, :]
-            P[:, :, t+1] = T*P[:, :, t]*T' + R*Q*R'
-            P[:, :, t+1] = ensure_pos_sym(P[:, :, t+1])
+            P[:, :, t+1] = ensure_pos_sym(T*P[:, :, t]*T' + R*Q*R')
         else
             v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
             if steadystate
@@ -53,10 +52,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
                 F[:, :, t]   = Z[:, :, t] * P[:, :, t] * Z[:, :, t]' + H
                 K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
                 a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
-                P[:, :, t+1] = T * P[:, :, t] * (T - K[:, :, t] * Z[:, :, t])' + R*Q*R'
-
-                # Avoid numerical errors by ensuring positivity and symmetry
-                P[:, :, t+1] = ensure_pos_sym(P[:, :, t+1])
+                P[:, :, t+1] = ensure_pos_sym(T * P[:, :, t] * (T - K[:, :, t] * Z[:, :, t])' + R*Q*R')
 
                 # Checking if steady state was attained
                 if check_steady_state(P[:, :, t+1], P[:, :, t], tol)

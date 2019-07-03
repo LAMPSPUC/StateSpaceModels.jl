@@ -34,7 +34,6 @@ end
         model = linear_trend(y)
         ss = statespace(model)
 
-        @test y[9:end] ≈ ss.filter.a[9:end, 1] rtol = 1e-3
         @test y[9:end] ≈ ss.smoother.alpha[9:end, 1] rtol = 1e-3
         @test sum(ss.filter.P[:, :, 8]) > sum(ss.filter.P[:, :, 7]) > sum(ss.filter.P[:, :, 6]) > 
                         sum(ss.filter.P[:, :, 5]) > sum(ss.filter.P[:, :, 4])
