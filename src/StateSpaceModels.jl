@@ -1,11 +1,12 @@
 module StateSpaceModels
 
-using Optim, Distributions, LinearAlgebra, StaticArrays
+using Optim, Distributions, LinearAlgebra, StaticArrays, Dates, Printf
 
-import Base: size
+import Base: size, show
 
 export statespace
 
+include("prints.jl")
 include("structures.jl")
 include("utils.jl")
 include("models.jl")
@@ -22,23 +23,18 @@ function statespace(model::StateSpaceModel; verbose::Int = 1)
         verbose = 1
     end
 
-    if verbose > 0
-        @info("Starting state-space model estimation.")
-    end
+    print_header(verbose)
 
     # Maximum likelihood estimation
     covariance = estimate_statespace(model, model.optimization_method; verbose = verbose)
 
-    if verbose > 0
-        @info("End of estimation.")
-        @info("Starting filtering and smoothing.")
-    end
-
     # Kalman filter and smoothing
     filtered_state, smoothed_state = kalman_filter_and_smoother(model, covariance, model.filter_type)
 
+    print_bottom(verbose)
+
     return StateSpace(model, filtered_state, smoothed_state, covariance)
-end
+end;
 
 function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
                                     filter_type::DataType)
