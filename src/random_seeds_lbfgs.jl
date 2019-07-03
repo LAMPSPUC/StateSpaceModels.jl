@@ -1,4 +1,4 @@
-function estimate_statespace(model::StateSpaceModel, 
+function estimate_statespace(model::StateSpaceModel, filter_type::DataType,
                              opt_method::RandomSeedsLBFGS; verbose::Int = 1)
 
     nseeds = opt_method.nseeds                         
@@ -31,7 +31,7 @@ function estimate_statespace(model::StateSpaceModel,
 
     # Optimization
     for iseed = 1:nseeds
-        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model), seeds[:, iseed],
+        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model, filter_type), seeds[:, iseed],
                             LBFGS(), Optim.Options(f_tol = opt_method.f_tol, 
                                                    g_tol = opt_method.g_tol, 
                                                    iterations = opt_method.iterations,
@@ -45,10 +45,10 @@ function estimate_statespace(model::StateSpaceModel,
     print_estimation_end(verbose, loglikelihood)
 
     # Put seeds in the model struct
-    model.optimization_method.seeds = seeds
+    opt_method.seeds = seeds
 
     bestpsi = psi[:, argmax(loglikelihood)]
-    H, Q    = statespace_covariance(bestpsi, model.dim.p, model.dim.r, model.filter_type)
+    H, Q    = statespace_covariance(bestpsi, model.dim.p, model.dim.r, filter_type)
 
-    return StateSpaceCovariance(H, Q, model.filter_type)
+    return StateSpaceCovariance(H, Q, filter_type)
 end

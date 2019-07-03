@@ -8,9 +8,7 @@ Build state-space system for a given structural model with observations y, seaso
 If `y` is provided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`. The same will happen to X, 
 if an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
 """
-function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0),
-                        filter_type::DataType = KalmanFilter,
-                        optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS()) where Typ <: AbstractFloat
+function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0)) where Typ <: AbstractFloat
 
     # Number of observations and endogenous variables
     y = y[:, :]
@@ -82,9 +80,7 @@ function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}
         ]
         )
 
-    model = StateSpaceModel(y, Z, T, R; filter_type = filter_type, optimization_method = optimization_method)
-
-    return model
+    return StateSpaceModel(y, Z, T, R)
 
 end
 
@@ -95,8 +91,7 @@ Build state-space system for a local level model with observations y.
 
 If `y` is proided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
 """
-function local_level(y::VecOrMat{Typ}; filter_type::DataType = KalmanFilter,
-                        optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS()) where Typ <: AbstractFloat
+function local_level(y::VecOrMat{Typ}) where Typ <: AbstractFloat
 
     # Number of observations and endogenous variables
     y = y[:, :]
@@ -112,9 +107,7 @@ function local_level(y::VecOrMat{Typ}; filter_type::DataType = KalmanFilter,
     T = Matrix{Float64}(I, p, p)
     R = Matrix{Float64}(I, p, p)
 
-    model = StateSpaceModel(y, Z, T, R; filter_type = filter_type, optimization_method = optimization_method)
-
-    return model
+    return StateSpaceModel(y, Z, T, R)
 end
 
 """
@@ -124,8 +117,7 @@ Build state-space system for a linear trend model with observations y.
 
 If `y` is proided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
 """
-function linear_trend(y::VecOrMat{Typ}; filter_type::DataType = KalmanFilter,
-                        optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS()) where Typ <: AbstractFloat
+function linear_trend(y::VecOrMat{Typ}) where Typ <: AbstractFloat
 
     # Number of observations and endogenous variables
     y = y[:, :]
@@ -141,7 +133,5 @@ function linear_trend(y::VecOrMat{Typ}; filter_type::DataType = KalmanFilter,
     T = kron(Matrix{Float64}(I, p, p),[1 1; 0 1])
     R = kron(Matrix{Float64}(I, p, p),[1 0; 0 1])
 
-    model = StateSpaceModel(y, Z, T, R; filter_type = filter_type, optimization_method = optimization_method)
-
-    return model
+    return StateSpaceModel(y, Z, T, R)
 end
