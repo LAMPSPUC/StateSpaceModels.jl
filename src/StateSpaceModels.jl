@@ -34,7 +34,7 @@ function statespace(model::StateSpaceModel; verbose::Int = 1)
     print_bottom(verbose)
 
     return StateSpace(model, filtered_state, smoothed_state, covariance)
-end;
+end
 
 function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
                                     filter_type::DataType)
