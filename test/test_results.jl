@@ -1,5 +1,3 @@
-# Here we should put tests that obtained the same results in other softwares
-
 @testset "Air passengers with Kalman filter" begin
 
     AP = CSV.read("../example/AirPassengers.csv")
