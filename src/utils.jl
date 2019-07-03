@@ -49,3 +49,19 @@ Ensure that matrix `M` is positive and symmetric to avoid numerical errors when 
 function ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
     return (M + M')/2 + ϵ*I
 end
+
+function Base.show(io::IO, ss::StateSpace)
+    println("An estimated state-space model")
+    return nothing
+end
+
+function Base.show(io::IO, model::StateSpaceModel)
+    println("A $(model.mode) state-space model with")
+    println("n = $(model.dim.n),")
+    println("p = $(model.dim.p),")
+    println("m = $(model.dim.m),")
+    println("r = $(model.dim.r),")
+    println("filter_type = $(model.filter_type),")
+    println("optimization_method = $(typeof(model.optimization_method)).")
+    return nothing
+end
