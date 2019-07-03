@@ -1,8 +1,4 @@
-
-path = joinpath(dirname(@__FILE__), "..", "..")
-push!(Base.LOAD_PATH, path)
-using StateSpaceModels
-using Distributions, LinearAlgebra, Plots, Random
+using StateSpaceModels, Distributions, LinearAlgebra, Plots, Random
 
 # Number of observations
 n = 300

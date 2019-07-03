@@ -1,6 +1,4 @@
-
 using Test, StateSpaceModels, Statistics, CSV
-
 # Run tests
 include("test_utils.jl")
 include("test_userdefined.jl")
