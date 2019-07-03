@@ -51,6 +51,7 @@ function ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
 end
 
 function Base.show(io::IO, ss::StateSpace)
+    println("An estimated state-space model")
     return nothing
 end
 
