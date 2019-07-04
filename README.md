@@ -13,7 +13,7 @@ pkg> add StateSpaceModels
 
 ## Notes
 
-StateSpaceModels.jl is a package for modeling, forecasting and simulating time series in a state-space framework. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by J. Durbin and S. J. Koopman. The notation of the variables in the code also follows the book.
+StateSpaceModels.jl is a package for modeling, forecasting, and simulating time series in a state-space framework. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by J. Durbin and S. J. Koopman. The notation of the variables in the code also follows the book.
 
 Works using this package:
 
@@ -25,21 +25,22 @@ In: L Simpósio Brasileiro de Pesquisa Operacional, Rio de Janeiro, Brazil.
 ## Features
 
 Current features:
+* Kalman filter and smoother
 * Square-root Kalman filter and smoother
 * Maximum likelihood estimation
 * Forecasting
 * Monte Carlo simulation
 * Multivariate modeling
 * User-defined models (input any `Z`, `T`, and `R`)
-* Several pre-defined models, including:
+* Several predefined models, including:
   1. Basic structural model (trend, slope, seasonal)
   2. Structural model with exogenous variables
   3. Linear trend model
   4. Local level model
 * Completion of missing values
 
-Future features (work in progress):
-* Exact initialization of Kalman filter
+Planned features:
+* Exact initialization of the Kalman filter
 
 [build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
 [build-url]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl
