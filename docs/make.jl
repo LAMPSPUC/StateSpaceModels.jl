@@ -9,7 +9,9 @@ makedocs(
     authors = "Raphael Saavedra, Mario Souto and Guilherme Bodin.",
     pages = [
         "Home" => "index.md",
-        "manual.md"
+        "manual.md",
+        "examples.md"
+        "reference.md"
     ]
 )
 
