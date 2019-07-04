@@ -2,7 +2,7 @@
 
 ## Air Passengers
 
-Let's take the Air Passenger time series to build and example. In order to avoid multiplicative effects, we use the well-known approach of taking the log of the series. The code is in the example folder.
+Let's take the classical Air Passenger time series as an example. In order to avoid multiplicative effects, we use the well-known approach of taking the log of the series. The code is in the example folder.
 
 ```julia
 using CSV, StateSpaceModels, Plots, Statistics, Dates
