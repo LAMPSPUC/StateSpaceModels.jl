@@ -179,10 +179,10 @@ end
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-* `a`
-* `v` 
-* `P`
-* `F`
+* `a` filtered states ``E(\\alpha_t|y_{t-1}, \\dots , y_1)``
+* `v` Prediction errors ``v_t = y_t − Z_ta_t,i, i = 1, \\dots , p``
+* `P` covariance matrix of filtered states ``P = Var(\\alpha_t|y_{t−1}, \\dots , y_1)``
+* `F` Prediction error variances ``Var(v_t)``
 * `steadystate` Boolean to indicate if steady state was attained
 * `tstady` Instant when steady state was attained; in case it wasn't, `tsteady = n+1`
 """
