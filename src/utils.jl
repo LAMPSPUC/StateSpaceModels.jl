@@ -51,7 +51,9 @@ function ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
 end
 
 function Base.show(io::IO, ss::StateSpace)
-    println("An estimated state-space model")
+    println("An estimated state-space model with")
+    println("filter_type = $(ss.filter_type),")
+    println("optimization_method = $(typeof(ss.optimization_method)).")
     return nothing
 end
 
@@ -60,8 +62,6 @@ function Base.show(io::IO, model::StateSpaceModel)
     println("n = $(model.dim.n),")
     println("p = $(model.dim.p),")
     println("m = $(model.dim.m),")
-    println("r = $(model.dim.r),")
-    println("filter_type = $(model.filter_type),")
-    println("optimization_method = $(typeof(model.optimization_method)).")
+    println("r = $(model.dim.r).")
     return nothing
 end
