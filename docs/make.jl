@@ -1,7 +1,5 @@
 using Documenter, StateSpaceModels
 
-cd("/home/rsaavedra/Dropbox/Research/StateSpaceModels.jl/docs")
-
 makedocs(
     modules = [StateSpaceModels],
     doctest  = false,
@@ -17,6 +15,6 @@ makedocs(
     ]
 )
 
-# deploydocs(
-#     repo = "github.com/LAMPSPUC/StateSpaceModels.jl.git",
-# )
+deploydocs(
+    repo = "github.com/LAMPSPUC/StateSpaceModels.jl.git",
+)
