@@ -4,6 +4,7 @@
         X = randn(15, 2)
         s = 2
         model = structural(y, s; X = X)
+
         n, p, m, r = size(model)
         @test n == 15
         @test p == 1
@@ -49,6 +50,14 @@
         A = randn(3,3)
         B = SSM.ensure_pos_sym(A)
         @test issymmetric(B)
+    end
+
+    @testset "show" begin
+        y = ones(15)
+        model = local_level(y)
+        ss = statespace(model)
+        @test show(model) == nothing
+        @test show(ss) == nothing
     end
 end
 
