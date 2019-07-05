@@ -36,6 +36,7 @@ for t in 1:n
     y[t, :] = Z * α[t, :] + rand(ε)
     α[t + 1, :] = T * α[t, :] + R * rand(η)  
 end
+α = α[1:n, :]
 
 # User defined model
 model = StateSpaceModel(y, Z, T, R)
@@ -43,6 +44,6 @@ model = StateSpaceModel(y, Z, T, R)
 # Estimate vehicle speed and position
 ss = statespace(model)
 
-plot(ss.smoother.alpha[:, 1], ss.smoother.alpha[:, 3], title="Vehicle tracking", lw=3, label="Estimate position")
-plot!(y[:, 1], y[:, 2], label="Measured position", line=:scatter, lw=3, markeralpha=0.2, color=:blue)
-plot!(α[:, 1], α[:, 3], label="True position", lw=3)
+plot(y[:, 1], y[:, 2], label="Measured position", line=:scatter, lw=2, markeralpha=0.2, color=:black, title="Vehicle tracking")
+plot!(α[:, 1], α[:, 3], label="True position", lw=3, color=:indianred)
+plot!(ss.smoother.alpha[:, 1], ss.smoother.alpha[:, 3], label="Estimated position", lw=2, color=:forestgreen)
