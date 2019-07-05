@@ -1,0 +1,22 @@
+title: "StateSpaceModels.jl: a Julia Package for Time-Series Analysis in a State-Space Framework"
+keywords:
+  - State-space models
+  - time-series analysis
+  - Kalman filter
+  - forecasting
+  - Monte Carlo simulation
+authors:
+  - name: Raphael Saavedra
+    orcid: 0000-0003-0095-4114
+    affiliation: 1, 2
+  - name: Guilherme Bodin
+    affiliation: 1, 2
+  - name: Mario Souto
+    affiliation: 1, 2
+affiliations:
+  - name: Laboratory of Applied Mathematical Programming and Statistics (LAMPS)
+    index: 1
+  - name: Pontifical Catholic University of Rio de Janeiro (PUC-Rio), Brazil
+    index: 2
+date: 5 July 2019
+bibliography: ref.bib

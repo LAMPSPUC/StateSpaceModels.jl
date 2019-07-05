@@ -1,0 +1,80 @@
+\begin{thebibliography}{10}
+
+\bibitem{statespacejl}
+{StateSpace.jl}, [Online]. Available:
+  \url{https://github.com/ElOceanografo/StateSpace.jl}\EatDot.
+
+\bibitem{controlsystemsjl}
+Fredrik B.~Carlson and Mattias Fält.
+{ControlSystems.jl: A Control Systems Toolbox for Julia}, 2016 [Online].
+  Available: \url{https://github.com/JuliaControl/ControlSystems.jl}\EatDot.
+
+\bibitem{casella2002statistical}
+George Casella and Roger~L. Berger.
+{\em Statistical Inference}, volume~2.
+Duxbury Pacific Grove, CA, 2002.
+
+\bibitem{durbin2012time}
+James Durbin and Siem~Jan Koopman.
+{\em Time Series Analysis by State Space Methods}.
+Oxford University Press, 2012.
+
+\bibitem{kfas}
+Jouni Helske.
+{KFAS}: Exponential family state space models in {R}.
+{\em Journal of Statistical Software}, 78(10):1--39, 2017.
+
+\bibitem{kalman1960new}
+Rudolph~Emil Kalman.
+A new approach to linear filtering and prediction problems.
+{\em Journal of basic Engineering}, 82(1):35--45, 1960.
+
+\bibitem{koopman2000stamp}
+Siem~Jan Koopman, Andrew~C. Harvey, Jurgen~A. Doornik, and Neil Shephard.
+{STAMP} 6.0: Structural time series analyser, modeller and predictor.
+{\em London: Timberlake Consultants}, 2000.
+
+\bibitem{liu1989limited}
+Dong~C. Liu and Jorge Nocedal.
+On the limited memory {BFGS} method for large scale optimization.
+{\em Mathematical programming}, 45(1-3):503--528, 1989.
+
+\bibitem{mogensen2018optim}
+Patrick~Kofod Mogensen and Asbj{\o}rn~Nilsen Riseth.
+Optim: A mathematical optimization package for {J}ulia.
+{\em Journal of Open Source Software}, 3(24), 2018.
+
+\bibitem{saavedra2018simulating}
+Raphael Saavedra, Guilherme Bodin, et~al.
+Simulating low and high-frequency energy demand scenarios in a unified
+  framework--{P}art {I}: Low-frequency simulation.
+In {\em Proceedings of the L Simpósio Brasileiro de Pesquisa Operacional},
+  2018.
+
+\bibitem{statespacemodels}
+Raphael Saavedra, Guilherme Bodin, and Mario Souto.
+{StateSpaceModels.jl}, [Online]. Available:
+  \url{https://github.com/LAMPSPUC/StateSpaceModels.jl}\EatDot.
+
+\bibitem{kalmanjl}
+Moritz Schauer.
+{Kalman.jl}, [Online]. Available:
+  \url{https://github.com/mschauer/Kalman.jl}\EatDot.
+
+\bibitem{seabold2010statsmodels}
+Skipper Seabold and Josef Perktold.
+Statsmodels: Econometric and statistical modeling with {P}ython.
+In {\em 9th Python in Science Conference}, 2010.
+
+\bibitem{welch1995introduction}
+Greg Welch, Gary Bishop, et~al.
+An introduction to the {K}alman filter.
+Technical report, Department of Computer Science, University of North Carolina
+  at Chapel Hill, 1995.
+
+\bibitem{zadeh2008linear}
+Lotfi Zadeh and Charles Desoer.
+{\em Linear System Theory: The State Space Approach}.
+Courier Dover Publications, 2008.
+
+\end{thebibliography}
