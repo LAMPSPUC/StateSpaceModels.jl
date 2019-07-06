@@ -31,8 +31,10 @@ end
 # Auxiliary structure for Kalman filter
 mutable struct KalmanFilter <: AbstractFilter
     a::Matrix{Float64} # predictive state
+    att::Matrix{Float64}
     v::Matrix{Float64} # innovations
     P::Array{Float64, 3} # covariance matrix of the predictive state
+    Ptt::Array{Float64, 3}
     F::Array{Float64, 3} # covariance matrix of the innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
@@ -187,12 +189,12 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `tstady` Instant when steady state was attained; in case it wasn't, `tsteady = n+1`
 """
 struct FilteredState
-    a::Matrix{Float64} # predictive state
-    v::Matrix{Float64} # innovations
-    P::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
-    F::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
-    steadystate::Bool # flag that indicates if steady state was attained
-    tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
+    a::Matrix{Float64} 
+    v::Matrix{Float64} 
+    P::Array{Float64, 3} 
+    F::Array{Float64, 3} 
+    steadystate::Bool 
+    tsteady::Int 
 end
 
 """

@@ -1,5 +1,6 @@
+push!(LOAD_PATH, "/Users/guilhermebodin/Documents/StateSpaceModels.jl/src")
 using Test, StateSpaceModels, Statistics, CSV, LinearAlgebra
-
+cd("test")
 const SSM = StateSpaceModels
 # Run tests
 include("test_utils.jl")
