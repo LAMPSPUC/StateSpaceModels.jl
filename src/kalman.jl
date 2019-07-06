@@ -3,16 +3,17 @@
 
 Kalman filter with big Kappa initialization.
 """
-function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: AbstractFloat
-    # if model.mode == "time-variant"
-    if true
+function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ},
+                       tol::Typ = 1e-5) where Typ <: AbstractFloat
+    if model.mode == "time-variant"
         return time_variant_kalman(model, H, Q)
     else
-        return time_invariant_kalman(model, H, Q)
+        return time_invariant_kalman(model, H, Q, tol)
     end
 end
 
-function time_invariant_kalman(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: AbstractFloat
+function time_invariant_kalman(model::StateSpaceModel, H::Matrix{Typ}, 
+                               Q::Matrix{Typ}, tol::Typ) where Typ <: AbstractFloat
     # Load dimensions
     n, p, m, r = size(model)
 
@@ -41,28 +42,43 @@ function time_invariant_kalman(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix
     a[1, :]    = zeros(m, 1)
     P[:, :, 1] = 1e6 .* Matrix(I, m, m)
 
+    RQR = R * Q * R'
     # Kalman filter
     for t = 1:n
         if check_missing_observation(y[t, :])
+            steadystate  = false
             v[t, :]      = fill(NaN, p)
             F[:, :, t]   = fill(NaN, (p, p))
             att[t, :]    = a[t, :]
             Ptt[:, :, t] = P[:, :, t]
             a[t+1, :]    = T * att[t, :]
-            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + R*Q*R')
+            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR)
+        elseif steadystate
+            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            F[:, :, t]   = F[:, :, t-1]
+            K[:, :, t]   = K[:, :, t-1] # K_t = T * P_t * Z_t * F^-1_t
+            att[t, :]    = T*a[t, :] + P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t]) * v[t, :] # att_t = T * a_t + P_t * Z_t' * F^-1_t * v_t
+            Ptt[:, :, t] = Ptt[:, :, t-1] # Ptt_t = P_t - P_t * Z_t * F^-1_t * P_t * Z_t
+            a[t+1, :]    = T * att[t, :] # a_t+1 = T * att_t
+            P[:, :, t+1] = P[:, :, t] # P_t+1 = T * Ptt_t * T' + RQR'
         else
-            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :]
-            F[:, :, t]   = Z[:, :, t] * P[:, :, t] * Z[:, :, t]' + H
-            aux_matrix   = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
-            K[:, :, t]   = T*aux_matrix
-            att[t, :]    = a[t, :] + aux_matrix * v[t, :]
-            Ptt[:, :, t] = P[:, :, t] - aux_matrix * Z[:, :, t] * P[:, :, t]
-            a[t+1, :]    = T * att[t, :]
-            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + R*Q*R')
+            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            ZP           = Z[:, :, t] * P[:, :, t]
+            F[:, :, t]   = ZP * Z[:, :, t]' + H # F_t = Z_t * P_t * Z_t + H
+            aux_matrix   = ZP' * inv(F[:, :, t]) 
+            K[:, :, t]   = T*aux_matrix # K_t = T * P_t * Z_t * F^-1_t
+            att[t, :]    = T*a[t, :] + aux_matrix * v[t, :] # att_t = T * a_t + P_t * Z_t * F^-1_t * v_t
+            Ptt[:, :, t] = P[:, :, t] - aux_matrix * ZP # Ptt_t = P_t - P_t * Z_t * F^-1_t * P_t * Z_t
+            a[t+1, :]    = T * att[t, :] # a_t+1 = T * att_t
+            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR) # P_t+1 = T * Ptt_t * T' + RQR'
+            if check_steady_state(P[:, :, t+1], P[:, :, t], tol)
+                steadystate = true
+                tsteady     = t
+            end
         end
     end
     # Return the auxiliary filter structre
-    return KalmanFilter(a, att, v, P, Ptt, F, false, n + 1, K)
+    return KalmanFilter(a, att, v, P, Ptt, F, steadystate, tsteady, K)
 end
 
 function time_variant_kalman(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: AbstractFloat
@@ -94,6 +110,7 @@ function time_variant_kalman(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{T
     a[1, :]    = zeros(m, 1)
     P[:, :, 1] = 1e6 .* Matrix(I, m, m)
 
+    RQR = R * Q * R'
     # Kalman filter
     for t = 1:n
         if check_missing_observation(y[t, :])
@@ -102,20 +119,21 @@ function time_variant_kalman(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{T
             att[t, :]    = a[t, :]
             Ptt[:, :, t] = P[:, :, t]
             a[t+1, :]    = T * att[t, :]
-            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + R*Q*R')
+            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR)
         else
-            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :]
-            F[:, :, t]   = Z[:, :, t] * P[:, :, t] * Z[:, :, t]' + H
-            aux_matrix   = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
-            K[:, :, t]   = T*aux_matrix
-            att[t, :]    = a[t, :] + aux_matrix * v[t, :]
-            Ptt[:, :, t] = P[:, :, t] - aux_matrix * Z[:, :, t] * P[:, :, t]
-            a[t+1, :]    = T * att[t, :]
-            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + R*Q*R')
+            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            ZP           = Z[:, :, t] * P[:, :, t]
+            F[:, :, t]   = ZP * Z[:, :, t]' + H # F_t = Z_t * P_t * Z_t + H
+            aux_matrix   = ZP' * inv(F[:, :, t]) 
+            K[:, :, t]   = T*aux_matrix # K_t = T * P_t * Z_t * F^-1_t
+            att[t, :]    = T*a[t, :] + aux_matrix * v[t, :] # att_t = T * a_t + P_t * Z_t * F^-1_t * v_t
+            Ptt[:, :, t] = P[:, :, t] - aux_matrix * ZP # Ptt_t = P_t - P_t * Z_t * F^-1_t * P_t * Z_t
+            a[t+1, :]    = T * att[t, :] # a_t+1 = T * att_t
+            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR) # P_t+1 = T * Ptt_t * T' + RQR'
         end
     end
     # Return the auxiliary filter structre
-    return KalmanFilter(a, att, v, P, Ptt, F, false, n + 1, K)
+    return KalmanFilter(a, att, v, P, Ptt, F, steadystate, tsteady, K)
 end
 
 """
