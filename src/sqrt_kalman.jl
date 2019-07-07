@@ -25,7 +25,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
 
     # Auxiliary matrices
     U2star = Array{Float64, 3}(undef, m, p, n)
-    
+
     # Steady state initialization
     steadystate  = false
     tsteady      = n+1
@@ -75,6 +75,39 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
 
     # Return the auxiliary filter structre
     return SquareRootFilter(a, v, sqrtP, sqrtF, steadystate, tsteady, K)
+end
+
+"""
+    filtered_state(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
+
+Obtain the filtered state estimates and their covariance matrices.
+"""
+function filtered_state(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
+
+    # Load dimensions data
+    n, p, m, r = size(model)
+
+    # Load system data
+    Z, T, R = ztr(model)
+
+    # Load filter data
+    a = sqrt_filter.a
+    v = sqrt_filter.v
+    F = gram_in_time(sqrt_filter.sqrtF)
+    P = gram_in_time(sqrt_filter.sqrtP)
+
+    # Filtered state and its covariance
+    att = Matrix{Float64}(undef, n, m)
+    Ptt = Array{Float64, 3}(undef, m, m, n)
+
+    for t = 1:n
+        PZF = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
+        att[t, :]    = a[t, :] + PZF * v[t, :]
+        Ptt[:, :, t] = ensure_pos_sym(P[:, :, t] - PZF * Z[:, :, t] * P[:, :, t])
+    end
+
+    return att, Ptt
+
 end
 
 """
@@ -151,7 +184,7 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     Nstar  = [Z[:, :, 1]' * inv(sqrtF[:, :, 1]) L[:, :, 1]' * sqrtN[:, :, 1]]
     G      = qr(Nstar').Q
     NstarG = Nstar*G
-    
+
     sqrtN_0  = NstarG[1:m, 1:m]
     P_1 = gram(sqrtP[:, :, 1])
     alpha[1, :] = a[1, :] + P_1 * r_0
@@ -186,27 +219,29 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
     return sqrtH, sqrtQ
 end
 
-function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel, 
+function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
                                    filter_type::Type{SquareRootFilter}) where T <: AbstractFloat
 
     sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
     # Obtain innovation v and its variance F
-    sqrt_kfilter = sqrt_kalman_filter(model, sqrtH, sqrtQ)
+    sqrt_sqrt_filter = sqrt_kalman_filter(model, sqrtH, sqrtQ)
     # Return v and F
-    return sqrt_kfilter.v, gram_in_time(sqrt_kfilter.sqrtF)
+    return sqrt_sqrt_filter.v, gram_in_time(sqrt_sqrt_filter.sqrtF)
 end
 
-function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
+function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance,
                                     filter_type::Type{SquareRootFilter})
-    # Compute sqrt matrices                                
+    # Compute sqrt matrices
     sqrtH = cholesky(covariance.H).L # .L stands for Lower triangular
     sqrtQ = cholesky(covariance.Q).L # .L stands for Lower triangular
 
-    # Do the SquareRootFilter 
-    filtered_state = sqrt_kalman_filter(model, sqrtH.data, sqrtQ.data)
-    smoothed_state = sqrt_smoother(model, filtered_state)
-    return FilteredState(filtered_state.a, filtered_state.v, 
-                         gram_in_time(filtered_state.sqrtP), gram_in_time(filtered_state.sqrtF),
-                         filtered_state.steadystate, filtered_state.tsteady) ,
-           SmoothedState(smoothed_state.alpha, smoothed_state.V) 
+    # Do the SquareRootFilter
+    filter_output  = sqrt_kalman_filter(model, sqrtH.data, sqrtQ.data)
+    smoothed_state = sqrt_smoother(model, filter_output)
+    att, Ptt       = filtered_state(model, filter_output)
+
+    return FilterOutput(filter_output.a, att, filter_output.v,
+                         gram_in_time(filter_output.sqrtP), Ptt, gram_in_time(filter_output.sqrtF),
+                         filter_output.steadystate, filter_output.tsteady) ,
+           SmoothedState(smoothed_state.alpha, smoothed_state.V)
 end

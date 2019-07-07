@@ -1,5 +1,5 @@
-export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, SmoothedState, 
-        FilteredState, StateSpace, KalmanFilter, SquareRootFilter, RandomSeedsLBFGS
+export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, SmoothedState,
+        FilterOutput, StateSpace, KalmanFilter, SquareRootFilter, RandomSeedsLBFGS
 
 # Abstract types
 """
@@ -25,7 +25,7 @@ mutable struct SquareRootFilter <: AbstractFilter
     sqrtF::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
-    K::Array{Float64, 3} # Kalman gain  
+    K::Array{Float64, 3} # Kalman gain
 end
 
 # Auxiliary structure for Kalman filter
@@ -66,7 +66,7 @@ end
 """
     StateSpaceDimensions
 
-StateSpaceModel dimensions, following the notation of on the book 
+StateSpaceModel dimensions, following the notation of on the book
 \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
 * `n` is the number of observations
@@ -104,7 +104,7 @@ struct StateSpaceModel
     mode::String
 
     function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64})
-        
+
         # Validate StateSpaceDimensions
         ny, py = size(y)
         pz, mz, nz = size(Z)
@@ -116,7 +116,7 @@ struct StateSpaceModel
         dim = StateSpaceDimensions(ny, py, mr, rr)
         new(y, Z, T, R, dim, "time-variant")
     end
-    
+
     function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64})
 
         # Validate StateSpaceDimensions
@@ -147,15 +147,15 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `Q` covariance matrix of the state vector ``Q_t``
 """
 struct StateSpaceCovariance
-    H::Matrix{Float64} 
+    H::Matrix{Float64}
     Q::Matrix{Float64}
 
-    function StateSpaceCovariance(sqrtH::Matrix{Float64}, sqrtQ::Matrix{Float64}, 
+    function StateSpaceCovariance(sqrtH::Matrix{Float64}, sqrtQ::Matrix{Float64},
                                   filter_type::Type{SquareRootFilter})
         return new(gram(sqrtH), gram(sqrtQ))
     end
 
-    function StateSpaceCovariance(H::Matrix{Float64}, Q::Matrix{Float64}, 
+    function StateSpaceCovariance(H::Matrix{Float64}, Q::Matrix{Float64},
                                     filter_type::Type{KalmanFilter})
         return new(H, Q)
     end
@@ -175,22 +175,24 @@ struct SmoothedState
 end
 
 """
-    FilteredState
+    Filter output
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-* `a` filtered states ``E(\\alpha_t|y_{t-1}, \\dots , y_1)``
+* `a` predictive states ``E(\\alpha_t|y_{t-1}, \\dots , y_1)``
 * `v` Prediction errors ``v_t = y_t − Z_ta_t,i, i = 1, \\dots , p``
-* `P` covariance matrix of filtered states ``P = Var(\\alpha_t|y_{t−1}, \\dots , y_1)``
+* `P` Covariance matrix of predictive states ``P = Var(\\alpha_t|y_{t−1}, \\dots , y_1)``
 * `F` Prediction error variances ``Var(v_t)``
 * `steadystate` Boolean to indicate if steady state was attained
 * `tstady` Instant when steady state was attained; in case it wasn't, `tsteady = n+1`
 """
-struct FilteredState
+struct FilterOutput
     a::Matrix{Float64} # predictive state
+    att::Matrix{Float64} # filtered state
     v::Matrix{Float64} # innovations
-    P::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the predictive state
-    F::Array{Float64, 3} # lower triangular matrix with sqrt-covariance of the innovations
+    P::Array{Float64, 3} # covariance matrix of the predictive state
+    Ptt::Array{Float64, 3} # covariance matrix of the filtered state
+    F::Array{Float64, 3} # covariance matrix of the innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
 end
@@ -202,7 +204,7 @@ StateSpaceModel
 """
 struct StateSpace
     model::StateSpaceModel
-    filter::FilteredState
+    filter::FilterOutput
     smoother::SmoothedState
     covariance::StateSpaceCovariance
     filter_type::DataType
