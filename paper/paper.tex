@@ -189,11 +189,18 @@ julia> ss = statespace(model)
 
 \subsection{Filtering}
 
-The filtering step derives the predictive state as well as its covariance matrix at every time period via the Kalman filter, i.e., it estimates
+The filtering step derives the predictive and filtered states as well as their covariance matrices at every time period via the Kalman filter. The predictive state and its variance are given by
 %
 \begin{align}
     a_{t+1} &= \mathbb{E}[\alpha_{t+1} | Y_{t}], \\
     P_{t+1} &= \mathbb{V}[\alpha_{t+1} | Y_{t}],
+\end{align}
+%
+while the filtered state and its variance are given by
+%
+\begin{align}
+    a_{t|t} &= \mathbb{E}[\alpha_{t} | Y_{t}], \\
+    P_{t|t} &= \mathbb{V}[\alpha_{t} | Y_{t}],
 \end{align}
 %
 where $Y_{t}$ denotes the set of time periods $y_{1}, \dots, y_{t}$.
@@ -277,7 +284,7 @@ model = linear_trend(y)
 ss = statespace(model)
 \end{lstlisting}
 %
-The results of the estimation step are presented in Fig. \ref{fig:missing_observations}. The filtered state and smoothed state estimates can be accessed in \texttt{ss.filter.a} and \texttt{ss.smoother.alpha}, respectively. It is clear in Fig. \ref{fig:missing_observations} that the filter and smoother are able to effectively capture the growing linear trend of the series even in the period where observations are missing.
+The results of the estimation step are presented in Fig. \ref{fig:missing_observations}. The predictive, filtered, and smoothed state estimates can be accessed in \texttt{ss.filter.a}, \texttt{ss.filter.att}, and \texttt{ss.smoother.alpha}, \mbox{respectively}. It is clear in Fig. \ref{fig:missing_observations} that the filter and smoother are able to effectively capture the growing linear trend of the series even in the period where observations are missing.
 %
 \begin{figure}[h]
 	\centering
@@ -292,7 +299,7 @@ At the end of the filtering, estimation, and smoothing routine executed by the \
 
 \begin{itemize}
     \item ~\texttt{model}: the previously defined \texttt{StateSpaceModel}.
-    \item ~\texttt{filter}: a \texttt{FilteredState} structure representing the result of the Kalman filter. It contains the predictive state and the innovations as well as their covariance matrices at each time period. Furthermore, there is a flag indicating if steady state was attained and the time period when it was attained.
+    \item ~\texttt{filter}: a \texttt{FilterOutput} structure representing the result of the Kalman filter. It contains the predictive and filtered states as well as the innovations and their covariance matrices at each time period. Furthermore, there is a flag indicating if steady state was attained and the time period when it was attained.
     \item ~\texttt{smoother}: a \texttt{SmoothedState} structure representing the result of the smoothing procedure. It contains the smoothed state as well as its covariance matrix at each time period.
     \item ~\texttt{covariance}: a \texttt{StateSpaceCovariance} structure which contains the covariance matrices of the observation and state noises.
     \item ~\texttt{filter\_type}: the defined filter type.
