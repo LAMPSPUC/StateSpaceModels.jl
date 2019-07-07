@@ -30,15 +30,16 @@ function statespace(model::StateSpaceModel; filter_type::DataType = KalmanFilter
     covariance = estimate_statespace(model, filter_type, optimization_method; verbose = verbose)
 
     # Kalman filter and smoothing
-    filtered_state, smoothed_state = kalman_filter_and_smoother(model, covariance, filter_type)
+    filter_output, smoothed_state = kalman_filter_and_smoother(model, covariance, filter_type)
 
     print_bottom(verbose)
-    return StateSpace(model, filtered_state, smoothed_state, covariance, filter_type, optimization_method)
+
+    return StateSpace(model, filter_output, smoothed_state, covariance, filter_type, optimization_method)
 end
 
-function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
+function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance,
                                     filter_type::DataType)
-    error(filter_type , " not implemented") # Returns an error if it cannot 
+    error(filter_type , " not implemented") # Returns an error if it cannot
                                             # find a specialized kalman_filter_and_smoother
 end
 

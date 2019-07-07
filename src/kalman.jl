@@ -22,7 +22,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
 
     # Kalman gain
     K = Array{Float64, 3}(undef, m, p, n)
-    
+
     # Steady state initialization
     steadystate = false
     tsteady     = n+1
@@ -65,6 +65,39 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
 
     # Return the auxiliary filter structre
     return KalmanFilter(a, v, P, F, steadystate, tsteady, K)
+end
+
+"""
+    filtered_state(model::StateSpaceModel, kfilter::KalmanFilter)
+
+Obtain the filtered state estimates and their covariance matrices.
+"""
+function filtered_state(model::StateSpaceModel, kfilter::KalmanFilter)
+
+    # Load dimensions data
+    n, p, m, r = size(model)
+
+    # Load system data
+    Z, T, R = ztr(model)
+
+    # Load filter data
+    a = kfilter.a
+    v = kfilter.v
+    F = kfilter.F
+    P = kfilter.P
+
+    # Filtered state and its covariance
+    att = Matrix{Float64}(undef, n, m)
+    Ptt = Array{Float64, 3}(undef, m, m, n)
+
+    for t = 1:n
+        PZF = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
+        att[t, :]    = a[t, :] + PZF * v[t, :]
+        Ptt[:, :, t] = ensure_pos_sym(P[:, :, t] - PZF * Z[:, :, t] * P[:, :, t])
+    end
+
+    return att, Ptt
+
 end
 
 """
@@ -152,7 +185,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     return Smoother(alpha, V)
 end
 
-# All filters have to have implemented the following functions
+# All filters have to implement the following functions
 # *
 # *
 # *
@@ -180,26 +213,28 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
     return H, Q
 end
 
-function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel, 
+function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
                                    filter_type::Type{KalmanFilter}) where T <: AbstractFloat
 
     H, Q = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
 
     # Obtain innovation v and its variance F
     kfilter = kalman_filter(model, H, Q)
-    
+
     # Return v and F
     return kfilter.v, kfilter.F
 end
 
-function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
+function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance,
                                     filter_type::Type{KalmanFilter})
 
-    # Run filter and smoother 
-    filtered_state = kalman_filter(model, covariance.H, covariance.Q)
-    smoothed_state = smoother(model, filtered_state)
-    return FilteredState(filtered_state.a[2:end, :], filtered_state.v, 
-                         filtered_state.P[:, :, 2:end], filtered_state.F,
-                         filtered_state.steadystate, filtered_state.tsteady),
-           SmoothedState(smoothed_state.alpha, smoothed_state.V) 
+    # Run filter and smoother
+    filter_output  = kalman_filter(model, covariance.H, covariance.Q)
+    smoothed_state = smoother(model, filter_output)
+    att, Ptt       = filtered_state(model, filter_output)
+
+    return FilterOutput(filter_output.a[1:end-1, :], att, filter_output.v,
+                        filter_output.P[:, :, 1:end-1], Ptt, filter_output.F,
+                        filter_output.steadystate, filter_output.tsteady),
+           SmoothedState(smoothed_state.alpha, smoothed_state.V)
 end
