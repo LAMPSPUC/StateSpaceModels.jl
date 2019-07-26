@@ -7,10 +7,10 @@ Let's take the classical Air Passenger time series as an example. In order to av
 ```julia
 using CSV, StateSpaceModels, Plots, Statistics, Dates
 
-#load the AirPassengers dataset
+# Load the AirPassengers dataset
 AP = CSV.read("AirPassengers.csv")
 
-#Take the log of the series
+# Take the log of the series
 logAP = log.(Array{Float64}(AP[:Passengers]))
 
 p1 = plot(AP[:Date], logAP, label = "AirPassengers timeseries", size = (1000, 500))
@@ -21,33 +21,33 @@ p1 = plot(AP[:Date], logAP, label = "AirPassengers timeseries", size = (1000, 50
 Estimating a `StateSpaceModel` gives us the trend and seasonal components of the time series.
 
 ```julia
-#Define its seasonality 
+# Define its seasonality 
 s = 12
 
-#Estimate a StateSpace Structure
+# Estimate a StateSpace Structure
 ss = statespace(logAP, s)
 
-#Analyze its decomposition in seasonal and trend
+# Analyze its decomposition in seasonal and trend
 p2 = plot(AP[:Date], ss.state.seasonal, label = "AirPassengers seasonal", size = (1000, 500))
 p3 = plot(AP[:Date], ss.state.trend, label = "AirPassengers trend", size = (1000, 500))
 ```
 
-![Lof of Air Passengers trend component](./assets/trendairpassengers.png)
+![Log of Air Passengers trend component](./assets/trendairpassengers.png)
 ![Log of Air Passengers seasonal component](./assets/seasonalairpassengers.png)
 
 We can also generate future scenarios for this time series through Monte Carlo simulation. In this example, we simulate 100 scenarios for up to five years (60 time periods) ahead.
 
 ```julia
-#Simulate 100 scenarios, 60 steps ahead
+# Simulate 100 scenarios, 60 steps ahead
 num_scenarios = 100
 num_steps_ahead = 60
 simulation = simulate(ss, num_steps_ahead, num_scenarios)
 
-#Define simulation dates
+# Define simulation dates
 firstdate = AP[:Date][end] + Month(1)
 newdates = collect(firstdate:Month(1):firstdate + Month(num_steps_ahead - 1))
 
-#Evaluating the mean of the forecast and its quantiles
+# Evaluating the mean of the forecast and its quantiles
 simulation_mean = mean(simulation, dims = 3)[1, :, :]
 
 n = length(logAP)
