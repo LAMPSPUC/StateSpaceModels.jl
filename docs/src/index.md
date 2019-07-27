@@ -1,9 +1,5 @@
 # StateSpaceModels.jl Documentation
 
-| **Build Status** | **Coverage** | **Documentation** |
-|:-----------------:|:-----------------:|:-----------------:|
-| [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lampspuc.github.io/StateSpaceModels.jl/latest/)
-
 StateSpaceModels.jl is a package for modeling, forecasting, and simulating time series in a state-space framework. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by James Durbin and Siem Jan Koopman. The notation of the variables in the code also follows the book.
 
 ## Installation
