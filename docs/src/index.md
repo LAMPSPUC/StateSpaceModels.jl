@@ -1,4 +1,4 @@
-# StateSpaceModels.jl
+# StateSpaceModels.jl Documentation
 
 | **Build Status** | **Coverage** | **Documentation** |
 |:-----------------:|:-----------------:|:-----------------:|
