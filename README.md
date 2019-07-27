@@ -17,7 +17,7 @@ pkg> add StateSpaceModels
 
 Current features:
 * Kalman filter and smoother
-* Square-root Kalman filter and smoother
+* Square-root filter and smoother
 * Maximum likelihood estimation
 * Forecasting
 * Monte Carlo simulation
@@ -32,6 +32,8 @@ Current features:
 
 Planned features:
 * Exact initialization of the Kalman filter
+* EM algorithm for maximum likelihood estimation
+* Univariate treatment of multivariate models
 
 [build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
 [build-url]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl

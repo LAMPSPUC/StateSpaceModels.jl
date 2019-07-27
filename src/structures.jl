@@ -175,7 +175,7 @@ struct SmoothedState
 end
 
 """
-    Filter output
+    FilterOutput
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
@@ -184,7 +184,7 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `P` Covariance matrix of predictive states ``P = Var(\\alpha_t|y_{t−1}, \\dots , y_1)``
 * `F` Prediction error variances ``Var(v_t)``
 * `steadystate` Boolean to indicate if steady state was attained
-* `tstady` Instant when steady state was attained; in case it wasn't, `tsteady = n+1`
+* `tsteady` Instant when steady state was attained; in case it wasn't, `tsteady = n+1`
 """
 struct FilterOutput
     a::Matrix{Float64} # predictive state
@@ -200,7 +200,7 @@ end
 """
     StateSpace
 
-StateSpaceModel
+A state space structure containing the model, filter output, smoother output, covariance matrices, filter type and optimization method.
 """
 struct StateSpace
     model::StateSpaceModel

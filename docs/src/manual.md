@@ -7,8 +7,8 @@ In this package we consider the following state space model
 ```math
 \begin{gather*}
     \begin{aligned}
-        y_t &= Z_t \alpha_t  + \varepsilon_t \quad \quad \quad t = 1 \dots n\\
-        \alpha_{t+1} &= T_t \alpha_t + R_t \eta_t
+        y_t &= Z_t \alpha_t  + \varepsilon_t, \quad \quad \quad t = 1 \dots n, \\
+        \alpha_{t+1} &= T_t \alpha_t + R_t \eta_t,
     \end{aligned}
 \end{gather*}
 ```
@@ -36,19 +36,18 @@ NID
 \end{pmatrix}
 ```
 
-
-## Data Structures
+## Data structures
 
 ```@docs
 StateSpaceDimensions
 StateSpaceModel
-StateSpaceParameters
+StateSpaceCovariance
 SmoothedState
 FilterOutput
 StateSpace
 ```
 
-## Default models
+## Predefined models
 The local level model is defined by
 
 ```math
@@ -84,21 +83,30 @@ The structural model is defined by
 
 <!-- TODO mathematical model -->
 ```@docs
-structuralmodel
+structural
 ```
 
-
 ## Estimation
-The model estimation is made using the function `statespace(y, s; X, nseeds)`. It receives as argument the time series `y` and the desired seasonality `s`. The user can input exogenous variables using optional argument `X` and specify the desired number of random seeds `nseeds` to perform the estimation.
+The model estimation is made using the function `statespace(model; filter_type = KalmanFilter, optimization_method = RandomSeedsLBFGS(), verbose = 1)`. It receives as argument the pre-specified `StateSpaceModel` object `model`. Optionally, the user can define the Kalman filter variant to be used, the optimization method and the verbosity level.
 
-<!-- TODO -->
+```@docs
+statespace
+```
+
+## Forecasting
+
+Forecasting is conducted with the function `forecast`. It receives as argument a `StateSpace` object and the number of steps ahead `N`.
+
+```@docs
+forecast
+```
 
 ## Simulation
 
 Simulation is made using the function `simulate`. It receives as argument a `StateSpace` object, the number of steps ahead `N` and the number of scenarios to simulate `S`.
 
-```julia
-simulation = simulate(ss, N, S)
+```@docs
+simulate
 ```
 
 ## Filters
