@@ -31,12 +31,6 @@ Planned features:
 * EM algorithm for maximum likelihood estimation
 * Univariate treatment of multivariate models
 
-[build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
-[build-url]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl
-
-[codecov-img]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl/coverage.svg?branch=master
-[codecov-url]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl?branch=master
-
 ## Works
 
 Works using this package:
