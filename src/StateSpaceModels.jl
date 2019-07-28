@@ -16,6 +16,11 @@ include("kalman.jl")
 include("sqrt_kalman.jl")
 include("forecast.jl")
 
+"""
+    statespace(model::StateSpaceModel; filter_type::DataType = KalmanFilter, optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1)
+
+Estimate the pre-specified state-space model.
+"""
 function statespace(model::StateSpaceModel; filter_type::DataType = KalmanFilter,
                     optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1)
 
