@@ -5,66 +5,66 @@ Kalman filter with big Kappa initialization.
 """
 function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
-    # Load dimensions
-    n, p, m, r = size(model)
-
     time_invariant = model.mode == "time-invariant"
 
     # Load system
-    y = model.y
     Z, T, R = ztr(model)
 
     # Predictive state and its covariance
-    a = Matrix{Float64}(undef, n+1, m)
-    P = Array{Float64, 3}(undef, m, m, n+1)
-    att = Matrix{Float64}(undef, n, m)
-    Ptt = Array{Float64, 3}(undef, m, m, n)
+    a = Matrix{Float64}(undef, model.dim.n+1, model.dim.m)
+    P = Array{Float64, 3}(undef, model.dim.m, model.dim.m, model.dim.n+1)
+    att = Matrix{Float64}(undef, model.dim.n, model.dim.m)
+    Ptt = Array{Float64, 3}(undef, model.dim.m, model.dim.m, model.dim.n)
 
     # Innovation and its covariance
-    v = Matrix{Float64}(undef, n, p)
-    F = Array{Float64, 3}(undef, p, p, n)
+    v = Matrix{Float64}(undef, model.dim.n, model.dim.p)
+    F = Array{Float64, 3}(undef, model.dim.p, model.dim.p, model.dim.n)
 
     # Kalman gain
-    K = Array{Float64, 3}(undef, m, p, n)
+    K = Array{Float64, 3}(undef, model.dim.m, model.dim.p, model.dim.n)
+    
+    # Auxiliary structures
+    ZP = Array{Float64, 2}(undef, model.dim.p, model.dim.m)
+    P_Ztransp_invF = Array{Float64, 2}(undef, model.dim.m, model.dim.p)
     
     # Steady state initialization
     steadystate = false
-    tsteady     = n+1
+    tsteady     = model.dim.n+1
 
     # Initial state: big Kappa initialization
-    a[1, :]    = zeros(m, 1)
-    P[:, :, 1] = 1e6 .* Matrix(I, m, m)
+    a[1, :]    = zeros(model.dim.m, 1)
+    P[:, :, 1] = 1e6 .* Matrix(I, model.dim.m, model.dim.m)
 
     RQR = R * Q * R'
     # Kalman filter
-    for t = 1:n
-        if check_missing_observation(y ,t)
+    for t = 1:model.dim.n
+        if check_missing_observation(model.y, t)
             steadystate  = false
-            v[t, :]      = fill(NaN, p)
-            F[:, :, t]   = fill(NaN, (p, p))
+            v[t, :]      = fill(NaN, model.dim.p)
+            F[:, :, t]   = fill(NaN, (model.dim.p, model.dim.p))
             att[t, :]    = a[t, :]
             Ptt[:, :, t] = P[:, :, t]
             update_a(a, att, T, t) # a_t+1 = T * att_t
             P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR)
         elseif steadystate
-            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            v[t, :]      = model.y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
             repeat_matrix_t_plus_1(F, t-1) # F[:, :, t]   = F[:, :, t-1]
             repeat_matrix_t_plus_1(K, t-1) # K[:, :, t]   = K[:, :, t-1]
-            att[t, :]    = a[t, :] + P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t]) * v[t, :] # att_t = a_t + P_t * Z_t' * F^-1_t * v_t
+            att[t, :]    = a[t, :] + P[:, :, t] * Z[:, :, t]' * invF(F, t) * v[t, :] # att_t = a_t + P_t * Z_t' * F^-1_t * v_t
             repeat_matrix_t_plus_1(Ptt, t-1) # Ptt_t = Ptt_t-1
             update_a(a, att, T, t) # a_t+1 = T * att_t
             repeat_matrix_t_plus_1(P, t) # P_t+1 = P_t
         else
-            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
-            ZP           = Z[:, :, t] * P[:, :, t]
+            v[t, :]      = model.y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            update_ZP(ZP, Z, P, t) # ZP = Z[:, :, t] * P[:, :, t]
             F[:, :, t]   = ZP * Z[:, :, t]' + H # F_t = Z_t * P_t * Z_t + H
-            aux_matrix   = ZP' * inv(F[:, :, t]) 
-            K[:, :, t]   = T*aux_matrix # K_t = T * P_t * Z_t * F^-1_t
-            att[t, :]    = a[t, :] + aux_matrix * v[t, :] # att_t = a_t + P_t * Z_t * F^-1_t * v_t
-            Ptt[:, :, t] = P[:, :, t] - aux_matrix * ZP # Ptt_t = P_t - P_t * Z_t * F^-1_t * P_t * Z_t
+            P_Ztransp_invF   = ZP' * invF(F, t)
+            update_K(K, P_Ztransp_invF, T, t) # K_t = T * P_t * Z_t * F^-1_t
+            att[t, :]    = a[t, :] + P_Ztransp_invF * v[t, :] # att_t = a_t + P_t * Z_t * F^-1_t * v_t
+            Ptt[:, :, t] = P[:, :, t] - P_Ztransp_invF * ZP # Ptt_t = P_t - P_t * Z_t * F^-1_t * P_t * Z_t
             update_a(a, att, T, t) # a_t+1 = T * att_t
             P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR) # P_t+1 = T * Ptt_t * T' + RQR'
-            if check_steady_state(P[:, :, t+1], P[:, :, t], tol) && time_invariant
+            if check_steady_state(P, t, tol) && time_invariant
                 steadystate = true
                 tsteady     = t
             end
@@ -154,7 +154,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
     end
 
     sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
-    sqrtQ[findall(x -> x == 1, sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
+    sqrtQ[findall(isequal(1), sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
     # Obtain full matrices
     H = gram(sqrtH)
@@ -189,15 +189,27 @@ end
 
 # Utils for filter performance
 function repeat_matrix_t_plus_1(mat::AbstractArray{T}, t::Int) where T <: AbstractFloat
-    for j in axes(mat, 2)
-        for i in axes(mat, 1)
+    @inbounds for j in axes(mat, 2), i in axes(mat, 1)
           mat[i, j, t+1] = mat[i, j, t]
         end
-    end
     return 
 end
 
 function update_a(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
     @views @inbounds mul!(a[t+1, :], T, att[t, :])
     return 
+end
+
+function update_ZP(ZP::AbstractArray{T}, Z::AbstractArray{T}, P::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    @inbounds @views mul!(ZP, Z[:, :, t], P[:, :, t])
+    return 
+end
+
+function update_K(K::AbstractArray{Typ}, P_Ztransp_invF::AbstractArray{Typ}, T::AbstractArray{Typ}, t::Int) where Typ <: AbstractFloat
+    @inbounds @views mul!(K[:, :, t], T, P_Ztransp_invF)
+    return
+end
+
+function invF(F::AbstractArray{T}, t::Int) where T
+    return @inbounds @views inv(F[:, :, t]) 
 end

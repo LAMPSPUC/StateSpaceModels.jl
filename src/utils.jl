@@ -41,6 +41,15 @@ function check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T <: 
     return maximum(abs.((P_t1 - P_t)./P_t1)) < tol ? true : false
 end
 
+function check_steady_state(P::AbstractArray{T}, t::Int, tol::T) where T <: AbstractFloat
+    @inbounds for j in axes(P, 2), i in axes(P, 1)
+        if abs((P[i, j, t+1] - P[i, j, t])/P[i, j, t+1]) > tol
+            return false
+        end
+    end
+    return true
+end
+
 """
     ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
 
