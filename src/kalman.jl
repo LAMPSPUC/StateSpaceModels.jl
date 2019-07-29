@@ -8,6 +8,8 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     # Load dimensions
     n, p, m, r = size(model)
 
+    time_invariant = model.mode == "time-invariant"
+
     # Load system
     y = model.y
     Z, T, R = ztr(model)
@@ -15,6 +17,8 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     # Predictive state and its covariance
     a = Matrix{Float64}(undef, n+1, m)
     P = Array{Float64, 3}(undef, m, m, n+1)
+    att = Matrix{Float64}(undef, n, m)
+    Ptt = Array{Float64, 3}(undef, m, m, n)
 
     # Innovation and its covariance
     v = Matrix{Float64}(undef, n, p)
@@ -22,7 +26,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
 
     # Kalman gain
     K = Array{Float64, 3}(undef, m, p, n)
-
+    
     # Steady state initialization
     steadystate = false
     tsteady     = n+1
@@ -31,73 +35,43 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     a[1, :]    = zeros(m, 1)
     P[:, :, 1] = 1e6 .* Matrix(I, m, m)
 
+    RQR = R * Q * R'
     # Kalman filter
     for t = 1:n
-        # Check for missing values
-        if any(isnan.(y[t, :]))
+        if check_missing_observation(y ,t)
             steadystate  = false
-            v[t, :]      = NaN*ones(p)
-            F[:, :, t]   = Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H
-            K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
-            a[t+1, :]    = T*a[t, :]
-            P[:, :, t+1] = ensure_pos_sym(T*P[:, :, t]*T' + R*Q*R')
+            v[t, :]      = fill(NaN, p)
+            F[:, :, t]   = fill(NaN, (p, p))
+            att[t, :]    = a[t, :]
+            Ptt[:, :, t] = P[:, :, t]
+            update_a(a, att, T, t) # a_t+1 = T * att_t
+            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR)
+        elseif steadystate
+            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            repeat_matrix_t_plus_1(F, t-1) # F[:, :, t]   = F[:, :, t-1]
+            repeat_matrix_t_plus_1(K, t-1) # K[:, :, t]   = K[:, :, t-1]
+            att[t, :]    = a[t, :] + P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t]) * v[t, :] # att_t = a_t + P_t * Z_t' * F^-1_t * v_t
+            repeat_matrix_t_plus_1(Ptt, t-1) # Ptt_t = Ptt_t-1
+            update_a(a, att, T, t) # a_t+1 = T * att_t
+            repeat_matrix_t_plus_1(P, t) # P_t+1 = P_t
         else
-            v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
-            if steadystate
-                F[:, :, t]   = F[:, :, t-1]
-                K[:, :, t]   = K[:, :, t-1]
-                a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
-                P[:, :, t+1] = P[:, :, t]
-            else
-                F[:, :, t]   = Z[:, :, t] * P[:, :, t] * Z[:, :, t]' + H
-                K[:, :, t]   = T * P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
-                a[t+1, :]    = T * a[t, :] + K[:, :, t] * v[t, :]
-                P[:, :, t+1] = ensure_pos_sym(T * P[:, :, t] * (T - K[:, :, t] * Z[:, :, t])' + R*Q*R')
-
-                # Checking if steady state was attained
-                if check_steady_state(P[:, :, t+1], P[:, :, t], tol)
-                    steadystate = true
-                    tsteady     = t
-                end
+            v[t, :]      = y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            ZP           = Z[:, :, t] * P[:, :, t]
+            F[:, :, t]   = ZP * Z[:, :, t]' + H # F_t = Z_t * P_t * Z_t + H
+            aux_matrix   = ZP' * inv(F[:, :, t]) 
+            K[:, :, t]   = T*aux_matrix # K_t = T * P_t * Z_t * F^-1_t
+            att[t, :]    = a[t, :] + aux_matrix * v[t, :] # att_t = a_t + P_t * Z_t * F^-1_t * v_t
+            Ptt[:, :, t] = P[:, :, t] - aux_matrix * ZP # Ptt_t = P_t - P_t * Z_t * F^-1_t * P_t * Z_t
+            update_a(a, att, T, t) # a_t+1 = T * att_t
+            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR) # P_t+1 = T * Ptt_t * T' + RQR'
+            if check_steady_state(P[:, :, t+1], P[:, :, t], tol) && time_invariant
+                steadystate = true
+                tsteady     = t
             end
         end
     end
-
     # Return the auxiliary filter structre
-    return KalmanFilter(a, v, P, F, steadystate, tsteady, K)
-end
-
-"""
-    filtered_state(model::StateSpaceModel, kfilter::KalmanFilter)
-
-Obtain the filtered state estimates and their covariance matrices.
-"""
-function filtered_state(model::StateSpaceModel, kfilter::KalmanFilter)
-
-    # Load dimensions data
-    n, p, m, r = size(model)
-
-    # Load system data
-    Z, T, R = ztr(model)
-
-    # Load filter data
-    a = kfilter.a
-    v = kfilter.v
-    F = kfilter.F
-    P = kfilter.P
-
-    # Filtered state and its covariance
-    att = Matrix{Float64}(undef, n, m)
-    Ptt = Array{Float64, 3}(undef, m, m, n)
-
-    for t = 1:n
-        PZF = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
-        att[t, :]    = a[t, :] + PZF * v[t, :]
-        Ptt[:, :, t] = ensure_pos_sym(P[:, :, t] - PZF * Z[:, :, t] * P[:, :, t])
-    end
-
-    return att, Ptt
-
+    return KalmanFilter(a, att, v, P, Ptt, F, steadystate, tsteady, K)
 end
 
 """
@@ -116,7 +90,6 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     # Load filter data
     a       = kfilter.a
     v       = kfilter.v
-    tsteady = kfilter.tsteady
     F       = kfilter.F
     P       = kfilter.P
     K       = kfilter.K
@@ -131,56 +104,33 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     # Initialization
     N[:, :, end] = zeros(m, m)
     r[end, :]    = zeros(m, 1)
-    Psteady      = P[:, :, end]
-    Fsteady      = F[:, :, end]
 
-    # Iterating backwards
-    for t = n:-1:tsteady
-        # Check for missing values
-        if any(isnan.(v[t, :]))
-            L[:, :, t]   = T
-            r[t-1, :]    = L[:, :, t]' * r[t, :]
-            N[:, :, t-1] = L[:, :, t]' * N[:, :, t] * L[:, :, t]
+    for t = n:-1:2
+        if check_missing_observation(v, t)
+            r[t-1, :]     = T' * r[t, :]
+            N[:, :, t-1]  = T' * N[:, :, t] * T
         else
-            L[:, :, t]   = T - K[:, :, end] * Z[:, :, t]
-            r[t-1, :]    = Z[:, :, t]' * inv(Fsteady) * v[t, :] + L[:, :, t]' * r[t, :]
-            N[:, :, t-1] = Z[:, :, t]' * inv(Fsteady) * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
+            Z_transp_invF = Z[:, :, t]' * inv(F[:, :, t])
+            L[:, :, t]    = T - K[:, :, t] * Z[:, :, t]
+            r[t-1, :]     = Z_transp_invF * v[t, :] + L[:, :, t]' * r[t, :]
+            N[:, :, t-1]  = Z_transp_invF * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
         end
-
-        # Smoothed state and its covariance
-        alpha[t, :] = a[t, :] + Psteady * r[t-1, :]
-        V[:, :, t]  = Psteady - Psteady * N[:, :, t-1] * Psteady
+        alpha[t, :]   = a[t, :] + P[:, :, t] * r[t-1, :]
+        V[:, :, t]    = P[:, :, t] - P[:, :, t] * N[:, :, t-1] * P[:, :, t]
     end
 
-    for t = tsteady-1:-1:2
-        if any(isnan.(v[t, :]))
-            L[:, :, t]   = T
-            r[t-1, :]    = L[:, :, t]' * r[t, :]
-            N[:, :, t-1] = L[:, :, t]' * N[:, :, t] * L[:, :, t]
-        else
-            L[:, :, t]   = T - K[:, :, t] * Z[:, :, t]
-            r[t-1, :]    = Z[:, :, t]' * inv(F[:, :, t]) * v[t, :] + L[:, :, t]' * r[t, :]
-            N[:, :, t-1] = Z[:, :, t]' * inv(F[:, :, t]) * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
-        end
-
-        # Smoothed state and its covariance
-        alpha[t, :]  = a[t, :] + P[:, :, t] * r[t-1, :]
-        V[:, :, t]   = P[:, :, t] - (P[:, :, t] * N[:, :, t-1] * P[:, :, t])
-    end
-
-    if any(isnan.(v[1, :]))
-        L[:, :, 1]  = T
-        r_0         = L[:, :, 1]' * r[1, :]
-        N_0         = L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]
+    # Last iteration
+    if check_missing_observation(v, 1)
+        r0  = T' * r[1, :]
+        N0  = T' * N[:, :, 1] * T
     else
-        L[:, :, 1]  = T - K[:, :, 1] * Z[:, :, 1]
-        r_0         = Z[:, :, 1]' * inv(F[:, :, 1]) * v[1, :] + L[:, :, 1]' * r[1, :]
-        N_0         = Z[:, :, 1]' * inv(F[:, :, 1]) * Z[:, :, 1] + L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]
+        Z_transp_invF = Z[:, :, 1]' * inv(F[:, :, 1])
+        L[:, :, 1]    = T - K[:, :, 1] * Z[:, :, 1]
+        r0            = Z_transp_invF * v[1, :] + L[:, :, 1]' * r[1, :]
+        N0            = Z_transp_invF * Z[:, :, 1] + L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]
     end
-
-    alpha[1, :] = a[1, :] + P[:, :, 1] * r_0
-    V[:, :, 1]  = P[:, :, 1] - (P[:, :, 1] * N_0 * P[:, :, 1])
-
+    alpha[1, :]   = a[1, :] + P[:, :, 1] * r0
+    V[:, :, 1]    = P[:, :, 1] - P[:, :, 1] * N0 * P[:, :, 1]
     # Return the smoothed state structure
     return Smoother(alpha, V)
 end
@@ -225,16 +175,29 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
     return kfilter.v, kfilter.F
 end
 
-function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance,
+function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
                                     filter_type::Type{KalmanFilter})
 
-    # Run filter and smoother
-    filter_output  = kalman_filter(model, covariance.H, covariance.Q)
-    smoothed_state = smoother(model, filter_output)
-    att, Ptt       = filtered_state(model, filter_output)
+    # Run filter and smoother 
+    filtered_state = kalman_filter(model, covariance.H, covariance.Q)
+    smoothed_state = smoother(model, filtered_state)
+    return FilterOutput(filtered_state.a, filtered_state.att, filtered_state.v, 
+                        filtered_state.P, filtered_state.Ptt, filtered_state.F,
+                        filtered_state.steadystate, filtered_state.tsteady),
+           SmoothedState(smoothed_state.alpha, smoothed_state.V) 
+end
 
-    return FilterOutput(filter_output.a[1:end-1, :], att, filter_output.v,
-                        filter_output.P[:, :, 1:end-1], Ptt, filter_output.F,
-                        filter_output.steadystate, filter_output.tsteady),
-           SmoothedState(smoothed_state.alpha, smoothed_state.V)
+# Utils for filter performance
+function repeat_matrix_t_plus_1(mat::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    for j in axes(mat, 2)
+        for i in axes(mat, 1)
+          mat[i, j, t+1] = mat[i, j, t]
+        end
+    end
+    return 
+end
+
+function update_a(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
+    @views @inbounds mul!(a[t+1, :], T, att[t, :])
+    return 
 end

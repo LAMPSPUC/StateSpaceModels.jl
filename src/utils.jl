@@ -50,6 +50,10 @@ function ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
     return (M + M')/2 + ϵ*I
 end
 
+function check_missing_observation(y::Matrix{T}, t::Int) where T
+    return any(isnan, view(y, t, :))
+end
+
 function Base.show(io::IO, ss::StateSpace)
     println("An estimated state-space model with")
     println("filter_type = $(ss.filter_type),")
