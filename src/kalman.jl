@@ -45,9 +45,9 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             att[t, :]    = a[t, :]
             Ptt[:, :, t] = P[:, :, t]
             update_a(a, att, T, t) # a_t+1 = T * att_t
-            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR)
+            update_P(P, T, Ptt, RQR, t)
         elseif steadystate
-            v[t, :]      = model.y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            update_v(v, model.y, Z, a, t) # v_t = y_t - Z_t * a_t
             repeat_matrix_t_plus_1(F, t-1) # F[:, :, t]   = F[:, :, t-1]
             repeat_matrix_t_plus_1(K, t-1) # K[:, :, t]   = K[:, :, t-1]
             att[t, :]    = a[t, :] + P[:, :, t] * Z[:, :, t]' * invF(F, t) * v[t, :] # att_t = a_t + P_t * Z_t' * F^-1_t * v_t
@@ -55,15 +55,15 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             update_a(a, att, T, t) # a_t+1 = T * att_t
             repeat_matrix_t_plus_1(P, t) # P_t+1 = P_t
         else
-            v[t, :]      = model.y[t, :] - Z[:, :, t] * a[t, :] # v_t = y_t - Z_t * a_t
+            update_v(v, model.y, Z, a, t) # v_t = y_t - Z_t * a_t
             update_ZP(ZP, Z, P, t) # ZP = Z[:, :, t] * P[:, :, t]
-            F[:, :, t]   = ZP * Z[:, :, t]' + H # F_t = Z_t * P_t * Z_t + H
-            P_Ztransp_invF   = ZP' * invF(F, t)
+            update_F(F, ZP, Z, H, t) # F_t = Z_t * P_t * Z_t + H
+            update_P_Ztransp_Finv(P_Ztransp_invF, ZP, F, t) # P_Ztransp_invF   = ZP' * invF(F, t)
             update_K(K, P_Ztransp_invF, T, t) # K_t = T * P_t * Z_t * F^-1_t
-            att[t, :]    = a[t, :] + P_Ztransp_invF * v[t, :] # att_t = a_t + P_t * Z_t * F^-1_t * v_t
+            update_att(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
             Ptt[:, :, t] = P[:, :, t] - P_Ztransp_invF * ZP # Ptt_t = P_t - P_t * Z_t * F^-1_t * P_t * Z_t
             update_a(a, att, T, t) # a_t+1 = T * att_t
-            P[:, :, t+1] = ensure_pos_sym(T * Ptt[:, :, t] * T' + RQR) # P_t+1 = T * Ptt_t * T' + RQR'
+            update_P(P, T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
             if check_steady_state(P, t, tol) && time_invariant
                 steadystate = true
                 tsteady     = t
@@ -191,7 +191,7 @@ end
 function repeat_matrix_t_plus_1(mat::AbstractArray{T}, t::Int) where T <: AbstractFloat
     @inbounds for j in axes(mat, 2), i in axes(mat, 1)
           mat[i, j, t+1] = mat[i, j, t]
-        end
+    end
     return 
 end
 
@@ -212,4 +212,32 @@ end
 
 function invF(F::AbstractArray{T}, t::Int) where T
     return @inbounds @views inv(F[:, :, t]) 
+end
+
+function update_P(P::AbstractArray{Typ}, T::AbstractArray{Typ}, Ptt::AbstractArray{Typ}, RQR::AbstractArray{Typ}, t::Int)  where Typ <: AbstractFloat 
+    @views @inbounds LinearAlgebra.BLAS.gemm!('N', 'T', 1.0, T * Ptt[:, :, t], T, 0.0, P[:, :, t+1]) # P[:, :, t+1] = T * Ptt[:, :, t] * T'
+    sum_matrix(P, RQR, t, 1) # P[:, :, t+1] .+= RQR
+    ensure_pos_sym(P, t + 1)
+    return 
+end
+
+function update_v(v::AbstractArray{T}, y::AbstractArray{T}, Z::AbstractArray{T}, a::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    @views @inbounds  v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
+    return 
+end
+
+function update_att(att::AbstractArray{T}, a::AbstractArray{T}, P_Ztransp_invF::AbstractArray{T}, v::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    @inbounds @views att[t, :] = a[t, :] + P_Ztransp_invF * v[t, :]
+    return 
+end
+
+function update_F(F::AbstractArray{T}, ZP::AbstractArray{T}, Z::AbstractArray{T}, H::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    @views @inbounds LinearAlgebra.BLAS.gemm!('N', 'T', 1.0, ZP, Z[:, :, t], 0.0, F[:, :, t]) # F_t = Z_t * P_t * Z_t
+    sum_matrix(F, H, t, 0) # F[:, :, t] .+= H
+    return
+end
+
+function update_P_Ztransp_Finv(P_Ztransp_invF::AbstractArray{T}, ZP::AbstractArray{T}, F::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    LinearAlgebra.BLAS.gemm!('T', 'N', 1.0, ZP, invF(F, t), 0.0, P_Ztransp_invF)
+    return
 end

@@ -5,7 +5,7 @@ locallevel_series = CSV.read("./benchmark/locallevel.csv"; header = false)
 verbose = 0
 
 locallevel = local_level(Matrix{Float64}(locallevel_series))
-# bench_local_level = @benchmark statespace($locallevel, filter_type = StateSpaceModels.SquareRootFilter, verbose = $verbose)
+bench_local_level = @benchmark statespace($locallevel, filter_type = StateSpaceModels.SquareRootFilter, verbose = $verbose)
 # 28th June 2019
 # BenchmarkTools.Trial:
 #   memory estimate:  200.64 MiB

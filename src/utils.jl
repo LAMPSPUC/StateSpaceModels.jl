@@ -22,14 +22,14 @@ end
 # Linar Algebra wrappers
 function gram_in_time(mat::Array{Float64, 3})
     gram_in_time = similar(mat)
-    for t = 1:size(gram_in_time, 3)
+    @inbounds @views for t = 1:size(gram_in_time, 3)
         gram_in_time[:, :, t] = gram(mat[:, :, t])
     end
     return gram_in_time
 end
 
-function gram(mat::Matrix{T}) where T <: AbstractFloat
-    return mat*mat'    
+function gram(mat::AbstractArray{T}) where T <: AbstractFloat
+    return LinearAlgebra.BLAS.gemm('N', 'T', mat, mat) # mat*mat'    
 end
 
 """
@@ -57,6 +57,25 @@ Ensure that matrix `M` is positive and symmetric to avoid numerical errors when 
 """
 function ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
     return (M + M')/2 + ϵ*I
+end
+
+function ensure_pos_sym(M::AbstractArray{T}, t::Int; ϵ::T = 1e-8) where T <: AbstractFloat
+    @inbounds for j in axes(M, 2), i in 1:j
+        if i == j
+            M[i, i, t] = (M[i, i, t] + M[i, i, t])/2 + ϵ
+        else
+            M[i, j, t] = (M[i, j, t] + M[j, i, t])/2
+            M[j, i, t] = M[i, j, t]
+        end
+    end
+    return 
+end
+
+function sum_matrix(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::Int, offset::Int) where T <:AbstractFloat
+    @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
+        mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j]
+    end
+    return 
 end
 
 function check_missing_observation(y::Matrix{T}, t::Int) where T
