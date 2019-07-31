@@ -1,6 +1,6 @@
 @testset "Air passengers with Kalman filter" begin
 
-    AP = CSV.read("./examples/AirPassengers.csv")
+    AP = CSV.read("../examples/AirPassengers.csv")
     logAP = log.(Vector{Float64}(AP[:Passengers]))
 
     model = structural(logAP, 12)
@@ -17,7 +17,7 @@ end
 
 @testset "Air passengers with square-root Kalman filter" begin
 
-    AP = CSV.read("./examples/AirPassengers.csv")
+    AP = CSV.read("../examples/AirPassengers.csv")
     logAP = log.(Vector{Float64}(AP[:Passengers]))
 
     model = structural(logAP, 12)
