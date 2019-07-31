@@ -63,7 +63,6 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             update_K(K, P_Ztransp_invF, T, t) # K_t = T * P_t * Z_t * F^-1_t
             update_att(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
             update_Ptt(Ptt, P, P_Ztransp_invF, ZP, t) # Ptt_t = P_t - P_t * Z_t' * F^-1_t * Z_t * P_t
-            # Ptt[:, :, t] = P[:, :, t] - P_Ztransp_invF * ZP # Ptt_t = P_t - P_t * Z_t' * F^-1_t * Z_t * P_t
             update_a(a, att, T, t) # a_t+1 = T * att_t
             update_P(P, T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
             if check_steady_state(P, t, tol) && time_invariant
