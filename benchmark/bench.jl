@@ -1,11 +1,10 @@
-push!(LOAD_PATH, "/home/guilhermebodin/Documents/Github/StateSpaceModels.jl/src")
 using StateSpaceModels, BenchmarkTools, CSV
 # Local level series
 locallevel_series = CSV.read("./benchmark/locallevel.csv"; header = false)
 verbose = 0
 
 locallevel = local_level(Matrix{Float64}(locallevel_series))
-bench_local_level = @benchmark statespace($locallevel, filter_type = StateSpaceModels.SquareRootFilter, verbose = $verbose)
+bench_local_level = @benchmark statespace($locallevel, filter_type = $SquareRootFilter, verbose = $verbose)
 # 28th June 2019
 # BenchmarkTools.Trial:
 #   memory estimate:  200.64 MiB
@@ -19,7 +18,7 @@ bench_local_level = @benchmark statespace($locallevel, filter_type = StateSpaceM
 #   samples:          25
 #   evals/sample:     1
 
-bench_local_level = @benchmark statespace($locallevel, filter_type = $StateSpaceModels.KalmanFilter, verbose = $verbose)
+bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilter, verbose = $verbose)
 # 28th June 2019
 # BenchmarkTools.Trial:
 #   memory estimate:  165.57 MiB
