@@ -26,7 +26,8 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     # Auxiliary structures
     ZP = Array{Float64, 2}(undef, model.dim.p, model.dim.m)
     P_Ztransp_invF = Array{Float64, 2}(undef, model.dim.m, model.dim.p)
-    
+    RQR = Array{Float64, 2}(undef, model.dim.m, model.dim.m)
+
     # Steady state initialization
     steadystate = false
     tsteady     = model.dim.n+1
@@ -42,15 +43,15 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             steadystate  = false
             v[t, :]      = fill(NaN, model.dim.p)
             F[:, :, t]   = fill(NaN, (model.dim.p, model.dim.p))
-            att[t, :]    = a[t, :]
-            Ptt[:, :, t] = P[:, :, t]
+            update_att(att, a, t) # att_t = a_t
+            update_Ptt(Ptt, P, t) # Ptt_t = P_t
             update_a(a, att, T, t) # a_t+1 = T * att_t
             update_P(P, T, Ptt, RQR, t)
         elseif steadystate
             update_v(v, model.y, Z, a, t) # v_t = y_t - Z_t * a_t
             repeat_matrix_t_plus_1(F, t-1) # F[:, :, t]   = F[:, :, t-1]
             repeat_matrix_t_plus_1(K, t-1) # K[:, :, t]   = K[:, :, t-1]
-            att[t, :]    = a[t, :] + P[:, :, t] * Z[:, :, t]' * invF(F, t) * v[t, :] # att_t = a_t + P_t * Z_t' * F^-1_t * v_t
+            update_att(att, a, P, Z, F, v, t) # att_t = a_t + P_t * Z_t' * F^-1_t * v_t
             repeat_matrix_t_plus_1(Ptt, t-1) # Ptt_t = Ptt_t-1
             update_a(a, att, T, t) # a_t+1 = T * att_t
             repeat_matrix_t_plus_1(P, t) # P_t+1 = P_t
@@ -61,7 +62,8 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             update_P_Ztransp_Finv(P_Ztransp_invF, ZP, F, t) # P_Ztransp_invF   = ZP' * invF(F, t)
             update_K(K, P_Ztransp_invF, T, t) # K_t = T * P_t * Z_t * F^-1_t
             update_att(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
-            Ptt[:, :, t] = P[:, :, t] - P_Ztransp_invF * ZP # Ptt_t = P_t - P_t * Z_t * F^-1_t * P_t * Z_t
+            update_Ptt(Ptt, P, P_Ztransp_invF, ZP, t) # Ptt_t = P_t - P_t * Z_t' * F^-1_t * Z_t * P_t
+            # Ptt[:, :, t] = P[:, :, t] - P_Ztransp_invF * ZP # Ptt_t = P_t - P_t * Z_t' * F^-1_t * Z_t * P_t
             update_a(a, att, T, t) # a_t+1 = T * att_t
             update_P(P, T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
             if check_steady_state(P, t, tol) && time_invariant
@@ -222,12 +224,42 @@ function update_P(P::AbstractArray{Typ}, T::AbstractArray{Typ}, Ptt::AbstractArr
 end
 
 function update_v(v::AbstractArray{T}, y::AbstractArray{T}, Z::AbstractArray{T}, a::AbstractArray{T}, t::Int) where T <: AbstractFloat
-    @views @inbounds  v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
+    @views @inbounds v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
     return 
 end
 
 function update_att(att::AbstractArray{T}, a::AbstractArray{T}, P_Ztransp_invF::AbstractArray{T}, v::AbstractArray{T}, t::Int) where T <: AbstractFloat
     @inbounds @views att[t, :] = a[t, :] + P_Ztransp_invF * v[t, :]
+    return 
+end
+
+function update_att(att::AbstractArray{T}, a::AbstractArray{T}, P::AbstractArray{T}, Z::AbstractArray{T},
+                    F::AbstractArray{T}, v::AbstractArray{T}, t::Int) where T <: AbstractFloat
+
+    @views @inbounds att[t, :] = a[t, :] + 
+        LinearAlgebra.BLAS.gemm('N', 'T', 1.0, P[:, :, t], Z[:, :, t]) *
+        invF(F, t) * v[t, :]
+    return
+end
+
+function update_att(att::AbstractArray{T}, a::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    @inbounds for j in axes(att, 2)
+        att[t, j] = a[t, j]
+    end
+    return
+end
+
+function update_Ptt(Ptt::AbstractArray{T}, P::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    @inbounds for i in axes(Ptt, 1), j in axes(Ptt, 2)
+        Ptt[i, j, t] = P[i, j, t]
+    end
+    return
+end
+
+function update_Ptt(Ptt::AbstractArray{T}, P::AbstractArray{T}, P_Ztransp_invF::AbstractArray{T},
+                    ZP::AbstractArray{T}, t::Int) where T <: AbstractFloat
+    @views @inbounds mul!(Ptt[:, :, t], -P_Ztransp_invF, ZP) # Ptt_t = - P_Ztransp_invF * ZP
+    sum_matrix(Ptt, P, t, 0) # Ptt_t += P_t
     return 
 end
 

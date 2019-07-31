@@ -71,9 +71,16 @@ function ensure_pos_sym(M::AbstractArray{T}, t::Int; ϵ::T = 1e-8) where T <: Ab
     return 
 end
 
-function sum_matrix(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::Int, offset::Int) where T <:AbstractFloat
+function sum_matrix(mat_prin::AbstractArray{T}, mat_sum::AbstractMatrix{T}, t::Int, offset::Int) where T <:AbstractFloat
     @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
         mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j]
+    end
+    return 
+end
+
+function sum_matrix(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::Int, offset::Int) where T <:AbstractFloat
+    @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
+        mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j, t]
     end
     return 
 end
