@@ -51,11 +51,11 @@ function check_steady_state(P::AbstractArray{T}, t::Int, tol::T) where T <: Abst
 end
 
 """
-    ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
+    ensure_pos_sym!(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
 
 Ensure that matrix `M` is positive and symmetric to avoid numerical errors when numbers are small by doing `(M + M')/2 + ϵ*I`
 """
-function ensure_pos_sym(M::AbstractArray{T}, t::Int; ϵ::T = 1e-8) where T <: AbstractFloat
+function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = 1e-8) where T <: AbstractFloat
     @inbounds for j in axes(M, 2), i in 1:j
         if i == j
             M[i, i, t] = (M[i, i, t] + M[i, i, t])/2 + ϵ

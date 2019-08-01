@@ -46,11 +46,11 @@
         @test SSM.gram_in_time(C)[:, :, 2] == SSM.gram_in_time(C)[:, :, 1]
     end
 
-    @testset "ensure_pos_sym" begin
+    @testset "ensure_pos_sym!" begin
         A = randn(3, 3, 2)
-        SSM.ensure_pos_sym(A, 1)
+        SSM.ensure_pos_sym!(A, 1)
         @test issymmetric(A[:, :, 1])
-        SSM.ensure_pos_sym(A, 2)
+        SSM.ensure_pos_sym!(A, 2)
         @test issymmetric(A[:, :, 2])
     end
 

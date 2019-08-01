@@ -28,7 +28,7 @@ end
 function update_P(P::AbstractArray{Typ}, T::AbstractArray{Typ}, Ptt::AbstractArray{Typ}, RQR::AbstractArray{Typ}, t::Int)  where Typ <: AbstractFloat 
     @views @inbounds LinearAlgebra.BLAS.gemm!('N', 'T', 1.0, T * Ptt[:, :, t], T, 0.0, P[:, :, t+1]) # P[:, :, t+1] = T * Ptt[:, :, t] * T'
     sum_matrix(P, RQR, t, 1) # P[:, :, t+1] .+= RQR
-    ensure_pos_sym(P, t + 1)
+    ensure_pos_sym!(P, t + 1)
     return 
 end
 
