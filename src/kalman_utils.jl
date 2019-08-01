@@ -22,7 +22,7 @@ function update_K(K::AbstractArray{Typ}, P_Ztransp_invF::AbstractArray{Typ}, T::
 end
 
 function invF(F::AbstractArray{T}, t::Int) where T
-    return @inbounds @views inv(F[:, :, t]) 
+    return @inbounds @views invertF(F[:, :, t]) 
 end
 
 function update_P(P::AbstractArray{Typ}, T::AbstractArray{Typ}, Ptt::AbstractArray{Typ}, RQR::AbstractArray{Typ}, t::Int)  where Typ <: AbstractFloat 

@@ -1,7 +1,7 @@
 function compute_log_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
     log_likelihood::Float64 = n*p*log(2*pi)/2
-    for t in valid_insts
-        log_likelihood = log_likelihood + 0.5 * (logdet(F[:, :, t]) + (v[t, :]' * inv(F[:, :, t]) * v[t, :]))
+    @inbounds @views for t in valid_insts
+        log_likelihood += 0.5 * (logdet(F[:, :, t]) + (v[t, :]' * invertF(F[:, :, t]) * v[t, :]))
     end
     return log_likelihood
 end
@@ -19,10 +19,12 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
 end
 
 function valid_instants(model::StateSpaceModel)
-    valid_insts = Vector{Int}(undef, 0)
-    for t = 1:model.dim.n
-        if all(.!isnan.(model.y[t, :]))
-            push!(valid_insts, t)
+    valid_insts = collect(1:model.dim.n)
+    offset::Int = 0 # Increase as we delete
+    for t in axes(model.y, 1), j in axes(model.y, 2)
+        if isnan(model.y[t, j])
+            deleteat!(valid_insts, t - offset)
+            offset += 1
         end
     end
     return valid_insts
@@ -35,11 +37,12 @@ Compute log-likelihood concerning hyperparameter vector psitilde
 
 Evaluate ``\\ell(\\psi)...`` TODO
 """
-function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, filter_type::DataType) where T <: AbstractFloat
+function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, 
+                               valid_insts::Vector{Int}, filter_type::DataType) where T <: AbstractFloat
     # Calculate v and F 
     v, F = get_log_likelihood_params(psitilde, model, filter_type)
     # Compute log-likelihood based on v and F
-    return compute_log_likelihood(model.dim.n, model.dim.p, v, F, valid_instants(model))
+    return compute_log_likelihood(model.dim.n, model.dim.p, v, F, valid_insts)
 end
 
 """

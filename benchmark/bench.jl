@@ -5,29 +5,29 @@ verbose = 0
 
 locallevel = local_level(Matrix{Float64}(locallevel_series))
 bench_local_level = @benchmark statespace($locallevel, filter_type = $SquareRootFilter, verbose = $verbose)
-# 28th June 2019
+# 1st August 2019
 # BenchmarkTools.Trial:
-#   memory estimate:  200.64 MiB
-#   allocs estimate:  2356684
+#   memory estimate:  555.70 MiB
+#   allocs estimate:  2964817
 #   --------------
-#   minimum time:     138.056 ms (16.78% GC)
-#   median time:      195.104 ms (18.21% GC)
-#   mean time:        202.507 ms (17.56% GC)
-#   maximum time:     310.801 ms (17.93% GC)
+#   minimum time:     248.796 ms (23.64% GC)
+#   median time:      306.473 ms (23.65% GC)
+#   mean time:        330.366 ms (24.22% GC)
+#   maximum time:     487.338 ms (28.60% GC)
 #   --------------
-#   samples:          25
+#   samples:          16
 #   evals/sample:     1
 
 bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilter, verbose = $verbose)
-# 28th June 2019
+# 1st August 2019
 # BenchmarkTools.Trial:
-#   memory estimate:  165.57 MiB
-#   allocs estimate:  1834110
+#   memory estimate:  135.35 MiB
+#   allocs estimate:  1956723
 #   --------------
-#   minimum time:     105.676 ms (18.00% GC)
-#   median time:      150.408 ms (16.63% GC)
-#   mean time:        152.375 ms (18.03% GC)
-#   maximum time:     230.527 ms (45.56% GC)
+#   minimum time:     91.660 ms (24.23% GC)
+#   median time:      130.084 ms (25.73% GC)
+#   mean time:        128.891 ms (24.95% GC)
+#   maximum time:     172.001 ms (24.89% GC)
 #   --------------
-#   samples:          33
+#   samples:          39
 #   evals/sample:     1

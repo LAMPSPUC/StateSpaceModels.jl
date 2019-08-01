@@ -81,6 +81,10 @@ function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::I
     return 
 end
 
+function invertF(F::AbstractMatrix{T}) where T
+    return size(F, 1) == 1 ? inv.(F) : inv(F)
+end
+
 function check_missing_observation(y::Matrix{T}, t::Int) where T
     return any(isnan, view(y, t, :))
 end
