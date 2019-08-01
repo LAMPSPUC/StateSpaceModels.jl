@@ -27,11 +27,14 @@ function estimate_statespace(model::StateSpaceModel, filter_type::DataType,
         end
     end
 
+    # compute the valid instants to evaluate loglikelihood
+    valid_insts = valid_instants(model)
+
     t0 = now()
 
     # Optimization
     for iseed = 1:nseeds
-        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model, filter_type), seeds[:, iseed],
+        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model, valid_insts, filter_type), seeds[:, iseed],
                             LBFGS(), Optim.Options(f_tol = opt_method.f_tol, 
                                                    g_tol = opt_method.g_tol, 
                                                    iterations = opt_method.iterations,

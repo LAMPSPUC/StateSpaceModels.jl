@@ -32,13 +32,15 @@ function forecast(ss::StateSpace, N::Int)
     # Initialization
     a[1, :]    = T*a0
     P[:, :, 1] = T*P0*T' + R*Q*R'
-    F[:, :, 1] = ensure_pos_sym(Z[:, :, 1]*P[:, :, 1]*Z[:, :, 1]' + H)
+    F[:, :, 1] = Z[:, :, 1]*P[:, :, 1]*Z[:, :, 1]' + H
+    ensure_pos_sym!(F, 1)
     dist[1]    = MvNormal(vec(Z[:, :, 1]*a[1, :]), F[:, :, 1])
 
     for t = 2:N
         a[t, :]    = T*a[t-1, :]
         P[:, :, t] = T*P[:, :, t-1]*T' + R*Q*R'
-        F[:, :, t] = ensure_pos_sym(Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H)
+        F[:, :, t] = Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H
+        ensure_pos_sym!(F, t)
         dist[t]    = MvNormal(vec(Z[:, :, t]*a[t, :]), F[:, :, t])
     end
 

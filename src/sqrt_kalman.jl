@@ -103,7 +103,8 @@ function filtered_state(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     for t = 1:n
         PZF = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
         att[t, :]    = a[t, :] + PZF * v[t, :]
-        Ptt[:, :, t] = ensure_pos_sym(P[:, :, t] - PZF * Z[:, :, t] * P[:, :, t])
+        Ptt[:, :, t] = P[:, :, t] - PZF * Z[:, :, t] * P[:, :, t]
+        ensure_pos_sym!(Ptt, t)
     end
 
     return att, Ptt

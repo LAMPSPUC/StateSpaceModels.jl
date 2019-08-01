@@ -22,14 +22,14 @@ end
 # Linar Algebra wrappers
 function gram_in_time(mat::Array{Float64, 3})
     gram_in_time = similar(mat)
-    for t = 1:size(gram_in_time, 3)
+    @inbounds @views for t = 1:size(gram_in_time, 3)
         gram_in_time[:, :, t] = gram(mat[:, :, t])
     end
     return gram_in_time
 end
 
-function gram(mat::Matrix{T}) where T <: AbstractFloat
-    return mat*mat'    
+function gram(mat::AbstractArray{T}) where T <: AbstractFloat
+    return LinearAlgebra.BLAS.gemm('N', 'T', mat, mat) # mat*mat'    
 end
 
 """
@@ -41,13 +41,52 @@ function check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T <: 
     return maximum(abs.((P_t1 - P_t)./P_t1)) < tol ? true : false
 end
 
+function check_steady_state(P::AbstractArray{T}, t::Int, tol::T) where T <: AbstractFloat
+    @inbounds for j in axes(P, 2), i in axes(P, 1)
+        if abs((P[i, j, t+1] - P[i, j, t])/P[i, j, t+1]) > tol
+            return false
+        end
+    end
+    return true
+end
+
 """
-    ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
+    ensure_pos_sym!(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
 
 Ensure that matrix `M` is positive and symmetric to avoid numerical errors when numbers are small by doing `(M + M')/2 + ϵ*I`
 """
-function ensure_pos_sym(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
-    return (M + M')/2 + ϵ*I
+function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = 1e-8) where T <: AbstractFloat
+    @inbounds for j in axes(M, 2), i in 1:j
+        if i == j
+            M[i, i, t] = (M[i, i, t] + M[i, i, t])/2 + ϵ
+        else
+            M[i, j, t] = (M[i, j, t] + M[j, i, t])/2
+            M[j, i, t] = M[i, j, t]
+        end
+    end
+    return 
+end
+
+function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractMatrix{T}, t::Int, offset::Int) where T <:AbstractFloat
+    @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
+        mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j]
+    end
+    return 
+end
+
+function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::Int, offset::Int) where T <:AbstractFloat
+    @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
+        mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j, t]
+    end
+    return 
+end
+
+function invertF(F::AbstractMatrix{T}) where T
+    return size(F, 1) == 1 ? inv.(F) : inv(F)
+end
+
+function check_missing_observation(y::Matrix{T}, t::Int) where T
+    return any(isnan, view(y, t, :))
 end
 
 function Base.show(io::IO, ss::StateSpace)
