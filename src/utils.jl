@@ -85,8 +85,15 @@ function invertF(F::AbstractMatrix{T}) where T
     return size(F, 1) == 1 ? inv.(F) : inv(F)
 end
 
-function check_missing_observation(y::Matrix{T}, t::Int) where T
-    return any(isnan, view(y, t, :))
+function find_missing_observations(y::Matrix{T}) where T
+    missing_obs = Vector{Int}(undef, 0)
+    for i in axes(y, 1), j in axes(y, 2)
+        if isnan(y[i, j])
+            # If is empty or if the index i is not already pushed
+            (isempty(missing_obs) || (missing_obs[end] != i)) && push!(missing_obs, i)
+        end
+    end
+    return missing_obs
 end
 
 function Base.show(io::IO, ss::StateSpace)
