@@ -5,6 +5,8 @@ Square-root Kalman filter with big Kappa initialization.
 """
 function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
+    time_invariant = model.mode == "time-invariant"
+
     # Load dimensions
     n, p, m, r = size(model)
 
@@ -67,7 +69,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
             sqrtP[:, :, t+1] = Ustar[range1, range1]
 
             # Checking if steady state was attained
-            if check_steady_state(sqrtP[:, :, t+1], sqrtP[:, :, t], tol)
+            if time_invariant && check_steady_state(sqrtP, t, tol)
                 steadystate = true
                 tsteady     = t
             end
