@@ -85,7 +85,7 @@ function invertF(F::AbstractMatrix{T}) where T
     return size(F, 1) == 1 ? inv.(F) : inv(F)
 end
 
-function check_missing_observation(y::Matrix{T}) where T
+function find_missing_observations(y::Matrix{T}) where T
     missing_obs = Vector{Int}(undef, 0)
     for i in axes(y, 1), j in axes(y, 2)
         if isnan(y[i, j])

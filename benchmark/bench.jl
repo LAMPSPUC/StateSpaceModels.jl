@@ -5,29 +5,43 @@ verbose = 0
 
 locallevel = local_level(Matrix{Float64}(locallevel_series))
 bench_local_level = @benchmark statespace($locallevel, filter_type = $SquareRootFilter, verbose = $verbose)
-# 1st August 2019
+# 5th August 2019
 # BenchmarkTools.Trial:
-#   memory estimate:  555.70 MiB
-#   allocs estimate:  2964817
+#   memory estimate:  187.38 MiB
+#   allocs estimate:  2398549
 #   --------------
-#   minimum time:     248.796 ms (23.64% GC)
-#   median time:      306.473 ms (23.65% GC)
-#   mean time:        330.366 ms (24.22% GC)
-#   maximum time:     487.338 ms (28.60% GC)
+#   minimum time:     127.855 ms (21.46% GC)
+#   median time:      169.408 ms (20.37% GC)
+#   mean time:        167.529 ms (20.88% GC)
+#   maximum time:     213.863 ms (21.28% GC)
 #   --------------
-#   samples:          16
+#   samples:          30
 #   evals/sample:     1
 
 bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilter, verbose = $verbose)
-# 1st August 2019
+# 5th August 2019
 # BenchmarkTools.Trial:
-#   memory estimate:  135.35 MiB
-#   allocs estimate:  1956723
+#   memory estimate:  128.48 MiB
+#   allocs estimate:  1832786
 #   --------------
-#   minimum time:     91.660 ms (24.23% GC)
-#   median time:      130.084 ms (25.73% GC)
-#   mean time:        128.891 ms (24.95% GC)
-#   maximum time:     172.001 ms (24.89% GC)
+#   minimum time:     88.344 ms (25.22% GC)
+#   median time:      132.428 ms (24.98% GC)
+#   mean time:        133.527 ms (24.29% GC)
+#   maximum time:     174.321 ms (23.58% GC)
 #   --------------
-#   samples:          39
+#   samples:          38
+#   evals/sample:     1
+
+bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilter, optimization_method = RandomSeedsLBFGS(; nseeds = 2), verbose = $verbose)
+# 5th August 2019
+# BenchmarkTools.Trial:
+#   memory estimate:  85.20 MiB
+#   allocs estimate:  1214590
+#   --------------
+#   minimum time:     59.862 ms (25.65% GC)
+#   median time:      93.516 ms (23.43% GC)
+#   mean time:        93.485 ms (24.29% GC)
+#   maximum time:     137.639 ms (29.21% GC)
+#   --------------
+#   samples:          54
 #   evals/sample:     1

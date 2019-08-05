@@ -33,12 +33,10 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     a[1, :]    = zeros(model.dim.m, 1)
     P[:, :, 1] = 1e6 .* Matrix(I, model.dim.m, model.dim.m)
 
-    missing_obs = check_missing_observation(model.y)
-
     RQR = model.R * Q * model.R'
     # Kalman filter
     for t = 1:model.dim.n
-        if t in missing_obs
+        if t in model.missing_observations
             steadystate  = false
             v[t, :]      = fill(NaN, model.dim.p)
             F[:, :, t]   = fill(NaN, (model.dim.p, model.dim.p))
@@ -105,10 +103,8 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     N[:, :, end] = zeros(m, m)
     r[end, :]    = zeros(m, 1)
 
-    missing_obs = check_missing_observation(v)
-
     @views @inbounds for t = n:-1:2
-        if t in missing_obs
+        if t in model.missing_observations
             r[t-1, :]     = T' * r[t, :]
             N[:, :, t-1]  = T' * N[:, :, t] * T
         else
@@ -122,7 +118,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     end
 
     # Last iteration
-    if 1 in missing_obs
+    if 1 in model.missing_observations
         r0  = T' * r[1, :]
         N0  = T' * N[:, :, 1] * T
     else

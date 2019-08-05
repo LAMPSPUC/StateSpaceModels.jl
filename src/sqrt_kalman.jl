@@ -42,7 +42,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
     sqrtH_zeros_pr  = [sqrtH zeros_pr]
     zeros_mp_RsqrtQ = [zeros_mp R*sqrtQ]
 
-    !isempty(check_missing_observation(model.y)) && error("Treatment of missing values not implemented for SquareRootFilter, please use KalmanFilter.")
+    !isempty(model.missing_observations) && error("Treatment of missing values not implemented for SquareRootFilter, please use KalmanFilter.")
 
     # Square-root Kalman filter
     for t = 1:n
