@@ -1,4 +1,20 @@
 # Utils for filter performance
+function fill_a1(a::Matrix{T}) where T <: AbstractFloat
+    for i in axes(a, 2)
+        a[1, i] = zero(T)
+    end
+end
+
+function fill_P1(P::AbstractArray{T}; bigkappa::Float64 = 1e6) where T <: AbstractFloat
+    for i in axes(P, 1), j in axes(P, 2)
+        if i == j
+            P[i, j, 1] = bigkappa
+        else
+            P[i, j, 1] = zero(T)
+        end
+    end
+end
+
 function repeat_matrix_t_plus_1(mat::AbstractArray{T}, t::Int) where T <: AbstractFloat
     @inbounds for j in axes(mat, 2), i in axes(mat, 1)
           mat[i, j, t+1] = mat[i, j, t]
