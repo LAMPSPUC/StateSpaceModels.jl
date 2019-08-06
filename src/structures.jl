@@ -146,8 +146,8 @@ end
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-* `H` covariance matrix of the observation vector
-* `Q` covariance matrix of the state vector
+* `H` Covariance matrix of the observation vector
+* `Q` Covariance matrix of the state vector
 """
 struct StateSpaceCovariance
     H::Matrix{Float64}
@@ -182,12 +182,14 @@ end
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-* `a` predictive states ``E(\\alpha_t|y_{t-1}, \\dots , y_1)``
-* `v` Prediction errors ``v_t = y_t − Z_t a_t``
-* `P` Covariance matrix of predictive states ``P = Var(\\alpha_t|y_{t−1}, \\dots , y_1)``
-* `F` Prediction error variances ``Var(v_t)``
+* `a` Predictive state ``E(\\alpha_t|y_{t-1}, \\dots , y_1)``
+* `att` Filtered state ``E(\\alpha_t|y_{t}, \\dots , y_1)``
+* `v` Prediction error ``v_t = y_t − Z_t a_t``
+* `P` Covariance matrix of predictive state ``P = Var(\\alpha_t|y_{t−1}, \\dots , y_1)``
+* `Ptt` Covariance matrix of filtered state ``P = Var(\\alpha_t|y_{t}, \\dots , y_1)``
+* `F` Variance of prediction error ``Var(v_{t})``
 * `steadystate` Boolean to indicate if steady state was attained
-* `tsteady` Instant when steady state was attained; in case it wasn't, `tsteady = n+1`
+* `tsteady` Instant when steady state was attained; in case it was not, `tsteady = n+1`
 """
 struct FilterOutput
     a::Matrix{Float64} # predictive state
