@@ -32,16 +32,18 @@ bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilt
 #   samples:          38
 #   evals/sample:     1
 
-bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilter, optimization_method = RandomSeedsLBFGS(; nseeds = 2), verbose = $verbose)
+H = fill(1.0, (1,1))
+Q = fill(1.0, (1,1))
+@benchmark StateSpaceModels.kalman_filter($locallevel, $H, $Q)
 # 5th August 2019
 # BenchmarkTools.Trial:
-#   memory estimate:  85.20 MiB
-#   allocs estimate:  1214590
+#   memory estimate:  128.42 KiB
+#   allocs estimate:  1761
 #   --------------
-#   minimum time:     59.862 ms (25.65% GC)
-#   median time:      93.516 ms (23.43% GC)
-#   mean time:        93.485 ms (24.29% GC)
-#   maximum time:     137.639 ms (29.21% GC)
+#   minimum time:     63.112 μs (0.00% GC)
+#   median time:      69.907 μs (0.00% GC)
+#   mean time:        93.078 μs (21.86% GC)
+#   maximum time:     7.084 ms (98.82% GC)
 #   --------------
-#   samples:          54
+#   samples:          10000
 #   evals/sample:     1

@@ -30,10 +30,10 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     tsteady     = model.dim.n+1
 
     # Initial state: big Kappa initialization
-    a[1, :]    = zeros(model.dim.m, 1)
-    P[:, :, 1] = 1e6 .* Matrix(I, model.dim.m, model.dim.m)
+    fill_a1(a)
+    fill_P1(P; bigkappa = 1e6)
 
-    RQR = model.R * Q * model.R'
+    RQR = model.R * LinearAlgebra.BLAS.gemm('N', 'T', 1.0, Q, model.R) # RQR = R Q R'
     # Kalman filter
     for t = 1:model.dim.n
         if t in model.missing_observations
