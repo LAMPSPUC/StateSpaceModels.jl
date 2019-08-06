@@ -49,12 +49,24 @@ function update_P(P::AbstractArray{Typ}, T::AbstractArray{Typ}, Ptt::AbstractArr
 end
 
 function update_v(v::AbstractArray{T}, y::AbstractArray{T}, Z::AbstractArray{T}, a::AbstractArray{T}, t::Int) where T <: AbstractFloat
-    @views @inbounds v[t, :] = y[t, :] - Z[:, :, t] * a[t, :]
+    # v[t, :] = y[t, :] - Z[:, :, t]*a[t, :]
+    for i in axes(Z, 1)
+        v[t, i] = y[t, i]
+        for j in axes(Z, 2)
+            v[t, i] -= Z[i, j, t]*a[t, j]
+        end
+    end
     return 
 end
 
 function update_att(att::AbstractArray{T}, a::AbstractArray{T}, P_Ztransp_invF::AbstractArray{T}, v::AbstractArray{T}, t::Int) where T <: AbstractFloat
-    @inbounds @views att[t, :] = a[t, :] + P_Ztransp_invF * v[t, :]
+    # att[t, :] = a[t, :] + P_Ztransp_invF*v[t, :]
+    for i in axes(P_Ztransp_invF, 1)
+        att[t, i] = a[t, i]
+        for j in axes(P_Ztransp_invF, 2)
+            att[t, i] += P_Ztransp_invF[i,j]*v[t, j]
+        end
+    end
     return 
 end
 
