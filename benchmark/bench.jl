@@ -19,17 +19,17 @@ bench_local_level = @benchmark statespace($locallevel, filter_type = $SquareRoot
 #   evals/sample:     1
 
 bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilter, verbose = $verbose)
-# 5th August 2019
+# 6th August 2019
 # BenchmarkTools.Trial:
-#   memory estimate:  128.48 MiB
-#   allocs estimate:  1832786
+#   memory estimate:  106.18 MiB
+#   allocs estimate:  1500659
 #   --------------
-#   minimum time:     88.344 ms (25.22% GC)
-#   median time:      132.428 ms (24.98% GC)
-#   mean time:        133.527 ms (24.29% GC)
-#   maximum time:     174.321 ms (23.58% GC)
+#   minimum time:     80.464 ms (22.75% GC)
+#   median time:      110.805 ms (23.33% GC)
+#   mean time:        112.070 ms (22.92% GC)
+#   maximum time:     131.950 ms (21.28% GC)
 #   --------------
-#   samples:          38
+#   samples:          45
 #   evals/sample:     1
 
 H = fill(1.0, (1,1))
@@ -37,13 +37,13 @@ Q = fill(1.0, (1,1))
 @benchmark StateSpaceModels.kalman_filter($locallevel, $H, $Q)
 # 5th August 2019
 # BenchmarkTools.Trial:
-#   memory estimate:  128.42 KiB
-#   allocs estimate:  1761
+#   memory estimate:  91.80 KiB
+#   allocs estimate:  1229
 #   --------------
-#   minimum time:     63.112 μs (0.00% GC)
-#   median time:      69.907 μs (0.00% GC)
-#   mean time:        93.078 μs (21.86% GC)
-#   maximum time:     7.084 ms (98.82% GC)
+#   minimum time:     49.136 μs (0.00% GC)
+#   median time:      56.570 μs (0.00% GC)
+#   mean time:        73.994 μs (20.43% GC)
+#   maximum time:     6.436 ms (97.36% GC)
 #   --------------
 #   samples:          10000
 #   evals/sample:     1
