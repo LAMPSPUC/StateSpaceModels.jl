@@ -2,13 +2,13 @@
 
 ## Introduction
 
-In this package we consider the following state space model
+In this package we consider the following state-space model
 
 ```math
 \begin{gather*}
     \begin{aligned}
         y_t &= Z_t \alpha_t  + \varepsilon_t, \quad \quad \quad t = 1 \dots n, \\
-        \alpha_{t+1} &= T_t \alpha_t + R_t \eta_t,
+        \alpha_{t+1} &= T \alpha_t + R \eta_t,
     \end{aligned}
 \end{gather*}
 ```
@@ -29,8 +29,8 @@ NID
     \end{bmatrix}
     ,
     \begin{bmatrix}
-        H_t & 0 & 0\\
-        0 & Q_t & 0\\
+        H & 0 & 0\\
+        0 & Q & 0\\
         0 & 0 & P_1\\
     \end{bmatrix}
 \end{pmatrix}
