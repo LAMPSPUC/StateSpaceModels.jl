@@ -74,7 +74,7 @@ StateSpaceModel dimensions, following the notation of on the book
 * `n` is the number of observations
 * `p` is the dimension of the observation vector ``y_t``
 * `m` is the dimension of the state vector ``\\alpha_t``
-* `r` is the dimension of the state covariance matrix ``Q_t``
+* `r` is the dimension of the state covariance matrix ``Q``
 """
 struct StateSpaceDimensions
     n::Int
@@ -146,8 +146,8 @@ end
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
-* `H` covariance matrix of the observation vector ``H_t``
-* `Q` covariance matrix of the state vector ``Q_t``
+* `H` covariance matrix of the observation vector
+* `Q` covariance matrix of the state vector
 """
 struct StateSpaceCovariance
     H::Matrix{Float64}
@@ -183,7 +183,7 @@ end
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
 * `a` predictive states ``E(\\alpha_t|y_{t-1}, \\dots , y_1)``
-* `v` Prediction errors ``v_t = y_t − Z_ta_t,i, i = 1, \\dots , p``
+* `v` Prediction errors ``v_t = y_t − Z_t a_t``
 * `P` Covariance matrix of predictive states ``P = Var(\\alpha_t|y_{t−1}, \\dots , y_1)``
 * `F` Prediction error variances ``Var(v_t)``
 * `steadystate` Boolean to indicate if steady state was attained
@@ -203,7 +203,7 @@ end
 """
     StateSpace
 
-A state space structure containing the model, filter output, smoother output, covariance matrices, filter type and optimization method.
+A state-space structure containing the model, filter output, smoother output, covariance matrices, filter type and optimization method.
 """
 struct StateSpace
     model::StateSpaceModel
