@@ -4,7 +4,7 @@ using Optim, Distributions, LinearAlgebra, StaticArrays, Dates, Printf
 
 import Base: size, show
 
-export statespace
+export statespace, kalman_filter_and_smoother
 
 include("prints.jl")
 include("structures.jl")
@@ -43,6 +43,12 @@ function statespace(model::StateSpaceModel; filter_type::DataType = KalmanFilter
     return StateSpace(model, filter_output, smoothed_state, covariance, filter_type, optimization_method)
 end
 
+"""
+    kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance,
+                               filter_type::DataType)
+
+Perform kalman filter and smoother according to the chosen `filter_type`.
+"""
 function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance,
                                     filter_type::DataType)
     error(filter_type , " not implemented") # Returns an error if it cannot

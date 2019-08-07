@@ -46,7 +46,10 @@ function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel,
 end
 
 """
-TODO
+    estimate_statespace(model::StateSpaceModel, filter_type::DataType,
+                        optimization_method::AbstractOptimizationMethod; verbose::Int = 1)
+
+Estimate parameters of the `StateSpaceModel` according to its `filter_type` and `optimization_method`.
 """
 function estimate_statespace(model::StateSpaceModel, filter_type::DataType,
                              optimization_method::AbstractOptimizationMethod; verbose::Int = 1)

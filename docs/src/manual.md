@@ -111,9 +111,46 @@ simulate
 
 ## Filters
 
-<!-- TODO sqrt kalman filter, put recursion and reference -->
-<!-- TODO bigkappa kalman filter, put recursion and reference -->
+### Interface
+
+StateSpaceModels has an interface that allows users to define their own versions of the kalman filter.
+
+```@docs
+StateSpaceModels.AbstractFilter
+StateSpaceModels.AbstractSmoother
+kalman_filter_and_smoother
+```
+
+every filter must provide its own version of the `statespace_likelihood` function
+```@docs
+StateSpaceModels.statespace_likelihood
+```
+
+
+### Kalman Filter
+
+```@docs
+StateSpaceModels.kalman_filter
+StateSpaceModels.smoother
+```
+
+### Square Root Kalman Filter
+
+```@docs
+StateSpaceModels.sqrt_kalman_filter
+StateSpaceModels.sqrt_smoother
+StateSpaceModels.filtered_state
+```
 
 ## Optimization methods
 
-<!-- LBFGS put reference and Optim manual -->
+```@docs
+StateSpaceModels.AbstractOptimizationMethod
+StateSpaceModels.estimate_statespace
+```
+
+### RandomSeedsLBFGS
+
+```@docs
+StateSpaceModels.RandomSeedsLBFGS
+```

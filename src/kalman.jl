@@ -1,7 +1,7 @@
 """
     kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
 
-Kalman filter with big Kappa initialization.
+Kalman filter with big Kappa (`1e6`) initialization.
 """
 function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 

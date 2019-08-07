@@ -3,17 +3,23 @@ export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, SmoothedStat
 
 # Abstract types
 """
-TODO
+    AbstractFilter
+
+Abstract type used to implement an interface for generic filters.
 """
 abstract type AbstractFilter end
 
 """
-TODO
+    AbstractSmoother
+
+Abstract type used to implement an interface for generic smoothers.
 """
 abstract type AbstractSmoother end
 
 """
-TODO
+    AbstractOptimizationMethod
+
+Abstract type used to implement an interface for generic optimization methods.
 """
 abstract type AbstractOptimizationMethod end
 
