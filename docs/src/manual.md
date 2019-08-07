@@ -111,22 +111,6 @@ simulate
 
 ## Filters
 
-### Interface
-
-StateSpaceModels has an interface that allows users to define their own versions of the kalman filter.
-
-```@docs
-StateSpaceModels.AbstractFilter
-StateSpaceModels.AbstractSmoother
-kalman_filter_and_smoother
-```
-
-every filter must provide its own version of the `statespace_likelihood` function
-```@docs
-StateSpaceModels.statespace_likelihood
-```
-
-
 ### Kalman Filter
 
 ```@docs
@@ -142,15 +126,32 @@ StateSpaceModels.sqrt_smoother
 StateSpaceModels.filtered_state
 ```
 
-## Optimization methods
+## Filter interface
+
+StateSpaceModels has an interface that allows users to define their own versions of the kalman filter.
 
 ```@docs
-StateSpaceModels.AbstractOptimizationMethod
-StateSpaceModels.estimate_statespace
+StateSpaceModels.AbstractFilter
+StateSpaceModels.AbstractSmoother
+kalman_filter_and_smoother
 ```
+
+every filter must provide its own version of the `statespace_likelihood` function
+```@docs
+StateSpaceModels.statespace_likelihood
+```
+
+## Optimization methods
 
 ### RandomSeedsLBFGS
 
 ```@docs
 StateSpaceModels.RandomSeedsLBFGS
+```
+
+## Optimization methods interface
+
+```@docs
+StateSpaceModels.AbstractOptimizationMethod
+StateSpaceModels.estimate_statespace
 ```
