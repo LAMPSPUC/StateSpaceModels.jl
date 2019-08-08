@@ -113,8 +113,45 @@ simulate
 
 ### Kalman Filter
 
+The implementation of the Kalman Filter follows the recursion
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        v_t &= y_t - Z_ta_t,  &F_t &= Z_tP_tZ^{T}_t + H\\
+        a_{t|t} &= a_t - P_tZ^{T}_tF_t^{-1}v_t, \quad \quad \quad &P_{t|t} &= P_t -  P_tZ^{T}_tF_t^{-1}Z_tP_t\\
+        a_{t+1} &= Ta_t - K_tv_t, \quad \quad \quad &P_{t+1} &= TP_t(T - K_tZ_t)^{T} + RQR\\
+    \end{aligned}
+\end{gather*}
+```
+where ``K_t = TP_tZ^{T}_tF_t^{-1}``. The terms ``a_{t+1}`` and ``P_{t+1}`` can be simplifed to 
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        a_{t+1} &= Ta_{t|t},\quad \quad \quad &P_{t+1} &= TP_{t|t}T^T + RQR\\
+    \end{aligned}
+\end{gather*}
+```
+
+In case of missing observation the mean of inovations ``v_t`` and variance of inovations ``F_t`` become `NaN` and the recursion becomes 
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        a_{t|t} &= a_t, \quad \quad \quad &P_{t|t} &= P_t\\
+        a_{t+1} &= Ta_t, \quad \quad \quad &P_{t+1} &= TP_tT^T + RQR\\
+    \end{aligned}
+\end{gather*}
+```
+
 ```@docs
 StateSpaceModels.kalman_filter
+```
+
+The implementation of the its smoother follows the recursion
+
+```@docs
 StateSpaceModels.smoother
 ```
 
