@@ -128,15 +128,15 @@ StateSpaceModels.filtered_state
 
 ## Filter interface
 
-StateSpaceModels has an interface that allows users to define their own versions of the kalman filter.
+StateSpaceModels has an interface that allows users to define their own versions of the Kalman filter.
 
 ```@docs
 StateSpaceModels.AbstractFilter
 StateSpaceModels.AbstractSmoother
-kalman_filter_and_smoother
+kfas
 ```
 
-every filter must provide its own version of the `statespace_likelihood` function
+Every filter must provide its own version of the `statespace_likelihood` function
 ```@docs
 StateSpaceModels.statespace_likelihood
 ```
