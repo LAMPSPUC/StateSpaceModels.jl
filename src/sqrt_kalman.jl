@@ -233,8 +233,8 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
     return sqrt_sqrt_filter.v, gram_in_time(sqrt_sqrt_filter.sqrtF)
 end
 
-function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance,
-                                    filter_type::Type{SquareRootFilter})
+function kfas(model::StateSpaceModel, covariance::StateSpaceCovariance,
+              filter_type::Type{SquareRootFilter})
     # Compute sqrt matrices
     sqrtH = cholesky(covariance.H).L # .L stands for Lower triangular
     sqrtQ = cholesky(covariance.Q).L # .L stands for Lower triangular

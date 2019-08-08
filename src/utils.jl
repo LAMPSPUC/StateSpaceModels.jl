@@ -35,7 +35,8 @@ end
 """
     check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T <: AbstractFloat
 
-Return `true` if steady state was attained with respect to tolerance `tol`, `false` otherwise
+Return `true` if steady state was attained with respect to tolerance `tol`, `false` otherwise.
+The steady state is checked by the following equation. TODO
 """
 function check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T <: AbstractFloat
     return maximum(abs.((P_t1 - P_t)./P_t1)) < tol ? true : false

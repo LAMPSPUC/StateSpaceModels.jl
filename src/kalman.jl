@@ -1,7 +1,7 @@
 """
     kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
 
-Kalman filter with big Kappa initialization.
+Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
 function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
@@ -173,8 +173,8 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
     return kfilter.v, kfilter.F
 end
 
-function kalman_filter_and_smoother(model::StateSpaceModel, covariance::StateSpaceCovariance, 
-                                    filter_type::Type{KalmanFilter})
+function kfas(model::StateSpaceModel, covariance::StateSpaceCovariance, 
+              filter_type::Type{KalmanFilter})
 
     # Run filter and smoother 
     filtered_state = kalman_filter(model, covariance.H, covariance.Q)
