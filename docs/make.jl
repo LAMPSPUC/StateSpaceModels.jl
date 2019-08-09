@@ -1,6 +1,5 @@
-push!(LOAD_PATH, "/Users/guilhermebodin/.julia/dev/StateSpaceModels/src")
 using Documenter, StateSpaceModels
-cd("docs")
+
 makedocs(
     modules = [StateSpaceModels],
     doctest  = false,
