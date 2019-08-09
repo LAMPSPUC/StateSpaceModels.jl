@@ -1,12 +1,12 @@
 # Utils for filter performance
 function fill_a1(a::Matrix{T}) where T <: AbstractFloat
-    for i in axes(a, 2)
+    @inbounds for i in axes(a, 2)
         a[1, i] = zero(T)
     end
 end
 
 function fill_P1(P::AbstractArray{T}; bigkappa::Float64 = 1e6) where T <: AbstractFloat
-    for i in axes(P, 1), j in axes(P, 2)
+    @inbounds for i in axes(P, 1), j in axes(P, 2)
         if i == j
             P[i, j, 1] = bigkappa
         else
@@ -22,8 +22,29 @@ function repeat_matrix_t_plus_1(mat::AbstractArray{T}, t::Int) where T <: Abstra
     return 
 end
 
-function update_a(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
+function big_update_a(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
     @views @inbounds mul!(a[t+1, :], T, att[t, :])
+    return 
+end
+
+function small_update_a(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
+    @inbounds for i in axes(a, 2)
+        a[t+1, i] = zero(Typ)
+        for j in axes(T, 2)
+            a[t+1, i] += T[i, j]*att[t, j]
+        end
+    end
+    return 
+end
+
+function update_a(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
+    # Here there is a trade-off memory-speed, usually if the dimension of a is smaller than 15 
+    # it is more performant to do the hard coded version (small_update_a)
+    if size(a, 2) < 16
+        small_update_a(a, att, T, t)
+    else
+        big_update_a(a, att, T, t)
+    end
     return 
 end
 
@@ -50,7 +71,7 @@ end
 
 function update_v(v::AbstractArray{T}, y::AbstractArray{T}, Z::AbstractArray{T}, a::AbstractArray{T}, t::Int) where T <: AbstractFloat
     # v[t, :] = y[t, :] - Z[:, :, t]*a[t, :]
-    for i in axes(Z, 1)
+    @inbounds for i in axes(Z, 1)
         v[t, i] = y[t, i]
         for j in axes(Z, 2)
             v[t, i] -= Z[i, j, t]*a[t, j]
@@ -61,7 +82,7 @@ end
 
 function update_att(att::AbstractArray{T}, a::AbstractArray{T}, P_Ztransp_invF::AbstractArray{T}, v::AbstractArray{T}, t::Int) where T <: AbstractFloat
     # att[t, :] = a[t, :] + P_Ztransp_invF*v[t, :]
-    for i in axes(P_Ztransp_invF, 1)
+    @inbounds for i in axes(P_Ztransp_invF, 1)
         att[t, i] = a[t, i]
         for j in axes(P_Ztransp_invF, 2)
             att[t, i] += P_Ztransp_invF[i,j]*v[t, j]
