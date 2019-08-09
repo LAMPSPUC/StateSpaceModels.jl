@@ -1,7 +1,23 @@
 function compute_log_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
+    if p == 1
+        return compute_log_likelihood_univariate(n, p, v, F, valid_insts)
+    else
+        return compute_log_likelihood_multivariate(n, p, v, F, valid_insts)
+    end
+end
+
+function compute_log_likelihood_univariate(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
+    log_likelihood::Float64 = n*p*log(2*pi)/2
+    @inbounds for t in valid_insts
+        log_likelihood += 0.5 * (log(F[1, 1, t]) + (v[t, 1]^2)/F[1, 1, t] )
+    end
+    return log_likelihood
+end
+
+function compute_log_likelihood_multivariate(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
     log_likelihood::Float64 = n*p*log(2*pi)/2
     @inbounds @views for t in valid_insts
-        log_likelihood += 0.5 * (logdetF(F[:, :, t]) + (v[t, :]' * invertF(F[:, :, t]) * v[t, :]))
+        log_likelihood += 0.5 * (logdetF(F, t) + (v[t, :]' * invertF(F, t) * v[t, :]))
     end
     return log_likelihood
 end

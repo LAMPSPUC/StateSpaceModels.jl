@@ -82,11 +82,11 @@ function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::I
     return 
 end
 
-function invertF(F::AbstractMatrix{T}) where T
-    return size(F, 1) == 1 ? inv.(F) : inv(F)
+function invertF(F::AbstractArray{T}, t::Int) where T
+    return @inbounds @views size(F, 1) == 1 ? 1/(F[1, 1, t]) : inv(F[:, :, t])
 end
-function logdetF(F::AbstractMatrix{T}) where T
-    return size(F, 1) == 1 ? log(F[1, 1]) : logdet(F)
+function logdetF(F::AbstractArray{T}, t::Int) where T
+    return @inbounds @views logdet(F[:, :, t])
 end
 
 function find_missing_observations(y::Matrix{T}) where T

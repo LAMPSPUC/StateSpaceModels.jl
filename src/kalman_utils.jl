@@ -59,7 +59,7 @@ function update_K(K::AbstractArray{Typ}, P_Ztransp_invF::AbstractArray{Typ}, T::
 end
 
 function invF(F::AbstractArray{T}, t::Int) where T
-    return @inbounds @views invertF(F[:, :, t]) 
+    return @inbounds @views invertF(F, t) 
 end
 
 function update_P(P::AbstractArray{Typ}, T::AbstractArray{Typ}, Ptt::AbstractArray{Typ}, RQR::AbstractArray{Typ}, t::Int)  where Typ <: AbstractFloat 
@@ -128,6 +128,13 @@ function update_F(F::AbstractArray{T}, ZP::AbstractArray{T}, Z::AbstractArray{T}
 end
 
 function update_P_Ztransp_Finv(P_Ztransp_invF::AbstractArray{T}, ZP::AbstractArray{T}, F::AbstractArray{T}, t::Int) where T <: AbstractFloat
-    LinearAlgebra.BLAS.gemm!('T', 'N', 1.0, ZP, invF(F, t), 0.0, P_Ztransp_invF)
+    # P_Ztransp_invF = (ZP)' * F^-1
+    if size(F, 1) == 1
+        for p in axes(ZP, 1), m in axes(ZP, 2)
+            P_Ztransp_invF[m, p] = ZP[p, m]/F[1, 1, t]
+        end
+    else
+        LinearAlgebra.BLAS.gemm!('T', 'N', 1.0, ZP, invF(F, t), 0.0, P_Ztransp_invF)
+    end
     return
 end

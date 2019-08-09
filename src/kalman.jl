@@ -108,7 +108,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
             r[t-1, :]     = T' * r[t, :]
             N[:, :, t-1]  = T' * N[:, :, t] * T
         else
-            Z_transp_invF = Z[:, :, t]' * invertF(F[:, :, t])
+            Z_transp_invF = Z[:, :, t]' * invertF(F, t)
             L[:, :, t]    = T - K[:, :, t] * Z[:, :, t]
             r[t-1, :]     = Z_transp_invF * v[t, :] + L[:, :, t]' * r[t, :]
             N[:, :, t-1]  = Z_transp_invF * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
@@ -122,7 +122,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
         r0  = T' * r[1, :]
         N0  = T' * N[:, :, 1] * T
     else
-        Z_transp_invF = Z[:, :, 1]' * invertF(F[:, :, 1])
+        Z_transp_invF = Z[:, :, 1]' * invertF(F, 1)
         L[:, :, 1]    = T - K[:, :, 1] * Z[:, :, 1]
         r0            = Z_transp_invF * v[1, :] + L[:, :, 1]' * r[1, :]
         N0            = Z_transp_invF * Z[:, :, 1] + L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]
