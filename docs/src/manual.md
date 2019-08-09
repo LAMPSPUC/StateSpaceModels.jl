@@ -151,6 +151,27 @@ StateSpaceModels.kalman_filter
 
 The implementation of the its smoother follows the recursion
 
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        r_{t-1} &= Z^T_tF_t^{-1}v_t + L^T_tr_t, \quad \quad  &N_{t-1} &= Z^T_tF_t^{-1}Z_t + L^T_tN_tL_t\\
+        \alpha_t &= a_t + P_tr_t,  &V_t &= P_t - P_tN_{t-1}P_t  \\
+    \end{aligned}
+\end{gather*}
+```
+where ``L_t = T - K_tZ_t``.
+
+In case of missing observation then ``r_{t-1}`` and ``N_{t-1}`` become 
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        r_{t-1} &= T^Tr_t, \quad \quad  &N_{t-1} &= T^T_tN_tT_t\\
+    \end{aligned}
+\end{gather*}
+```
+
 ```@docs
 StateSpaceModels.smoother
 ```

@@ -85,6 +85,9 @@ end
 function invertF(F::AbstractMatrix{T}) where T
     return size(F, 1) == 1 ? inv.(F) : inv(F)
 end
+function logdetF(F::AbstractMatrix{T}) where T
+    return size(F, 1) == 1 ? log(F[1, 1]) : logdet(F)
+end
 
 function find_missing_observations(y::Matrix{T}) where T
     missing_obs = Vector{Int}(undef, 0)
