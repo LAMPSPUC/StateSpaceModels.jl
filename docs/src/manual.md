@@ -118,18 +118,18 @@ The implementation of the Kalman Filter follows the recursion
 ```math
 \begin{gather*}
     \begin{aligned}
-        v_t &= y_t - Z_ta_t,  &F_t &= Z_tP_tZ^{T}_t + H\\
-        a_{t|t} &= a_t - P_tZ^{T}_tF_t^{-1}v_t, \quad \quad \quad &P_{t|t} &= P_t -  P_tZ^{T}_tF_t^{-1}Z_tP_t\\
-        a_{t+1} &= Ta_t - K_tv_t, \quad \quad \quad &P_{t+1} &= TP_t(T - K_tZ_t)^{T} + RQR\\
+        v_t &= y_t - Z_t a_t,  &F_t &= Z_t P_t Z^{\top}_t + H\\
+        a_{t|t} &= a_t - P_t Z^{\top}_t F_t^{-1} v_t, \quad \quad \quad &P_{t|t} &= P_t -  P_t Z^{\top}_t F_t^{-1}Z_t P_t\\
+        a_{t+1} &= T a_t - K_t v_t, \quad \quad \quad &P_{t+1} &= T P_t(T - K_t Z_t)^{\top} + R Q R\\
     \end{aligned}
 \end{gather*}
 ```
-where ``K_t = TP_tZ^{T}_tF_t^{-1}``. The terms ``a_{t+1}`` and ``P_{t+1}`` can be simplifed to 
+where ``K_t = T P_t Z^{\top}_t F_t^{-1}``. The terms ``a_{t+1}`` and ``P_{t+1}`` can be simplifed to 
 
 ```math
 \begin{gather*}
     \begin{aligned}
-        a_{t+1} &= Ta_{t|t},\quad \quad \quad &P_{t+1} &= TP_{t|t}T^T + RQR\\
+        a_{t+1} &= T a_{t|t},\quad \quad \quad &P_{t+1} &= T P_{t|t} T^{\top} + R Q R\\
     \end{aligned}
 \end{gather*}
 ```
@@ -140,7 +140,7 @@ In case of missing observation the mean of inovations ``v_t`` and variance of in
 \begin{gather*}
     \begin{aligned}
         a_{t|t} &= a_t, \quad \quad \quad &P_{t|t} &= P_t\\
-        a_{t+1} &= Ta_t, \quad \quad \quad &P_{t+1} &= TP_tT^T + RQR\\
+        a_{t+1} &= T a_t, \quad \quad \quad &P_{t+1} &= T P_t T^{\top} + R Q R\\
     \end{aligned}
 \end{gather*}
 ```
@@ -155,19 +155,19 @@ The implementation of the its smoother follows the recursion
 ```math
 \begin{gather*}
     \begin{aligned}
-        r_{t-1} &= Z^T_tF_t^{-1}v_t + L^T_tr_t, \quad \quad  &N_{t-1} &= Z^T_tF_t^{-1}Z_t + L^T_tN_tL_t\\
-        \alpha_t &= a_t + P_tr_t,  &V_t &= P_t - P_tN_{t-1}P_t  \\
+        r_{t-1} &= Z^{\top}_t F_t^{-1} v_t + L^{\top}_t r_t, \quad \quad  &N_{t-1} &= Z^{\top}_t F_t^{-1} Z_t + L^{\top}_t N_t L_t\\
+        \alpha_t &= a_t + P_t r_t,  &V_t &= P_t - P_t N_{t-1} P_t  \\
     \end{aligned}
 \end{gather*}
 ```
-where ``L_t = T - K_tZ_t``.
+where ``L_t = T - K_t Z_t``.
 
 In case of missing observation then ``r_{t-1}`` and ``N_{t-1}`` become 
 
 ```math
 \begin{gather*}
     \begin{aligned}
-        r_{t-1} &= T^Tr_t, \quad \quad  &N_{t-1} &= T^T_tN_tT_t\\
+        r_{t-1} &= T^{\top} r_t, \quad \quad  &N_{t-1} &= T^{\top}_t N_t T_t\\
     \end{aligned}
 \end{gather*}
 ```

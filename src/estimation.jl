@@ -52,7 +52,7 @@ end
 Compute log-likelihood concerning hyperparameter vector psitilde (``\\psi``)
 
 Evaluate ``\\ell(\\psi;y_n)= -\\frac{np}{2}\\log2\\pi - \\frac{1}{2} \\sum_{t=1}^n \\log |F_t| - 
-\\frac{1}{2} \\sum_{t=1}^n v_t^{T} F_t^{-1} v_t ``
+\\frac{1}{2} \\sum_{t=1}^n v_t^{\\top} F_t^{-1} v_t ``
 """
 function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, 
                                valid_insts::Vector{Int}, filter_type::DataType) where T <: AbstractFloat
