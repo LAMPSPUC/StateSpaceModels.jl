@@ -30,8 +30,8 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
     tsteady     = model.dim.n+1
 
     # Initial state: big Kappa initialization
-    fill_a1(a)
-    fill_P1(P; bigkappa = 1e6)
+    fill_a1!(a)
+    fill_P1!(P; bigkappa = 1e6)
 
     RQR = model.R * LinearAlgebra.BLAS.gemm('N', 'T', 1.0, Q, model.R) # RQR = R Q R'
     # Kalman filter
@@ -40,28 +40,28 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             steadystate  = false
             v[t, :]      = fill(NaN, model.dim.p)
             F[:, :, t]   = fill(NaN, (model.dim.p, model.dim.p))
-            update_att(att, a, t) # att_t = a_t
-            update_Ptt(Ptt, P, t) # Ptt_t = P_t
-            update_a(a, att, model.T, t) # a_t+1 = T * att_t
-            update_P(P, model.T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
+            update_att!(att, a, t) # att_t = a_t
+            update_Ptt!(Ptt, P, t) # Ptt_t = P_t
+            update_a!(a, att, model.T, t) # a_t+1 = T * att_t
+            update_P!(P, model.T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
         elseif steadystate
-            update_v(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
-            repeat_matrix_t_plus_1(F, t-1) # F[:, :, t]   = F[:, :, t-1]
-            repeat_matrix_t_plus_1(K, t-1) # K[:, :, t]   = K[:, :, t-1]
-            update_att(att, a, P, model.Z, F, v, t) # att_t = a_t + P_t * Z_t' * F^-1_t * v_t
-            repeat_matrix_t_plus_1(Ptt, t-1) # Ptt_t = Ptt_t-1
-            update_a(a, att, model.T, t) # a_t+1 = T * att_t
-            repeat_matrix_t_plus_1(P, t) # P_t+1 = P_t
+            update_v!(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
+            repeat_matrix_t_plus_1!(F, t-1) # F[:, :, t]   = F[:, :, t-1]
+            repeat_matrix_t_plus_1!(K, t-1) # K[:, :, t]   = K[:, :, t-1]
+            update_att!(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
+            repeat_matrix_t_plus_1!(Ptt, t-1) # Ptt_t = Ptt_t-1
+            update_a!(a, att, model.T, t) # a_t+1 = T * att_t
+            repeat_matrix_t_plus_1!(P, t) # P_t+1 = P_t
         else
-            update_v(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
-            update_ZP(ZP, model.Z, P, t) # ZP = Z[:, :, t] * P[:, :, t]
-            update_F(F, ZP, model.Z, H, t) # F_t = Z_t * P_t * Z_t + H
-            update_P_Ztransp_Finv(P_Ztransp_invF, ZP, F, t) # P_Ztransp_invF   = ZP' * invF(F, t)
-            update_K(K, P_Ztransp_invF, model.T, t) # K_t = T * P_t * Z_t * F^-1_t
-            update_att(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
-            update_Ptt(Ptt, P, P_Ztransp_invF, ZP, t) # Ptt_t = P_t - P_t * Z_t' * F^-1_t * Z_t * P_t
-            update_a(a, att, model.T, t) # a_t+1 = T * att_t
-            update_P(P, model.T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
+            update_v!(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
+            update_ZP!(ZP, model.Z, P, t) # ZP = Z[:, :, t] * P[:, :, t]
+            update_F!(F, ZP, model.Z, H, t) # F_t = Z_t * P_t * Z_t + H
+            update_P_Ztransp_Finv!(P_Ztransp_invF, ZP, F, t) # P_Ztransp_invF   = ZP' * invF(F, t)
+            update_K!(K, P_Ztransp_invF, model.T, t) # K_t = T * P_t * Z_t * F^-1_t
+            update_att!(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
+            update_Ptt!(Ptt, P, P_Ztransp_invF, ZP, t) # Ptt_t = P_t - P_t * Z_t' * F^-1_t * Z_t * P_t
+            update_a!(a, att, model.T, t) # a_t+1 = T * att_t
+            update_P!(P, model.T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
             if time_invariant && check_steady_state(P, t, tol)
                 steadystate = true
                 tsteady     = t
@@ -108,7 +108,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
             r[t-1, :]     = T' * r[t, :]
             N[:, :, t-1]  = T' * N[:, :, t] * T
         else
-            Z_transp_invF = Z[:, :, t]' * invertF(F[:, :, t])
+            Z_transp_invF = Z[:, :, t]' * invertF(F, t)
             L[:, :, t]    = T - K[:, :, t] * Z[:, :, t]
             r[t-1, :]     = Z_transp_invF * v[t, :] + L[:, :, t]' * r[t, :]
             N[:, :, t-1]  = Z_transp_invF * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]
@@ -122,7 +122,7 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
         r0  = T' * r[1, :]
         N0  = T' * N[:, :, 1] * T
     else
-        Z_transp_invF = Z[:, :, 1]' * invertF(F[:, :, 1])
+        Z_transp_invF = Z[:, :, 1]' * invertF(F, 1)
         L[:, :, 1]    = T - K[:, :, 1] * Z[:, :, 1]
         r0            = Z_transp_invF * v[1, :] + L[:, :, 1]' * r[1, :]
         N0            = Z_transp_invF * Z[:, :, 1] + L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]

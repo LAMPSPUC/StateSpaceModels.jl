@@ -29,7 +29,13 @@ function gram_in_time(mat::Array{Float64, 3})
 end
 
 function gram(mat::AbstractArray{T}) where T <: AbstractFloat
-    return LinearAlgebra.BLAS.gemm('N', 'T', mat, mat) # mat*mat'    
+    if size(mat, 1) == 1
+        gram_mat = Matrix{T}(undef, 1, 1)
+        gram_mat[1, 1] = mat[1, 1]^2
+        return gram_mat
+    else
+        return LinearAlgebra.BLAS.gemm('N', 'T', mat, mat) # mat*mat'    
+    end
 end
 
 """
@@ -82,8 +88,11 @@ function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::I
     return 
 end
 
-function invertF(F::AbstractMatrix{T}) where T
-    return size(F, 1) == 1 ? inv.(F) : inv(F)
+function invertF(F::AbstractArray{T}, t::Int) where T
+    return @inbounds @views size(F, 1) == 1 ? 1/(F[1, 1, t]) : inv(F[:, :, t])
+end
+function logdetF(F::AbstractArray{T}, t::Int) where T
+    return @inbounds @views logdet(F[:, :, t])
 end
 
 function find_missing_observations(y::Matrix{T}) where T

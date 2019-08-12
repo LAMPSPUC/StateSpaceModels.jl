@@ -1,7 +1,23 @@
 function compute_log_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
+    if p == 1
+        return compute_log_likelihood_univariate(n, v, F, valid_insts)
+    else
+        return compute_log_likelihood_multivariate(n, p, v, F, valid_insts)
+    end
+end
+
+function compute_log_likelihood_univariate(n::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
+    log_likelihood::Float64 = n*log(2*pi)/2
+    @inbounds for t in valid_insts
+        log_likelihood += 0.5 * (log(F[1, 1, t]) + (v[t, 1]^2)/F[1, 1, t] )
+    end
+    return log_likelihood
+end
+
+function compute_log_likelihood_multivariate(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
     log_likelihood::Float64 = n*p*log(2*pi)/2
     @inbounds @views for t in valid_insts
-        log_likelihood += 0.5 * (logdet(F[:, :, t]) + (v[t, :]' * invertF(F[:, :, t]) * v[t, :]))
+        log_likelihood += 0.5 * (logdetF(F, t) + (v[t, :]' * invertF(F, t) * v[t, :]))
     end
     return log_likelihood
 end
@@ -36,7 +52,7 @@ end
 Compute log-likelihood concerning hyperparameter vector psitilde (``\\psi``)
 
 Evaluate ``\\ell(\\psi;y_n)= -\\frac{np}{2}\\log2\\pi - \\frac{1}{2} \\sum_{t=1}^n \\log |F_t| - 
-\\frac{1}{2} \\sum_{t=1}^n v_t^{T} F_t^{-1} v_t ``
+\\frac{1}{2} \\sum_{t=1}^n v_t^{\\top} F_t^{-1} v_t ``
 """
 function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, 
                                valid_insts::Vector{Int}, filter_type::DataType) where T <: AbstractFloat
