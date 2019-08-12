@@ -22,12 +22,12 @@ function repeat_matrix_t_plus_1!(mat::AbstractArray{T}, t::Int) where T <: Abstr
     return 
 end
 
-function big_update_a(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
+function big_update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
     @views @inbounds mul!(a[t+1, :], T, att[t, :])
     return 
 end
 
-function small_update_a(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
+function small_update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ <: AbstractFloat
     @inbounds for i in axes(a, 2)
         a[t+1, i] = zero(Typ)
         for j in axes(T, 2)
@@ -41,9 +41,9 @@ function update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) whe
     # Here there is a trade-off memory-speed, usually if the dimension of a is smaller than 15 
     # it is more performant to do the hard coded version (small_update_a)
     if size(a, 2) < 16
-        small_update_a(a, att, T, t)
+        small_update_a!(a, att, T, t)
     else
-        big_update_a(a, att, T, t)
+        big_update_a!(a, att, T, t)
     end
     return 
 end
@@ -89,15 +89,6 @@ function update_att!(att::AbstractArray{T}, a::AbstractArray{T}, P_Ztransp_invF:
         end
     end
     return 
-end
-
-function update_att!(att::AbstractArray{T}, a::AbstractArray{T}, P::AbstractArray{T}, Z::AbstractArray{T},
-                    F::AbstractArray{T}, v::AbstractArray{T}, t::Int) where T <: AbstractFloat
-
-    @views @inbounds att[t, :] = a[t, :] + 
-        LinearAlgebra.BLAS.gemm('N', 'T', 1.0, P[:, :, t], Z[:, :, t]) *
-        invF(F, t) * v[t, :]
-    return
 end
 
 function update_att!(att::AbstractArray{T}, a::AbstractArray{T}, t::Int) where T <: AbstractFloat

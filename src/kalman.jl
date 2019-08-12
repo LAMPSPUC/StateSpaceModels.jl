@@ -48,7 +48,7 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
             update_v!(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
             repeat_matrix_t_plus_1!(F, t-1) # F[:, :, t]   = F[:, :, t-1]
             repeat_matrix_t_plus_1!(K, t-1) # K[:, :, t]   = K[:, :, t-1]
-            update_att!(att, a, P, model.Z, F, v, t) # att_t = a_t + P_t * Z_t' * F^-1_t * v_t
+            update_att!(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
             repeat_matrix_t_plus_1!(Ptt, t-1) # Ptt_t = Ptt_t-1
             update_a!(a, att, model.T, t) # a_t+1 = T * att_t
             repeat_matrix_t_plus_1!(P, t) # P_t+1 = P_t
