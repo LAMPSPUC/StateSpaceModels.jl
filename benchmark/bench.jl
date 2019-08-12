@@ -66,3 +66,20 @@ bench_structural = @benchmark statespace($structural_model, filter_type = $Kalma
 #   --------------
 #   samples:          2
 #   evals/sample:     1
+
+H = fill(1e-4, (1,1))
+Q = fill(1e-4, (3,3))
+Q[[2; 3; 4; 6; 7; 8]] .= 0 # Zero on off diagonal elements
+@benchmark StateSpaceModels.kalman_filter($structural_model, $H, $Q)
+# 12th August 2019
+# BenchmarkTools.Trial: 
+#   memory estimate:  740.64 KiB
+#   allocs estimate:  1455
+#   --------------
+#   minimum time:     369.790 μs (0.00% GC)
+#   median time:      530.777 μs (0.00% GC)
+#   mean time:        608.815 μs (14.20% GC)
+#   maximum time:     4.704 ms (86.14% GC)
+#   --------------
+#   samples:          8182
+#   evals/sample:     1
