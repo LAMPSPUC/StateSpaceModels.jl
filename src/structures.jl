@@ -1,6 +1,8 @@
 export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, SmoothedState,
-        FilterOutput, StateSpace, KalmanFilter, SquareRootFilter, RandomSeedsLBFGS
+        FilterOutput, StateSpace
 
+export KalmanFilter, SquareRootFilter, UnivariateKalmanFilter
+export RandomSeedsLBFGS
 # Abstract types
 """
     AbstractFilter
@@ -45,6 +47,19 @@ mutable struct KalmanFilter <: AbstractFilter
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
     K::Array{Float64, 3} # Kalman gain
+end
+
+# Auxiliary structure for univariate Kalman filter
+mutable struct UnivariateKalmanFilter <: AbstractFilter
+    a::Matrix{Float64} # predictive state
+    att::Matrix{Float64}
+    v::Vector{Float64} # innovations
+    P::Array{Float64, 3} # covariance matrix of the predictive state
+    Ptt::Array{Float64, 3}
+    F::Vector{Float64} # covariance matrix of the innovations
+    steadystate::Bool # flag that indicates if steady state was attained
+    tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
+    K::Matrix{Float64} # Kalman gain
 end
 
 # Auxiliary structure for smoother
