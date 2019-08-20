@@ -56,7 +56,7 @@ function update_ZP!(ZP::Matrix{T}, Z::Array{T, 3}, P::Array{T, 3}, t::Int) where
     return 
 end
 function update_ZP!(ZP::Vector{T}, Z::Array{T, 3}, P::Array{T, 3}, t::Int) where T <: AbstractFloat
-    @inbounds @views ZP = Z[:, :, t] * P[:, :, t]
+    @inbounds @views ZP = Z[:, :, t] * P[:, :, t] #TODO
     return 
 end
 
@@ -65,7 +65,7 @@ function update_K!(K::AbstractArray{Typ}, P_Ztransp_invF::AbstractMatrix{Typ}, T
     return
 end
 function update_K!(K::AbstractMatrix{Typ}, P_Ztransp_invF::AbstractVector{Typ}, T::AbstractMatrix{Typ}, t::Int) where Typ <: AbstractFloat
-    @inbounds K[:, t] = P_Ztransp_invF' * T
+    @inbounds K[:, t] = P_Ztransp_invF' * T #TODO
     return
 end
 
@@ -137,7 +137,7 @@ function update_Ptt!(Ptt::Array{T, 3}, P::Array{T, 3}, P_Ztransp_invF::Matrix{T}
 end
 function update_Ptt!(Ptt::Array{T, 3}, P::Array{T, 3}, P_Ztransp_invF::Vector{T},
                     ZP::Vector{T}, t::Int) where T <: AbstractFloat
-    @inbounds @views Ptt[:, :, t], -P_Ztransp_invF*ZP' # Ptt_t = - P_Ztransp_invF * ZP
+    @inbounds @views Ptt[:, :, t] = -P_Ztransp_invF*ZP' # Ptt_t = - P_Ztransp_invF * ZP #TODO
     sum_matrix!(Ptt, P, t, 0) # Ptt_t += P_t
     return 
 end
@@ -164,9 +164,6 @@ function update_P_Ztransp_Finv!(P_Ztransp_invF::Matrix{T}, ZP::Matrix{T}, F::Arr
     return
 end
 function update_P_Ztransp_Finv!(P_Ztransp_invF::Vector{T}, ZP::Vector{T}, F::Vector{T}, t::Int) where T <: AbstractFloat
-    # P_Ztransp_invF = (ZP)' * F^-1
-    for m in axes(ZP, 1)
-        P_Ztransp_invF[m] = ZP[m]/F[t]
-    end
+    @. P_Ztransp_invF = ZP/F[t]
     return
 end
