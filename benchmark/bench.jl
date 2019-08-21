@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "/Users/guilhermebodin/Documents/StateSpaceModels.jl/src")
+push!(LOAD_PATH, "/home/guilhermebodin/Documents/Github/StateSpaceModels.jl/src")
 using StateSpaceModels, BenchmarkTools, CSV
 # Local level series
 locallevel_series = CSV.read("./benchmark/locallevel.csv"; header = false)
@@ -115,19 +115,34 @@ Q[[2; 3; 4; 6; 7; 8]] .= 0 # Zero on off diagonal elements
 #   samples:          8182
 #   evals/sample:     1
 
+
+bench_structural = @benchmark statespace($structural_model, filter_type = $UnivariateKalmanFilter, verbose = $verbose)
+# 21th August 2019
+# BenchmarkTools.Trial:
+#   memory estimate:  3.93 GiB
+#   allocs estimate:  2888472
+#   --------------
+#   minimum time:     1.923 s (10.59% GC)
+#   median time:      2.082 s (10.59% GC)
+#   mean time:        2.066 s (10.59% GC)
+#   maximum time:     2.194 s (10.60% GC)
+#   --------------
+#   samples:          3
+#   evals/sample:     1
+
 H = 1e-4
 Q = fill(1e-4, (3,3))
 Q[[2; 3; 4; 6; 7; 8]] .= 0 # Zero on off diagonal elements
 @benchmark StateSpaceModels.univariate_kalman_filter($structural_model, $H, $Q)
-# 12th August 2019
-# BenchmarkTools.Trial: 
-#   memory estimate:  685.19 KiB
-#   allocs estimate:  590
+# 21th August 2019
+# BenchmarkTools.Trial:
+#   memory estimate:  658.19 KiB
+#   allocs estimate:  446
 #   --------------
-#   minimum time:     263.106 μs (0.00% GC)
-#   median time:      420.366 μs (0.00% GC)
-#   mean time:        465.150 μs (10.04% GC)
-#   maximum time:     5.397 ms (84.85% GC)
+#   minimum time:     243.650 μs (0.00% GC)
+#   median time:      253.331 μs (0.00% GC)
+#   mean time:        302.104 μs (11.47% GC)
+#   maximum time:     3.784 ms (83.94% GC)
 #   --------------
 #   samples:          10000
 #   evals/sample:     1
