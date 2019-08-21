@@ -56,7 +56,12 @@ function update_ZP!(ZP::Matrix{T}, Z::Array{T, 3}, P::Array{T, 3}, t::Int) where
     return 
 end
 function update_ZP!(ZP::Vector{T}, Z::Array{T, 3}, P::Array{T, 3}, t::Int) where T <: AbstractFloat
-    @inbounds @views ZP = Z[:, :, t] * P[:, :, t] #TODO
+    @inbounds for i in axes(ZP, 1)
+        ZP[i] = zero(T)
+        for j in axes(ZP, 1)
+            ZP[i] += Z[1, j, t]*P[j, i, t]
+        end
+    end
     return 
 end
 
@@ -65,7 +70,26 @@ function update_K!(K::AbstractArray{Typ}, P_Ztransp_invF::AbstractMatrix{Typ}, T
     return
 end
 function update_K!(K::AbstractMatrix{Typ}, P_Ztransp_invF::AbstractVector{Typ}, T::AbstractMatrix{Typ}, t::Int) where Typ <: AbstractFloat
-    @inbounds K[:, t] = P_Ztransp_invF' * T #TODO
+    # Here there is a trade-off memory-speed, usually if the dimension of a is smaller than 15 
+    # it is more performant to do the hard coded version (small_update_K!)
+    if size(K, 1) < 16
+        small_update_K!(K, P_Ztransp_invF, T, t)
+    else
+        big_update_K!(K, P_Ztransp_invF, T, t)
+    end
+    return 
+end
+function small_update_K!(K::AbstractMatrix{Typ}, P_Ztransp_invF::AbstractVector{Typ}, T::AbstractMatrix{Typ}, t::Int) where Typ <: AbstractFloat
+    @inbounds for i in axes(K, 1)
+        K[i, t] = zero(Typ) 
+        for j in axes(K, 1)
+            K[i, t] += T[i, j]*P_Ztransp_invF[i]
+        end
+    end
+    return
+end
+function big_update_K!(K::AbstractMatrix{Typ}, P_Ztransp_invF::AbstractVector{Typ}, T::AbstractMatrix{Typ}, t::Int) where Typ <: AbstractFloat
+    @inbounds @views K[:, t] = T * P_Ztransp_invF
     return
 end
 
@@ -99,12 +123,12 @@ function update_v!(v::Vector{T}, y::Matrix{T}, Z::Array{T, 3}, a::Matrix{T}, t::
     return 
 end
 
-function update_att!(att::Matrix{T}, a::AbstractArray{T}, P_Ztransp_invF::Matrix{T}, v::Matrix{T}, t::Int) where T <: AbstractFloat
+function update_att!(att::Matrix{T}, a::Matrix{T}, P_Ztransp_invF::Matrix{T}, v::Matrix{T}, t::Int) where T <: AbstractFloat
     # att[t, :] = a[t, :] + P_Ztransp_invF*v[t, :]
     @inbounds for i in axes(P_Ztransp_invF, 1)
         att[t, i] = a[t, i]
         for j in axes(P_Ztransp_invF, 2)
-            att[t, i] += P_Ztransp_invF[i,j]*v[t, j]
+            att[t, i] += P_Ztransp_invF[i, j]*v[t, j]
         end
     end
     return 
@@ -137,8 +161,9 @@ function update_Ptt!(Ptt::Array{T, 3}, P::Array{T, 3}, P_Ztransp_invF::Matrix{T}
 end
 function update_Ptt!(Ptt::Array{T, 3}, P::Array{T, 3}, P_Ztransp_invF::Vector{T},
                     ZP::Vector{T}, t::Int) where T <: AbstractFloat
-    @inbounds @views Ptt[:, :, t] = -P_Ztransp_invF*ZP' # Ptt_t = - P_Ztransp_invF * ZP #TODO
-    sum_matrix!(Ptt, P, t, 0) # Ptt_t += P_t
+    @inbounds for i in axes(Ptt, 1), j in axes(Ptt, 2)
+        Ptt[i, j, t] = P[i, j, t] - P_Ztransp_invF[i]*ZP[j] # Ptt_t = - P_Ztransp_invF * ZP
+    end
     return 
 end
 
@@ -148,7 +173,10 @@ function update_F!(F::Array{T, 3}, ZP::Matrix{T}, Z::Array{T, 3}, H::AbstractArr
     return
 end
 function update_F!(F::Vector{T}, ZP::Vector{T}, Z::Array{T, 3}, H::T, t::Int) where T <: AbstractFloat
-    F[t] = dot(ZP, Z[1, :, t]) + H # F_t = Z_t * P_t * Z_t
+    F[t] = H
+    @inbounds for i in axes(ZP, 1)
+        F[t] += ZP[i]*Z[1, i, t] # F_t = Z_t * P_t * Z_t
+    end
     return
 end
 
@@ -164,6 +192,8 @@ function update_P_Ztransp_Finv!(P_Ztransp_invF::Matrix{T}, ZP::Matrix{T}, F::Arr
     return
 end
 function update_P_Ztransp_Finv!(P_Ztransp_invF::Vector{T}, ZP::Vector{T}, F::Vector{T}, t::Int) where T <: AbstractFloat
-    @. P_Ztransp_invF = ZP/F[t]
+    @inbounds for i in axes(P_Ztransp_invF, 1)
+        P_Ztransp_invF[i] = ZP[i]/F[t]
+    end
     return
 end

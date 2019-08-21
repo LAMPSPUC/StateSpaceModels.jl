@@ -46,7 +46,7 @@ function univariate_kalman_filter(model::StateSpaceModel, H::Typ, Q::Matrix{Typ}
             update_P!(P, model.T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
         elseif steadystate
             update_v!(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
-            F[t] = F[t-1] # F[:, :, t]   = F[:, :, t-1]
+            F[t] = F[t-1]
             repeat_vector_t_plus_1!(K, t-1) # K[:, t]   = K[:, t-1]
             update_att!(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
             repeat_matrix_t_plus_1!(Ptt, t-1) # Ptt_t = Ptt_t-1
@@ -55,7 +55,7 @@ function univariate_kalman_filter(model::StateSpaceModel, H::Typ, Q::Matrix{Typ}
         else
             update_v!(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
             update_ZP!(ZP, model.Z, P, t) # ZP = Z[:, :, t] * P[:, :, t]
-            update_F!(F, ZP, model.Z, H, t) # F_t = Z_t * P_t * Z_t + H
+            update_F!(F, ZP, model.Z, H, t) # F_t = Z_t * P_t * Z_t' + H
             update_P_Ztransp_Finv!(P_Ztransp_invF, ZP, F, t) # P_Ztransp_invF   = ZP' * invF(F, t)
             update_K!(K, P_Ztransp_invF, model.T, t) # K_t = T * P_t * Z_t * F^-1_t
             update_att!(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
@@ -122,8 +122,8 @@ function univariate_smoother(model::StateSpaceModel, kfilter::UnivariateKalmanFi
         r0  = T' * r[1, :]
         N0  = T' * N[:, :, 1] * T
     else
-        Z_transp_invF = Z[:, :, 1]' * invertF(F, 1)
-        L[:, :, 1]    = T - K[:, :, 1] * Z[:, :, 1]
+        Z_transp_invF = Z[1, :, 1]' * invertF(F, 1)
+        L[:, :, 1]    = T - K[:, 1] * Z[:, :, 1]
         r0            = Z_transp_invF * v[1] + L[:, :, 1]' * r[1, :]
         N0            = Z_transp_invF * Z[:, :, 1] + L[:, :, 1]' * N[:, :, 1] * L[:, :, 1]
     end
@@ -142,7 +142,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
                                filter_type::Type{UnivariateKalmanFilter}) where T <: AbstractFloat
 
     # Build lower triangular matrices
-    H = psi[1]
+    H = psi[1]^2
     unknownsH = 1
 
     sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
@@ -170,10 +170,15 @@ function kfas(model::StateSpaceModel, covariance::StateSpaceCovariance,
               filter_type::Type{UnivariateKalmanFilter})
 
     # Run filter and smoother 
-    filtered_state = univariate_kalman_filter(model, covariance.H, covariance.Q)
+    filtered_state = univariate_kalman_filter(model, covariance.H[1, 1], covariance.Q)
     smoothed_state = univariate_smoother(model, filtered_state)
-    return FilterOutput(filtered_state.a, filtered_state.att, filtered_state.v, 
-                        filtered_state.P, filtered_state.Ptt, filtered_state.F,
+    v = Matrix{Float64}(undef, length(filtered_state.v), 1)
+    v[:, 1] = filtered_state.v
+    F = Array{Float64}(undef, 1, 1, length(filtered_state.F))
+    F[1, 1, :] = filtered_state.F.*ones(1, 1)
+
+    return FilterOutput(filtered_state.a, filtered_state.att, v, 
+                        filtered_state.P, filtered_state.Ptt, F,
                         filtered_state.steadystate, filtered_state.tsteady),
            SmoothedState(smoothed_state.alpha, smoothed_state.V) 
 end
