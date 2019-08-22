@@ -3,7 +3,7 @@
 
 Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
-function univariate_kalman_filter(model::StateSpaceModel, H::Typ, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
+function univariate_kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
     time_invariant = model.mode == "time-invariant"
 
@@ -142,7 +142,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
                                filter_type::Type{UnivariateKalmanFilter}) where T <: AbstractFloat
 
     # Build lower triangular matrices
-    H = psi[1]^2
+    H = ones(1, 1)*psi[1]^2
     unknownsH = 1
 
     sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
@@ -170,7 +170,7 @@ function kfas(model::StateSpaceModel, covariance::StateSpaceCovariance,
               filter_type::Type{UnivariateKalmanFilter})
 
     # Run filter and smoother 
-    filtered_state = univariate_kalman_filter(model, covariance.H[1, 1], covariance.Q)
+    filtered_state = univariate_kalman_filter(model, covariance.H, covariance.Q)
     smoothed_state = univariate_smoother(model, filtered_state)
     v = Matrix{Float64}(undef, length(filtered_state.v), 1)
     v[:, 1] = filtered_state.v

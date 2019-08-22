@@ -147,7 +147,7 @@ function update_att!(att::Matrix{T}, a::Matrix{T}, t::Int) where T <: AbstractFl
     return
 end
 
-function update_Ptt!(Ptt::AbstractArray{T}, P::AbstractArray{T}, t::Int) where T <: AbstractFloat
+function update_Ptt!(Ptt::Array{T, 3}, P::Array{T, 3}, t::Int) where T <: AbstractFloat
     @inbounds for i in axes(Ptt, 1), j in axes(Ptt, 2)
         Ptt[i, j, t] = P[i, j, t]
     end
@@ -172,8 +172,8 @@ function update_F!(F::Array{T, 3}, ZP::Matrix{T}, Z::Array{T, 3}, H::AbstractArr
     sum_matrix!(F, H, t, 0) # F[:, :, t] .+= H
     return
 end
-function update_F!(F::Vector{T}, ZP::Vector{T}, Z::Array{T, 3}, H::T, t::Int) where T <: AbstractFloat
-    F[t] = H
+function update_F!(F::Vector{T}, ZP::Vector{T}, Z::Array{T, 3}, H::Matrix{T}, t::Int) where T <: AbstractFloat
+    F[t] = H[1, 1]
     @inbounds for i in axes(ZP, 1)
         F[t] += ZP[i]*Z[1, i, t] # F_t = Z_t * P_t * Z_t
     end

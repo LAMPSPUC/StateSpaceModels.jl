@@ -1,4 +1,3 @@
-push!(LOAD_PATH, "/home/guilhermebodin/Documents/Github/StateSpaceModels.jl/src")
 using StateSpaceModels, BenchmarkTools, CSV
 # Local level series
 locallevel_series = CSV.read("./benchmark/locallevel.csv"; header = false)
@@ -34,17 +33,17 @@ bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilt
 #   evals/sample:     1
 
 bench_local_level = @benchmark statespace($locallevel, filter_type = $UnivariateKalmanFilter, verbose = $verbose)
-# 11th August 2019
-# BenchmarkTools.Trial: 
-#   memory estimate:  7.11 MiB
-#   allocs estimate:  47471
+# 22th August 2019
+# BenchmarkTools.Trial:
+#   memory estimate:  7.09 MiB
+#   allocs estimate:  42550
 #   --------------
-#   minimum time:     6.253 ms (0.00% GC)
-#   median time:      11.619 ms (14.16% GC)
-#   mean time:        12.161 ms (7.93% GC)
-#   maximum time:     69.158 ms (6.30% GC)
+#   minimum time:     5.756 ms (0.00% GC)
+#   median time:      10.094 ms (0.00% GC)
+#   mean time:        11.012 ms (12.64% GC)
+#   maximum time:     41.820 ms (24.80% GC)
 #   --------------
-#   samples:          411
+#   samples:          454
 #   evals/sample:     1
 
 H = fill(1.0, (1,1))
@@ -63,21 +62,21 @@ Q = fill(1.0, (1,1))
 #   samples:          10000
 #   evals/sample:     1
 
-H = 1.0
+H = fill(1.0, (1,1))
 Q = fill(1.0, (1,1))
 @benchmark StateSpaceModels.univariate_kalman_filter($locallevel, $H, $Q)
-# 11th August 2019
-# BenchmarkTools.Trial: 
-#   memory estimate:  9.08 KiB
-#   allocs estimate:  44
+# 22th August 2019
+# BenchmarkTools.Trial:
+#   memory estimate:  8.33 KiB
+#   allocs estimate:  36
 #   --------------
-#   minimum time:     6.666 μs (0.00% GC)
-#   median time:      6.835 μs (0.00% GC)
-#   mean time:        7.862 μs (7.42% GC)
-#   maximum time:     367.324 μs (97.60% GC)
+#   minimum time:     5.066 μs (0.00% GC)
+#   median time:      5.544 μs (0.00% GC)
+#   mean time:        6.965 μs (12.17% GC)
+#   maximum time:     1.124 ms (98.75% GC)
 #   --------------
 #   samples:          10000
-#   evals/sample:     5
+#   evals/sample:     6
 
 # Benchmark structural model
 AP = CSV.read("./examples/AirPassengers.csv")
@@ -130,7 +129,7 @@ bench_structural = @benchmark statespace($structural_model, filter_type = $Univa
 #   samples:          3
 #   evals/sample:     1
 
-H = 1e-4
+H = fill(1e-4, (1,1))
 Q = fill(1e-4, (3,3))
 Q[[2; 3; 4; 6; 7; 8]] .= 0 # Zero on off diagonal elements
 @benchmark StateSpaceModels.univariate_kalman_filter($structural_model, $H, $Q)

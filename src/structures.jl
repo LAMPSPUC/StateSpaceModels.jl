@@ -180,13 +180,9 @@ struct StateSpaceCovariance
     end
 
     function StateSpaceCovariance(H::Matrix{Float64}, Q::Matrix{Float64},
-                                  filter_type::Type{KalmanFilter})
+                                  filter_type::Union{Type{KalmanFilter}, 
+                                                     Type{UnivariateKalmanFilter}})
         return new(H, Q)
-    end
-
-    function StateSpaceCovariance(H::Float64, Q::Matrix{Float64},
-                                  filter_type::Type{UnivariateKalmanFilter})
-        return new(H * ones(1, 1), Q)
     end
 end
 
