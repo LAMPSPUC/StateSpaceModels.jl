@@ -88,10 +88,13 @@ function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::I
     return 
 end
 
-function invertF(F::AbstractArray{T}, t::Int) where T
+function invertF(F::Array{T, 3}, t::Int) where T
     return @inbounds @views size(F, 1) == 1 ? 1/(F[1, 1, t]) : inv(F[:, :, t])
 end
-function logdetF(F::AbstractArray{T}, t::Int) where T
+function invertF(F::Vector{T}, t::Int) where T
+    return 1/F[t]
+end
+function logdetF(F::Array{T, 3}, t::Int) where T
     return @inbounds @views logdet(F[:, :, t])
 end
 
