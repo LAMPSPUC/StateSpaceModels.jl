@@ -83,7 +83,7 @@ function small_update_K!(K::AbstractMatrix{Typ}, P_Ztransp_invF::AbstractVector{
     @inbounds for i in axes(K, 1)
         K[i, t] = zero(Typ) 
         for j in axes(K, 1)
-            K[i, t] += T[i, j]*P_Ztransp_invF[i]
+            K[i, t] += T[i, j]*P_Ztransp_invF[j]
         end
     end
     return

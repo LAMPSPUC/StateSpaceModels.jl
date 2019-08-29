@@ -28,7 +28,7 @@
         compare_forecast_simulation(ss3, 20, 1000, 1e-3)
 
         @test ss2.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
-        @test ss3.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3 # !!! failing
+        @test ss3.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
         @test ss2.filter.a ≈ ss1.filter.a rtol = 1e-3
         @test ss3.filter.a ≈ ss1.filter.a rtol = 1e-3
     end
