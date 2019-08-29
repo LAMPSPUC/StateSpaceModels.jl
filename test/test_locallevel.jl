@@ -106,31 +106,21 @@ y = [0.0     # Deterministic local level generated time series
         @test isa(unimodel, StateSpaceModel)
         @test unimodel.mode == "time-invariant"
         
-        ss = statespace(unimodel)
-
-        @test ss.filter_type == KalmanFilter
-        @test isa(ss, StateSpace)
-    end
-
-    @testset "Local level model with square-root Kalman filter" begin
-        unimodel = local_level(y)
-
-        @test isa(unimodel, StateSpaceModel)
-        @test unimodel.mode == "time-invariant"
+        ss1 = statespace(unimodel)
+        @test ss1.filter_type == KalmanFilter
+        @test isa(ss1, StateSpace)
         
-        ss = statespace(unimodel; filter_type = SquareRootFilter)
-        @test ss.filter_type == SquareRootFilter
-        @test isa(ss, StateSpace)
-    end
-
-    @testset "Local level model with univariate Kalman filter" begin
-        unimodel = local_level(y)
-
-        @test isa(unimodel, StateSpaceModel)
-        @test unimodel.mode == "time-invariant"
+        ss2 = statespace(unimodel; filter_type = SquareRootFilter)
+        @test ss2.filter_type == SquareRootFilter
+        @test isa(ss2, StateSpace)
         
-        ss = statespace(unimodel; filter_type = UnivariateKalmanFilter)
-        @test ss.filter_type == UnivariateKalmanFilter
-        @test isa(ss, StateSpace)
+        ss3 = statespace(unimodel; filter_type = UnivariateKalmanFilter)
+        @test ss3.filter_type == UnivariateKalmanFilter
+        @test isa(ss3, StateSpace)
+
+        @test ss2.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
+        @test ss3.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
+        @test ss2.filter.a ≈ ss1.filter.a rtol = 1e-3
+        @test ss3.filter.a ≈ ss1.filter.a rtol = 1e-3
     end
 end
