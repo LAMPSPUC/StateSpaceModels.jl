@@ -1,4 +1,4 @@
-AP = CSV.read("./examples/AirPassengers.csv")
+AP = CSV.read("../examples/AirPassengers.csv")
 logAP = log.(Vector{Float64}(AP[:Passengers]))
 
 @testset "Air passengers with Kalman filter" begin
