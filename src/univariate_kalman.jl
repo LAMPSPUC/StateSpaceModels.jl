@@ -108,7 +108,7 @@ function univariate_smoother(model::StateSpaceModel, kfilter::UnivariateKalmanFi
             r[t-1, :]     = T' * r[t, :]
             N[:, :, t-1]  = T' * N[:, :, t] * T
         else
-            Z_transp_invF = Z[:, :, t]' * invertF(F, t)
+            Z_transp_invF = Z[1, :, t]/F[t]
             L[:, :, t]    = T - K[:, t] * Z[:, :, t]
             r[t-1, :]     = Z_transp_invF * v[t] + L[:, :, t]' * r[t, :]
             N[:, :, t-1]  = Z_transp_invF * Z[:, :, t] + L[:, :, t]' * N[:, :, t] * L[:, :, t]

@@ -1,47 +1,36 @@
 @testset "Linear trend" begin
-    @testset "Linear trend model with Kalman filter" begin
+    @testset "Linear trend model" begin
         y = collect(1:15.0)
         unimodel = linear_trend(y)
 
         @test isa(unimodel, StateSpaceModel)
         @test unimodel.mode == "time-invariant"
                 
-        ss = statespace(unimodel)
-                
-        @test ss.filter_type == KalmanFilter
-        @test isa(ss, StateSpace)
-        @test ss.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
-        compare_forecast_simulation(ss, 20, 1000, 1e-3)
-    end
+        ss1 = statespace(unimodel)
 
-    @testset "Linear trend model with square-root Kalman filter" begin
-        y = collect(1:15.0)
-        unimodel = linear_trend(y)
+        @test ss1.filter_type == KalmanFilter
+        @test isa(ss1, StateSpace)
+        @test ss1.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
+        compare_forecast_simulation(ss1, 20, 1000, 1e-3)
+                
+        ss2 = statespace(unimodel; filter_type = SquareRootFilter)
 
-        @test isa(unimodel, StateSpaceModel)
-        @test unimodel.mode == "time-invariant"
+        @test ss2.filter_type == SquareRootFilter
+        @test isa(ss2, StateSpace)
+        @test ss2.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
+        compare_forecast_simulation(ss2, 20, 1000, 1e-3)
                 
-        ss = statespace(unimodel; filter_type = SquareRootFilter)
-                
-        @test ss.filter_type == SquareRootFilter
-        @test isa(ss, StateSpace)
-        @test ss.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
-        compare_forecast_simulation(ss, 20, 1000, 1e-3)
-    end
+        ss3 = statespace(unimodel; filter_type = UnivariateKalmanFilter)
 
-    @testset "Linear trend model with univariate Kalman filter" begin
-        y = collect(1:15.0)
-        unimodel = linear_trend(y)
+        @test ss3.filter_type == UnivariateKalmanFilter
+        @test isa(ss3, StateSpace)
+        @test ss3.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
+        compare_forecast_simulation(ss3, 20, 1000, 1e-3)
 
-        @test isa(unimodel, StateSpaceModel)
-        @test unimodel.mode == "time-invariant"
-                
-        ss = statespace(unimodel; filter_type = UnivariateKalmanFilter)
-                
-        @test ss.filter_type == UnivariateKalmanFilter
-        @test isa(ss, StateSpace)
-        @test ss.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
-        compare_forecast_simulation(ss, 20, 1000, 1e-3)
+        @test ss2.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
+        @test ss3.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
+        @test ss2.filter.a ≈ ss1.filter.a rtol = 1e-3
+        @test ss3.filter.a ≈ ss1.filter.a rtol = 1e-3
     end
 
     @testset "Linear trend model with missing values" begin
