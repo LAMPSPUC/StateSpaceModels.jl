@@ -17,7 +17,7 @@ include("univariate_kalman.jl")
 include("kalman.jl")
 include("sqrt_kalman.jl")
 include("forecast.jl")
-include("diagnostics")
+include("diagnostics.jl")
 
 """
     statespace(model::StateSpaceModel; filter_type::DataType = KalmanFilter, optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1)
