@@ -1,4 +1,8 @@
-"""Run diagnostics and print results"""
+"""
+    diagnostics(ss::StateSpace)
+
+Run diagnostics and print results
+"""
 function diagnostics(ss::StateSpace)
     println("==============================================================")
     println("                    Running diagnostics...                    ")
@@ -24,7 +28,11 @@ function diagnostics(ss::StateSpace)
     return Diagnostics(pvalueJB, pvalueLB, pvalueH)
 end
 
-"""Obtain standardized residuals from a state-space model"""
+"""
+    residuals(ss::StateSpace)
+
+Obtain standardized residuals from a state-space model
+"""
 function residuals(ss::StateSpace)
     e = Matrix{Float64}(undef, ss.model.dim.n, ss.model.dim.p)
     for j = 1:ss.model.dim.p
@@ -39,10 +47,13 @@ function residuals(ss::StateSpace)
     return e
 end
 
-"""Run Jarque-Bera normality test and return p-values"""
+"""
+    jarquebera(e::Matrix{Float64})
+
+Run Jarque-Bera normality test and return p-values
+"""
 function jarquebera(e::Matrix{Float64})
-    n = size(e, 1)
-    p = size(e, 2)
+    n, p = size(e)
     pvalue = Vector{Float64}(undef, p)
     for j = 1:p
         m1 = sum(e[:, j])/n
@@ -58,10 +69,13 @@ function jarquebera(e::Matrix{Float64})
     return pvalue
 end
 
-"""Run Ljung-Box independence test and return p-values"""
+"""
+    ljungbox(e::Matrix{Float64}; maxlag = 20)
+
+Run Ljung-Box independence test and return p-values
+"""
 function ljungbox(e::Matrix{Float64}; maxlag = 20)
-    n = size(e, 1)
-    p = size(e, 2)
+    n, p = size(e)
     pvalue = Vector{Float64}(undef, p)
     for j = 1:p
         acor = autocor(e[:, j], 1:maxlag)
@@ -73,10 +87,13 @@ function ljungbox(e::Matrix{Float64}; maxlag = 20)
     return pvalue
 end
 
-"""Run homoscedasticity test and return p-values"""
+"""
+    homoscedast(e::Matrix{Float64})
+
+Run homoscedasticity test and return p-values
+"""
 function homoscedast(e::Matrix{Float64})
-    n = size(e, 1)
-    p = size(e, 2)
+    n, p = size(e)
     t1 = floor(Int, n/3)
     t2 = ceil(Int, 2*(n/3)+1)
     dist = FDist(n-t2+1, t1)
