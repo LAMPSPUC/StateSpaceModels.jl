@@ -76,6 +76,7 @@ Run Ljung-Box independence test and return p-values
 """
 function ljungbox(e::Matrix{Float64}; maxlag = 20)
     n, p = size(e)
+    n <= maxlag && (maxlag = n-1)
     pvalue = Vector{Float64}(undef, p)
     for j = 1:p
         acor = autocor(e[:, j], 1:maxlag)
