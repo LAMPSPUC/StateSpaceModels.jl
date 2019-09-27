@@ -29,6 +29,10 @@ Current features:
   3. Linear trend model
   4. Local level model
 * Completion of missing values
+* Diagnostics for the residuals, including:
+  1. Jarque-Bera test
+  2. Ljung-Box test
+  3. Homoscedasticity test
 
 Planned features:
 * Exact initialization of the Kalman filter
@@ -51,12 +55,3 @@ If you use StateSpaceModels.jl in your work, we kindly ask you to cite the follo
     journal={arXiv preprint arXiv:1908.01757},
     year={2019}
     }
-
-## Works
-
-Works using this package:
-
-[Simulating Low and High-Frequency Energy
-Demand Scenarios in a Unified Framework – Part
-I: Low-Frequency Simulation](https://proceedings.science/sbpo/papers/simulando-cenarios-de-demanda-em-baixa-e-alta-frequencia-em-um-framework-unificado---parte-i%3A-simulacao-em-baixa-frequen).
-In: L Simpósio Brasileiro de Pesquisa Operacional, Rio de Janeiro, Brazil.

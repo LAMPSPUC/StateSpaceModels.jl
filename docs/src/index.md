@@ -25,17 +25,23 @@ Current features:
   3. Linear trend model
   4. Local level model
 * Completion of missing values
+* Diagnostics for the residuals, including:
+  1. Jarque-Bera test
+  2. Ljung-Box test
+  3. Homoscedasticity test
 
 Planned features:
 * Exact initialization of the Kalman filter
 * EM algorithm for maximum likelihood estimation
 * Univariate treatment of multivariate models
 
-## Works
+## Citing StateSpaceModels.jl
 
-Works using this package:
+If you use StateSpaceModels.jl in your work, we kindly ask you to cite the following paper ([pdf](https://arxiv.org/pdf/1908.01757.pdf)):
 
-[Simulating Low and High-Frequency Energy
-Demand Scenarios in a Unified Framework – Part
-I: Low-Frequency Simulation](https://proceedings.science/sbpo/papers/simulando-cenarios-de-demanda-em-baixa-e-alta-frequencia-em-um-framework-unificado---parte-i%3A-simulacao-em-baixa-frequen).
-In: L Simpósio Brasileiro de Pesquisa Operacional, Rio de Janeiro, Brazil.
+    @article{SaavedraBodinSouto2019,
+    title={StateSpaceModels.jl: a Julia Package for Time-Series Analysis in a State-Space Framework},
+    author={Raphael Saavedra and Guilherme Bodin and Mario Souto},
+    journal={arXiv preprint arXiv:1908.01757},
+    year={2019}
+    }
