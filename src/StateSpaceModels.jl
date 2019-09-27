@@ -4,7 +4,7 @@ using Optim, Distributions, LinearAlgebra, StaticArrays, Dates, Printf, StatsBas
 
 import Base: size, show
 
-export statespace, kfas
+export statespace, kfas, diagnostics
 
 include("prints.jl")
 include("structures.jl")
@@ -17,6 +17,7 @@ include("univariate_kalman.jl")
 include("kalman.jl")
 include("sqrt_kalman.jl")
 include("forecast.jl")
+include("diagnostics")
 
 """
     statespace(model::StateSpaceModel; filter_type::DataType = KalmanFilter, optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1)
