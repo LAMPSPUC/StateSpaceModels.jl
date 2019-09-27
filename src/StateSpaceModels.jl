@@ -1,6 +1,6 @@
 module StateSpaceModels
 
-using Optim, Distributions, LinearAlgebra, StaticArrays, Dates, Printf
+using Optim, Distributions, LinearAlgebra, StaticArrays, Dates, Printf, StatsBase
 
 import Base: size, show
 
