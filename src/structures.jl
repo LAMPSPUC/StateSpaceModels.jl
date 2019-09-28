@@ -237,3 +237,14 @@ struct StateSpace
     filter_type::DataType
     optimization_method::AbstractOptimizationMethod
 end
+
+"""
+    Diagnostics
+
+A structure containing the diagnostics of a state-space model.
+"""
+struct Diagnostics
+    p_jarquebera::Vector{Float64}
+    p_ljungbox::Vector{Float64}
+    p_homo::Vector{Float64}
+end

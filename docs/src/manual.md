@@ -213,3 +213,14 @@ StateSpaceModels.RandomSeedsLBFGS
 StateSpaceModels.AbstractOptimizationMethod
 StateSpaceModels.estimate_statespace
 ```
+
+## Diagnostics
+After the estimation is completed, diagnostics can be run over the residuals. The implemented diagnostics include the Jarque-Bera normality test, the Ljung-Box independence test, and a homoscedasticity test.
+
+```@docs
+diagnostics
+StateSpaceModels.residuals
+StateSpaceModels.jarquebera
+StateSpaceModels.ljungbox
+StateSpaceModels.homoscedast
+```

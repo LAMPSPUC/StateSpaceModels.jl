@@ -44,6 +44,8 @@
         @test model.mode == "time-invariant"
 
         ss = statespace(model)
+        diags = diagnostics(ss)
+        
         sim  = simulate(ss, 10, 1000)
 
         @test ss.filter_type == KalmanFilter
