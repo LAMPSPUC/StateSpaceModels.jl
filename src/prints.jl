@@ -19,7 +19,7 @@ function print_estimation_start(verbose::Int, nseeds::Int)
     end
 end
 
-function print_loglikelihood(verbose::Int, iseed::Int, loglikelihood::Vector{Float64}, t0::DateTime)
+function print_loglikelihood(verbose::Int, iseed::Int, loglikelihood::Vector{T}, t0::DateTime) where T <: AbstractFloat
     if verbose > 0
         t1 = now() - t0
 
@@ -36,7 +36,7 @@ function print_loglikelihood(verbose::Int, iseed::Int, loglikelihood::Vector{Flo
     end
 end
 
-function print_estimation_end(verbose::Int, loglikelihood::Vector{Float64})
+function print_estimation_end(verbose::Int, loglikelihood::Vector{T}) where T <: AbstractFloat
     if verbose > 0
         str = "                  Log-likelihood: "
         str_loglik = @sprintf("%.4f", maximum(loglikelihood)) * "                  "

@@ -20,7 +20,7 @@ end
 
 
 # Linar Algebra wrappers
-function gram_in_time(mat::Array{Float64, 3})
+function gram_in_time(mat::Array{T, 3}) where T <: AbstractFloat
     gram_in_time = similar(mat)
     @inbounds @views for t = 1:size(gram_in_time, 3)
         gram_in_time[:, :, t] = gram(mat[:, :, t])

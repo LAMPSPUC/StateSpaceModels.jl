@@ -33,8 +33,8 @@ end
 
 Obtain standardized residuals from a state-space model
 """
-function residuals(ss::StateSpace)
-    e = Matrix{Float64}(undef, ss.model.dim.n, ss.model.dim.p)
+function residuals(ss::StateSpace{T}) where T <: AbstractFloat
+    e = Matrix{T}(undef, ss.model.dim.n, ss.model.dim.p)
     for j = 1:ss.model.dim.p
         for t = 1:ss.model.dim.n
             e[t, j] = ss.filter.v[t, j] / sqrt(ss.filter.F[j, j, t])
@@ -48,13 +48,13 @@ function residuals(ss::StateSpace)
 end
 
 """
-    jarquebera(e::Matrix{Float64})
+    jarquebera(e::Matrix{T})
 
 Run Jarque-Bera normality test and return p-values
 """
-function jarquebera(e::Matrix{Float64})
+function jarquebera(e::Matrix{T}) where T <: AbstractFloat
     n, p = size(e)
-    pvalue = Vector{Float64}(undef, p)
+    pvalue = Vector{T}(undef, p)
     for j = 1:p
         m1 = sum(e[:, j])/n
         m2 = sum((e[:, j] .- m1).^2)/n
@@ -70,14 +70,14 @@ function jarquebera(e::Matrix{Float64})
 end
 
 """
-    ljungbox(e::Matrix{Float64}; maxlag = 20)
+    ljungbox(e::Matrix{T}; maxlag = 20)
 
 Run Ljung-Box independence test and return p-values
 """
-function ljungbox(e::Matrix{Float64}; maxlag = 20)
+function ljungbox(e::Matrix{T}; maxlag::Int = 20) where T <: AbstractFloat
     n, p = size(e)
     n <= maxlag && (maxlag = n-1)
-    pvalue = Vector{Float64}(undef, p)
+    pvalue = Vector{T}(undef, p)
     for j = 1:p
         acor = autocor(e[:, j], 1:maxlag)
         Q = n*(n+2)*sum((acor[k]^2)/(n-k) for k = 1:maxlag)
@@ -89,16 +89,16 @@ function ljungbox(e::Matrix{Float64}; maxlag = 20)
 end
 
 """
-    homoscedast(e::Matrix{Float64})
+    homoscedast(e::Matrix{T})
 
 Run homoscedasticity test and return p-values
 """
-function homoscedast(e::Matrix{Float64})
+function homoscedast(e::Matrix{T}) where T <: AbstractFloat
     n, p = size(e)
     t1 = floor(Int, n/3)
     t2 = ceil(Int, 2*(n/3)+1)
     dist = FDist(n-t2+1, t1)
-    pvalue = Vector{Float64}(undef, p)
+    pvalue = Vector{T}(undef, p)
     for j = 1:p
         H = sum(e[t, j]^2 for t = t2:n)/sum(e[t, j]^2 for t = 1:t1)
         Δ = abs(cdf(dist, H) - 0.5)

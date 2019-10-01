@@ -1,17 +1,17 @@
-function estimate_statespace(model::StateSpaceModel, filter_type::DataType,
-                             opt_method::RandomSeedsLBFGS; verbose::Int = 1)
+function estimate_statespace(model::StateSpaceModel{T}, filter_type::DataType,
+                             opt_method::RandomSeedsLBFGS; verbose::Int = 1) where T <: AbstractFloat
 
     nseeds = opt_method.nseeds                         
     nseeds += 1 # creating additional seed for degenerate cases
 
     # Initialization
     npsi          = Int((1 + model.dim.r/model.dim.p)*(model.dim.p*(model.dim.p + 1)/2))
-    seeds         = Matrix{Float64}(undef, npsi, nseeds)
-    loglikelihood = Vector{Float64}(undef, nseeds)
-    psi           = Matrix{Float64}(undef, npsi, nseeds)
+    seeds         = Matrix{T}(undef, npsi, nseeds)
+    loglikelihood = Vector{T}(undef, nseeds)
+    psi           = Matrix{T}(undef, npsi, nseeds)
 
     # Initial conditions
-    seedrange = collect(-1e3:0.1:1e3)
+    seedrange = collect(T, -1e3:0.1:1e3)
 
     # Avoiding zero values for covariance
     deleteat!(seedrange, findall(iszero, seedrange))
@@ -21,7 +21,7 @@ function estimate_statespace(model::StateSpaceModel, filter_type::DataType,
     # Generate initial values in [-1e3, 1e3]
     for iseed = 1:nseeds
         if iseed == 1
-            seeds[:, iseed] = 1e-8*ones(npsi)
+            seeds[:, iseed] = T(1e-8)*ones(T, npsi)
         else
             seeds[:, iseed] = rand(seedrange, npsi)
         end

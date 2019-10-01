@@ -1,5 +1,5 @@
 """
-    kalman_filter(model::StateSpaceModel, H::Typ, Q::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
+    kalman_filter(model::StateSpaceModel, H::Typ, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
 Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
@@ -8,22 +8,22 @@ function univariate_kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Mat
     time_invariant = model.mode == "time-invariant"
 
     # Predictive state and its covariance
-    a = Matrix{Float64}(undef, model.dim.n+1, model.dim.m)
-    P = Array{Float64, 3}(undef, model.dim.m, model.dim.m, model.dim.n+1)
-    att = Matrix{Float64}(undef, model.dim.n, model.dim.m)
-    Ptt = Array{Float64, 3}(undef, model.dim.m, model.dim.m, model.dim.n)
+    a = Matrix{Typ}(undef, model.dim.n+1, model.dim.m)
+    P = Array{Typ, 3}(undef, model.dim.m, model.dim.m, model.dim.n+1)
+    att = Matrix{Typ}(undef, model.dim.n, model.dim.m)
+    Ptt = Array{Typ, 3}(undef, model.dim.m, model.dim.m, model.dim.n)
 
     # Innovation and its covariance
-    v = Vector{Float64}(undef, model.dim.n)
-    F = Vector{Float64}(undef, model.dim.n)
+    v = Vector{Typ}(undef, model.dim.n)
+    F = Vector{Typ}(undef, model.dim.n)
 
     # Kalman gain
-    K = Matrix{Float64}(undef, model.dim.m, model.dim.n)
+    K = Matrix{Typ}(undef, model.dim.m, model.dim.n)
     
     # Auxiliary structures
-    ZP = Vector{Float64}(undef, model.dim.m)
-    P_Ztransp_invF = Vector{Float64}(undef, model.dim.m)
-    RQR = Matrix{Float64}(undef, model.dim.m, model.dim.m)
+    ZP = Vector{Typ}(undef, model.dim.m)
+    P_Ztransp_invF = Vector{Typ}(undef, model.dim.m)
+    RQR = Matrix{Typ}(undef, model.dim.m, model.dim.m)
 
     # Steady state initialization
     steadystate = false
@@ -77,7 +77,7 @@ end
 
 Smoother for state-space model.
 """
-function univariate_smoother(model::StateSpaceModel, kfilter::UnivariateKalmanFilter)
+function univariate_smoother(model::StateSpaceModel{Typ}, kfilter::UnivariateKalmanFilter{Typ}) where Typ <: AbstractFloat
 
     # Load dimensions data
     n, p, m, r = size(model)
@@ -93,11 +93,11 @@ function univariate_smoother(model::StateSpaceModel, kfilter::UnivariateKalmanFi
     K       = kfilter.K
 
     # Smoothed state and its covariance
-    alpha = Matrix{Float64}(undef, n, m)
-    V     = Array{Float64, 3}(undef, m, m, n)
-    L     = Array{Float64, 3}(undef, m, m, n)
-    r     = Matrix{Float64}(undef, n, m)
-    N     = Array{Float64, 3}(undef, m, m, n)
+    alpha = Matrix{Typ}(undef, n, m)
+    V     = Array{Typ, 3}(undef, m, m, n)
+    L     = Array{Typ, 3}(undef, m, m, n)
+    r     = Matrix{Typ}(undef, n, m)
+    N     = Array{Typ, 3}(undef, m, m, n)
 
     # Initialization
     N[:, :, end] = zeros(m, m)
@@ -139,13 +139,13 @@ end
 # *
 
 function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
-                               filter_type::Type{UnivariateKalmanFilter}) where T <: AbstractFloat
+                               filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
 
     # Build lower triangular matrices
     H = ones(1, 1)*psi[1]^2
     unknownsH = 1
 
-    sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
+    sqrtQ = kron(Matrix{T}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
     sqrtQ[findall(isequal(1), sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
     # Obtain full matrices
@@ -155,7 +155,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
 end
 
 function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
-                                   filter_type::Type{UnivariateKalmanFilter}) where T <: AbstractFloat
+                                   filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
 
     H, Q = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
 
@@ -166,15 +166,15 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
     return kfilter.v, kfilter.F
 end
 
-function kfas(model::StateSpaceModel, covariance::StateSpaceCovariance, 
-              filter_type::Type{UnivariateKalmanFilter})
+function kfas(model::StateSpaceModel{T}, covariance::StateSpaceCovariance{T}, 
+              filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
 
     # Run filter and smoother 
     filtered_state = univariate_kalman_filter(model, covariance.H, covariance.Q)
     smoothed_state = univariate_smoother(model, filtered_state)
-    v = Matrix{Float64}(undef, length(filtered_state.v), 1)
+    v = Matrix{T}(undef, length(filtered_state.v), 1)
     v[:, 1] = filtered_state.v
-    F = Array{Float64}(undef, 1, 1, length(filtered_state.F))
+    F = Array{T}(undef, 1, 1, length(filtered_state.F))
     F[1, 1, :] = filtered_state.F.*ones(1, 1)
 
     return FilterOutput(filtered_state.a, filtered_state.att, v, 

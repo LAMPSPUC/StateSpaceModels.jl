@@ -8,21 +8,21 @@
                 
         ss1 = statespace(unimodel)
 
-        @test ss1.filter_type == KalmanFilter
+        @test ss1.filter_type <: KalmanFilter
         @test isa(ss1, StateSpace)
         @test ss1.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
         compare_forecast_simulation(ss1, 20, 1000, 1e-3)
 
-        ss2 = statespace(unimodel; filter_type = SquareRootFilter)
+        ss2 = statespace(unimodel; filter_type = SquareRootFilter{Float64})
 
-        @test ss2.filter_type == SquareRootFilter
+        @test ss2.filter_type <: SquareRootFilter
         @test isa(ss2, StateSpace)
         @test ss2.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
         compare_forecast_simulation(ss2, 20, 1000, 1e-3)
 
-        ss3 = statespace(unimodel; filter_type = UnivariateKalmanFilter)
+        ss3 = statespace(unimodel; filter_type = UnivariateKalmanFilter{Float64})
 
-        @test ss3.filter_type == UnivariateKalmanFilter
+        @test ss3.filter_type <: UnivariateKalmanFilter
         @test isa(ss3, StateSpace)
         @test ss3.smoother.alpha[:, 2] ≈ ones(15) rtol = 1e-4
         compare_forecast_simulation(ss3, 20, 1000, 1e-3)

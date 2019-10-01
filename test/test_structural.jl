@@ -8,7 +8,7 @@
         
         ss = statespace(model)
         
-        @test ss.filter_type == KalmanFilter
+        @test ss.filter_type <: KalmanFilter
         @test isa(ss, StateSpace)
 
         @test all(ss.covariance.H .< 1e-6)
@@ -27,7 +27,7 @@
 
         ss = statespace(model)
 
-        @test ss.filter_type == KalmanFilter
+        @test ss.filter_type <: KalmanFilter
         @test isa(ss, StateSpace)
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
@@ -48,7 +48,7 @@
         
         sim  = simulate(ss, 10, 1000)
 
-        @test ss.filter_type == KalmanFilter
+        @test ss.filter_type <: KalmanFilter
         @test mean(sim, dims = 3)[:, 1] ≈ ones(10) rtol = 1e-3
         @test mean(sim, dims = 3)[:, 2] ≈ collect(21:30) rtol = 1e-3
         compare_forecast_simulation(ss, 20, 1000, 1e-3)
@@ -67,6 +67,6 @@
         
         model = StateSpaceModel(y, Z, T, R)
         ss = statespace(model)
-        @test_throws ErrorException sim  = simulate(ss, 10, 1000)
+        @test_throws ErrorException sim = simulate(ss, 10, 1000)
     end
 end

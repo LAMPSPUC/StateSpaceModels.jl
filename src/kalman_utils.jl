@@ -4,7 +4,7 @@ function fill_a1!(a::Matrix{T}) where T <: AbstractFloat
         a[1, i] = zero(T)
     end
 end
-function fill_P1!(P::AbstractArray{T}; bigkappa::Float64 = 1e6) where T <: AbstractFloat
+function fill_P1!(P::AbstractArray{T}; bigkappa::T = 1e6) where T <: AbstractFloat
     @inbounds for i in axes(P, 1), j in axes(P, 2)
         if i == j
             P[i, j, 1] = bigkappa

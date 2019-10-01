@@ -1,9 +1,9 @@
 """
-    sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
+    sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
 Square-root Kalman filter with big Kappa initialization.
 """
-function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
+function sqrt_kalman_filter(model::StateSpaceModel{Typ}, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
     time_invariant = model.mode == "time-invariant"
 
@@ -15,18 +15,18 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
     Z, T, R = ztr(model)
 
     # Predictive state and its sqrt-covariance
-    a     = Matrix{Float64}(undef, n+1, m)
-    sqrtP = Array{Float64, 3}(undef, m, m, n+1)
+    a     = Matrix{Typ}(undef, n+1, m)
+    sqrtP = Array{Typ, 3}(undef, m, m, n+1)
 
     # Innovation and its sqrt-covariance
-    v     = Matrix{Float64}(undef, n, p)
-    sqrtF = Array{Float64, 3}(undef, p, p, n)
+    v     = Matrix{Typ}(undef, n, p)
+    sqrtF = Array{Typ, 3}(undef, p, p, n)
 
     # Kalman gain
-    K     = Array{Float64, 3}(undef, m, p, n)
+    K     = Array{Typ, 3}(undef, m, p, n)
 
     # Auxiliary matrices
-    U2star = Array{Float64, 3}(undef, m, p, n)
+    U2star = Array{Typ, 3}(undef, m, p, n)
 
     # Steady state initialization
     steadystate  = false
@@ -85,7 +85,7 @@ end
 
 Obtain the filtered state estimates and their covariance matrices.
 """
-function filtered_state(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
+function filtered_state(model::StateSpaceModel{Typ}, sqrt_filter::SquareRootFilter{Typ}) where Typ <: AbstractFloat
 
     # Load dimensions data
     n, p, m, r = size(model)
@@ -100,8 +100,8 @@ function filtered_state(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     P = gram_in_time(sqrt_filter.sqrtP)
 
     # Filtered state and its covariance
-    att = Matrix{Float64}(undef, n, m)
-    Ptt = Array{Float64, 3}(undef, m, m, n)
+    att = Matrix{Typ}(undef, n, m)
+    Ptt = Array{Typ, 3}(undef, m, m, n)
 
     for t = 1:n
         PZF = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
@@ -119,7 +119,7 @@ end
 
 Square-root smoother for state space model.
 """
-function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
+function sqrt_smoother(model::StateSpaceModel{Typ}, sqrt_filter::SquareRootFilter{Typ}) where Typ <: AbstractFloat
 
     # Load dimensions data
     n, p, m, r = size(model)
@@ -136,11 +136,11 @@ function sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     K           = sqrt_filter.K
 
     # Smoothed state and its covariance
-    alpha = Matrix{Float64}(undef, n, m)
-    V     = Array{Float64, 3}(undef, m, m, n)
-    L     = Array{Float64, 3}(undef, m, m, n)
-    r     = Matrix{Float64}(undef, n, m)
-    sqrtN = Array{Float64, 3}(undef, m, m, n)
+    alpha = Matrix{Typ}(undef, n, m)
+    V     = Array{Typ, 3}(undef, m, m, n)
+    L     = Array{Typ, 3}(undef, m, m, n)
+    r     = Matrix{Typ}(undef, n, m)
+    sqrtN = Array{Typ, 3}(undef, m, m, n)
 
     # Initialization
     sqrtN[:, :, end]  = zeros(m, m)
@@ -205,7 +205,7 @@ end
 # *
 
 function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
-                               filter_type::Type{SquareRootFilter}) where T <: AbstractFloat
+                               filter_type::Type{SquareRootFilter{T}}) where T <: AbstractFloat
     # Observation sqrt-covariance matrix
     if p > 1
         sqrtH     = tril!(ones(p, p))
@@ -217,14 +217,14 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
     end
 
     # State sqrt-covariance matrix
-    sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
+    sqrtQ = kron(Matrix{T}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
     sqrtQ[findall(x -> x == 1, sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
     return sqrtH, sqrtQ
 end
 
 function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
-                                   filter_type::Type{SquareRootFilter}) where T <: AbstractFloat
+                                   filter_type::Type{SquareRootFilter{T}}) where T <: AbstractFloat
 
     sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
     # Obtain innovation v and its variance F
@@ -233,8 +233,8 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
     return sqrt_sqrt_filter.v, gram_in_time(sqrt_sqrt_filter.sqrtF)
 end
 
-function kfas(model::StateSpaceModel, covariance::StateSpaceCovariance,
-              filter_type::Type{SquareRootFilter})
+function kfas(model::StateSpaceModel{T}, covariance::StateSpaceCovariance{T},
+              filter_type::Type{SquareRootFilter{T}}) where T <: AbstractFloat
     # Compute sqrt matrices
     sqrtH = cholesky(covariance.H).L # .L stands for Lower triangular
     sqrtQ = cholesky(covariance.Q).L # .L stands for Lower triangular

@@ -6,7 +6,7 @@ export forecast, simulate
 Obtain the minimum mean square error forecasts N steps ahead. Returns the forecasts and the predictive distributions 
 at each time period.
 """
-function forecast(ss::StateSpace, N::Int)
+function forecast(ss::StateSpace{Typ}, N::Int) where Typ <: AbstractFloat
 
     # Load estimated covariance matrices
     H = ss.covariance.H
@@ -22,9 +22,9 @@ function forecast(ss::StateSpace, N::Int)
     F0 = ss.filter.F[:, :, end]
     
     # State and variance forecasts
-    a = Matrix{Float64}(undef, N, m)
-    P = Array{Float64, 3}(undef, m, m, N)
-    F = Array{Float64, 3}(undef, p, p, N)
+    a = Matrix{Typ}(undef, N, m)
+    P = Array{Typ, 3}(undef, m, m, N)
+    F = Array{Typ, 3}(undef, p, p, N)
 
     # Probability distribution
     dist = Vector{Distribution}(undef, N)
@@ -44,7 +44,7 @@ function forecast(ss::StateSpace, N::Int)
         dist[t]    = MvNormal(vec(Z[:, :, t]*a[t, :]), F[:, :, t])
     end
 
-    forec = Matrix{Float64}(undef, N, p)
+    forec = Matrix{Typ}(undef, N, p)
     for t = 1:N
         forec[t, :] = mean(dist[t])
     end
@@ -58,7 +58,7 @@ end
 Simulate S future scenarios up to N steps ahead. Returns a p x N x S matrix where the dimensions represent, respectively,
 the number of series in the model, the number of steps ahead, and the number of scenarios.
 """
-function simulate(ss::StateSpace, N::Int, S::Int)
+function simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ <: AbstractFloat
 
     # Load estimated covariance matrices
     H = ss.covariance.H
@@ -72,8 +72,8 @@ function simulate(ss::StateSpace, N::Int, S::Int)
     dist_ϵ = MvNormal(zeros(p), H)
     dist_η = MvNormal(zeros(r), Q)
 
-    αsim = Array{Float64, 3}(undef, N, m, S)
-    ysim = Array{Float64, 3}(undef, N, p, S)
+    αsim = Array{Typ, 3}(undef, N, m, S)
+    ysim = Array{Typ, 3}(undef, N, p, S)
 
     for s = 1:S
 
@@ -100,13 +100,13 @@ end
 
 Adjust matrix Z for forecasting and check for dimension errors.
 """
-function prepare_forecast(ss::StateSpace, N::Int)
+function prepare_forecast(ss::StateSpace{Typ}, N::Int) where Typ <: AbstractFloat
 
     # Load system
     n, p, m, r = size(ss.model)
     Z0, T, R   = ztr(ss.model)
 
-    Z = Array{Float64, 3}(undef, p, m, N)
+    Z = Array{Typ, 3}(undef, p, m, N)
     if ss.model.mode == "time-invariant"
         Z[:, :, 1:N] .= Z0[:, :, 1]
     else
