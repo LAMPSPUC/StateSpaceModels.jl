@@ -126,14 +126,14 @@ y = [0.0     # Deterministic local level generated time series
         unimodel32 = local_level(Float32.(y))
         ss4 = statespace(unimodel32; filter_type = KalmanFilter{Float32})
         @test ss4.filter_type <: KalmanFilter
-        @test isa(ss1, StateSpace)
+        @test isa(ss4, StateSpace)
         
-        ss5 = statespace(unimodel; filter_type = SquareRootFilter{Float32})
+        ss5 = statespace(unimodel32; filter_type = SquareRootFilter{Float32})
         @test ss5.filter_type <: SquareRootFilter
-        @test isa(ss2, StateSpace)
-        
-        ss6 = statespace(unimodel; filter_type = UnivariateKalmanFilter{Float32})
-        @test ss6.filter_type <: UnivariateKalmanFilter
         @test isa(ss3, StateSpace)
+        
+        ss6 = statespace(unimodel32; filter_type = UnivariateKalmanFilter{Float32})
+        @test ss6.filter_type <: UnivariateKalmanFilter
+        @test isa(ss5, StateSpace)
     end
 end

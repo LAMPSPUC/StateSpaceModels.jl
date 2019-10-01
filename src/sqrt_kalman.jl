@@ -3,7 +3,7 @@
 
 Square-root Kalman filter with big Kappa initialization.
 """
-function sqrt_kalman_filter(model::StateSpaceModel{Typ}, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
+function sqrt_kalman_filter(model::StateSpaceModel{Typ}, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ <: AbstractFloat
 
     time_invariant = model.mode == "time-invariant"
 
@@ -220,7 +220,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
     sqrtQ = kron(Matrix{T}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
     sqrtQ[findall(x -> x == 1, sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
-    return sqrtH, sqrtQ
+    return T.(sqrtH), T.(sqrtQ)
 end
 
 function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,

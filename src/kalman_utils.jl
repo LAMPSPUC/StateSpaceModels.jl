@@ -98,7 +98,7 @@ function invF(F::AbstractArray{T}, t::Int) where T
 end
 
 function update_P!(P::Array{Typ, 3}, T::Matrix{Typ}, Ptt::Array{Typ, 3}, RQR::Matrix{Typ}, t::Int)  where Typ <: AbstractFloat 
-    @views @inbounds LinearAlgebra.BLAS.gemm!('N', 'T', 1.0, T * Ptt[:, :, t], T, 0.0, P[:, :, t+1]) # P[:, :, t+1] = T * Ptt[:, :, t] * T'
+    @views @inbounds LinearAlgebra.BLAS.gemm!('N', 'T', Typ(1.0), T * Ptt[:, :, t], T, Typ(0.0), P[:, :, t+1]) # P[:, :, t+1] = T * Ptt[:, :, t] * T'
     sum_matrix!(P, RQR, t, 1) # P[:, :, t+1] .+= RQR
     ensure_pos_sym!(P, t + 1)
     return 
@@ -168,7 +168,7 @@ function update_Ptt!(Ptt::Array{T, 3}, P::Array{T, 3}, P_Ztransp_invF::Vector{T}
 end
 
 function update_F!(F::Array{T, 3}, ZP::Matrix{T}, Z::Array{T, 3}, H::AbstractArray{T}, t::Int) where T <: AbstractFloat
-    @views @inbounds LinearAlgebra.BLAS.gemm!('N', 'T', 1.0, ZP, Z[:, :, t], 0.0, F[:, :, t]) # F_t = Z_t * P_t * Z_t
+    @views @inbounds LinearAlgebra.BLAS.gemm!('N', 'T', T(1.0), ZP, Z[:, :, t], T(0.0), F[:, :, t]) # F_t = Z_t * P_t * Z_t
     sum_matrix!(F, H, t, 0) # F[:, :, t] .+= H
     return
 end
@@ -187,7 +187,7 @@ function update_P_Ztransp_Finv!(P_Ztransp_invF::Matrix{T}, ZP::Matrix{T}, F::Arr
             P_Ztransp_invF[m, p] = ZP[p, m]/F[1, 1, t]
         end
     else
-        LinearAlgebra.BLAS.gemm!('T', 'N', 1.0, ZP, invF(F, t), 0.0, P_Ztransp_invF)
+        LinearAlgebra.BLAS.gemm!('T', 'N', T(1.0), ZP, invF(F, t), T(0.0), P_Ztransp_invF)
     end
     return
 end

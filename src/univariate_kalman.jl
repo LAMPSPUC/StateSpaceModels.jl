@@ -3,7 +3,7 @@
 
 Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
-function univariate_kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
+function univariate_kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ <: AbstractFloat
 
     time_invariant = model.mode == "time-invariant"
 
@@ -31,9 +31,9 @@ function univariate_kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Mat
 
     # Initial state: big Kappa initialization
     fill_a1!(a)
-    fill_P1!(P; bigkappa = 1e6)
+    fill_P1!(P; bigkappa = Typ(1e6))
 
-    mul!(RQR, model.R, LinearAlgebra.BLAS.gemm('N', 'T', 1.0, Q, model.R)) # RQR = R Q R'
+    mul!(RQR, model.R, LinearAlgebra.BLAS.gemm('N', 'T', Typ(1.0), Q, model.R)) # RQR = R Q R'
     # Kalman filter
     for t = 1:model.dim.n
         if t in model.missing_observations
@@ -151,7 +151,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
     # Obtain full matrices
     Q = gram(sqrtQ)
 
-    return H, Q
+    return T.(H), T.(Q)
 end
 
 function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,

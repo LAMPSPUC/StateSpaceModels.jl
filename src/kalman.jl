@@ -31,9 +31,9 @@ function kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Ty
 
     # Initial state: big Kappa initialization
     fill_a1!(a)
-    fill_P1!(P; bigkappa = 1e6)
+    fill_P1!(P; bigkappa = Typ(1e6))
 
-    RQR = model.R * LinearAlgebra.BLAS.gemm('N', 'T', 1.0, Q, model.R) # RQR = R Q R'
+    RQR = model.R * LinearAlgebra.BLAS.gemm('N', 'T', Typ(1.0), Q, model.R) # RQR = R Q R'
     # Kalman filter
     for t = 1:model.dim.n
         if t in model.missing_observations
@@ -158,7 +158,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
     H = gram(sqrtH)
     Q = gram(sqrtQ)
 
-    return H, Q
+    return T.(H), T.(Q)
 end
 
 function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel{T},
