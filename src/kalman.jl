@@ -1,29 +1,29 @@
 """
-    kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Float64 = 1e-5) where Typ <: AbstractFloat
+    kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
 Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
-function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
+function kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ <: AbstractFloat
 
     time_invariant = model.mode == "time-invariant"
 
     # Predictive state and its covariance
-    a = Matrix{Float64}(undef, model.dim.n+1, model.dim.m)
-    P = Array{Float64, 3}(undef, model.dim.m, model.dim.m, model.dim.n+1)
-    att = Matrix{Float64}(undef, model.dim.n, model.dim.m)
-    Ptt = Array{Float64, 3}(undef, model.dim.m, model.dim.m, model.dim.n)
+    a = Matrix{Typ}(undef, model.dim.n+1, model.dim.m)
+    P = Array{Typ, 3}(undef, model.dim.m, model.dim.m, model.dim.n+1)
+    att = Matrix{Typ}(undef, model.dim.n, model.dim.m)
+    Ptt = Array{Typ, 3}(undef, model.dim.m, model.dim.m, model.dim.n)
 
     # Innovation and its covariance
-    v = Matrix{Float64}(undef, model.dim.n, model.dim.p)
-    F = Array{Float64, 3}(undef, model.dim.p, model.dim.p, model.dim.n)
+    v = Matrix{Typ}(undef, model.dim.n, model.dim.p)
+    F = Array{Typ, 3}(undef, model.dim.p, model.dim.p, model.dim.n)
 
     # Kalman gain
-    K = Array{Float64, 3}(undef, model.dim.m, model.dim.p, model.dim.n)
+    K = Array{Typ, 3}(undef, model.dim.m, model.dim.p, model.dim.n)
     
     # Auxiliary structures
-    ZP = Array{Float64, 2}(undef, model.dim.p, model.dim.m)
-    P_Ztransp_invF = Array{Float64, 2}(undef, model.dim.m, model.dim.p)
-    RQR = Array{Float64, 2}(undef, model.dim.m, model.dim.m)
+    ZP = Array{Typ, 2}(undef, model.dim.p, model.dim.m)
+    P_Ztransp_invF = Array{Typ, 2}(undef, model.dim.m, model.dim.p)
+    RQR = Array{Typ, 2}(undef, model.dim.m, model.dim.m)
 
     # Steady state initialization
     steadystate = false
@@ -31,9 +31,9 @@ function kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; t
 
     # Initial state: big Kappa initialization
     fill_a1!(a)
-    fill_P1!(P; bigkappa = 1e6)
+    fill_P1!(P; bigkappa = Typ(1e6))
 
-    RQR = model.R * LinearAlgebra.BLAS.gemm('N', 'T', 1.0, Q, model.R) # RQR = R Q R'
+    RQR = model.R * LinearAlgebra.BLAS.gemm('N', 'T', Typ(1.0), Q, model.R) # RQR = R Q R'
     # Kalman filter
     for t = 1:model.dim.n
         if t in model.missing_observations
@@ -77,7 +77,7 @@ end
 
 Smoother for state-space model.
 """
-function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
+function smoother(model::StateSpaceModel{Typ}, kfilter::KalmanFilter{Typ}) where Typ <: AbstractFloat
 
     # Load dimensions data
     n, p, m, r = size(model)
@@ -93,11 +93,11 @@ function smoother(model::StateSpaceModel, kfilter::KalmanFilter)
     K       = kfilter.K
 
     # Smoothed state and its covariance
-    alpha = Matrix{Float64}(undef, n, m)
-    V     = Array{Float64, 3}(undef, m, m, n)
-    L     = Array{Float64, 3}(undef, m, m, n)
-    r     = Matrix{Float64}(undef, n, m)
-    N     = Array{Float64, 3}(undef, m, m, n)
+    alpha = Matrix{Typ}(undef, n, m)
+    V     = Array{Typ, 3}(undef, m, m, n)
+    L     = Array{Typ, 3}(undef, m, m, n)
+    r     = Matrix{Typ}(undef, n, m)
+    N     = Array{Typ, 3}(undef, m, m, n)
 
     # Initialization
     N[:, :, end] = zeros(m, m)
@@ -139,7 +139,7 @@ end
 # *
 
 function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
-                               filter_type::Type{KalmanFilter}) where T <: AbstractFloat
+                               filter_type::Type{KalmanFilter{T}}) where T <: AbstractFloat
 
     # Build lower triangular matrices
     if p > 1
@@ -151,18 +151,18 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
         unknownsH = 1
     end
 
-    sqrtQ = kron(Matrix{Float64}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
+    sqrtQ = kron(Matrix{T}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
     sqrtQ[findall(isequal(1), sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
     # Obtain full matrices
     H = gram(sqrtH)
     Q = gram(sqrtQ)
 
-    return H, Q
+    return T.(H), T.(Q)
 end
 
-function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
-                                   filter_type::Type{KalmanFilter}) where T <: AbstractFloat
+function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel{T},
+                                   filter_type::Type{KalmanFilter{T}}) where T <: AbstractFloat
 
     H, Q = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
 
@@ -173,8 +173,8 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
     return kfilter.v, kfilter.F
 end
 
-function kfas(model::StateSpaceModel, covariance::StateSpaceCovariance, 
-              filter_type::Type{KalmanFilter})
+function kfas(model::StateSpaceModel{T}, covariance::StateSpaceCovariance{T}, 
+              filter_type::Type{KalmanFilter{T}}) where T <: AbstractFloat
 
     # Run filter and smoother 
     filtered_state = kalman_filter(model, covariance.H, covariance.Q)

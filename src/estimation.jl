@@ -6,7 +6,7 @@ function compute_log_likelihood(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}, va
     end
 end
 function compute_log_likelihood(n::Int, p::Int, v::Vector{T}, F::Vector{T}, valid_insts::Vector{Int}) where T <: AbstractFloat
-    log_likelihood::Float64 = n*log(2*pi)/2
+    log_likelihood::T = n*log(2*pi)/2
     @inbounds for t in valid_insts
         log_likelihood += 0.5 * (log(F[t]) + (v[t]^2)/F[t])
     end
@@ -14,15 +14,15 @@ function compute_log_likelihood(n::Int, p::Int, v::Vector{T}, F::Vector{T}, vali
 end
 
 function compute_log_likelihood_univariate(n::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
-    log_likelihood::Float64 = n*log(2*pi)/2
+    log_likelihood::T = n*log(2*pi)/2
     @inbounds for t in valid_insts
-        log_likelihood += 0.5 * (log(F[1, 1, t]) + (v[t, 1]^2)/F[1, 1, t] )
+        log_likelihood += 0.5 * (log(F[1, 1, t]) + (v[t, 1]^2)/F[1, 1, t])
     end
     return log_likelihood
 end
 
 function compute_log_likelihood_multivariate(n::Int, p::Int, v::Matrix{T}, F::Array{T, 3}, valid_insts::Vector{Int}) where T <: AbstractFloat
-    log_likelihood::Float64 = n*p*log(2*pi)/2
+    log_likelihood::T = n*p*log(2*pi)/2
     @inbounds @views for t in valid_insts
         log_likelihood += 0.5 * (logdetF(F, t) + (v[t, :]' * invertF(F, t) * v[t, :]))
     end

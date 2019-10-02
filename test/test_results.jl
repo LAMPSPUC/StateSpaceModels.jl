@@ -9,19 +9,19 @@ logAP = log.(Vector{Float64}(AP[!, :Passengers]))
     
     ss1 = statespace(model)
     
-    @test ss1.filter_type == KalmanFilter
+    @test ss1.filter_type <: KalmanFilter
     @test isa(ss1, StateSpace)
     compare_forecast_simulation(ss1, 20, 1000, 1e-2)
     
-    ss2 = statespace(model; filter_type = SquareRootFilter)
+    ss2 = statespace(model; filter_type = SquareRootFilter{Float64})
     
-    @test ss2.filter_type == SquareRootFilter
+    @test ss2.filter_type <: SquareRootFilter
     @test isa(ss2, StateSpace)
     compare_forecast_simulation(ss2, 20, 1000, 1e-2)
     
-    ss3 = statespace(model; filter_type = UnivariateKalmanFilter)
+    ss3 = statespace(model; filter_type = UnivariateKalmanFilter{Float64})
     
-    @test ss3.filter_type == UnivariateKalmanFilter
+    @test ss3.filter_type <: UnivariateKalmanFilter
     @test isa(ss3, StateSpace)
     compare_forecast_simulation(ss3, 20, 1000, 1e-2)
 

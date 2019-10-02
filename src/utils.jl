@@ -20,7 +20,7 @@ end
 
 
 # Linar Algebra wrappers
-function gram_in_time(mat::Array{Float64, 3})
+function gram_in_time(mat::Array{T, 3}) where T <: AbstractFloat
     gram_in_time = similar(mat)
     @inbounds @views for t = 1:size(gram_in_time, 3)
         gram_in_time[:, :, t] = gram(mat[:, :, t])
@@ -62,7 +62,7 @@ end
 
 Ensure that matrix `M` is positive and symmetric to avoid numerical errors when numbers are small by doing `(M + M')/2 + ϵ*I`
 """
-function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = 1e-8) where T <: AbstractFloat
+function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = T(1e-8)) where T <: AbstractFloat
     @inbounds for j in axes(M, 2), i in 1:j
         if i == j
             M[i, i, t] = (M[i, i, t] + M[i, i, t])/2 + ϵ

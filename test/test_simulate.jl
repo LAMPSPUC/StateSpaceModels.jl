@@ -6,7 +6,7 @@
     @test model.mode == "time-invariant"
     
     ss = statespace(model)
-    @test ss.filter_type == KalmanFilter
+    @test ss.filter_type <: KalmanFilter
 
     sim = simulate(ss, 20, 100)
     media_sim = mean(sim, dims = 3)[:, 1]

@@ -1,6 +1,7 @@
 using Test, StateSpaceModels, Statistics, CSV, LinearAlgebra
 
 const SSM = StateSpaceModels
+
 # Run tests
 include("test_utils.jl")
 include("test_userdefined.jl")

@@ -4,7 +4,7 @@ locallevel_series = CSV.read("./benchmark/locallevel.csv"; header = false)
 verbose = 0
 
 locallevel = local_level(Matrix{Float64}(locallevel_series))
-bench_local_level = @benchmark statespace($locallevel, filter_type = $SquareRootFilter, verbose = $verbose)
+bench_local_level = @benchmark statespace($locallevel, filter_type = $SquareRootFilter{Float64}, verbose = $verbose)
 # 9th August 2019
 # BenchmarkTools.Trial: 
 #   memory estimate:  135.70 MiB
@@ -18,7 +18,7 @@ bench_local_level = @benchmark statespace($locallevel, filter_type = $SquareRoot
 #   samples:          31
 #   evals/sample:     1
 
-bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilter, verbose = $verbose)
+bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilter{Float64}, verbose = $verbose)
 # 11th August 2019
 # BenchmarkTools.Trial: 
 #   memory estimate:  10.62 MiB
@@ -32,7 +32,7 @@ bench_local_level = @benchmark statespace($locallevel, filter_type = $KalmanFilt
 #   samples:          250
 #   evals/sample:     1
 
-bench_local_level = @benchmark statespace($locallevel, filter_type = $UnivariateKalmanFilter, verbose = $verbose)
+bench_local_level = @benchmark statespace($locallevel, filter_type = $UnivariateKalmanFilter{Float64}, verbose = $verbose)
 # 22th August 2019
 # BenchmarkTools.Trial:
 #   memory estimate:  7.09 MiB
@@ -83,7 +83,7 @@ AP = CSV.read("./examples/AirPassengers.csv")
 logAP = log.(Vector{Float64}(AP[:Passengers]))
 structural_model = structural(logAP, 12)
 
-bench_structural = @benchmark statespace($structural_model, filter_type = $KalmanFilter, verbose = $verbose)
+bench_structural = @benchmark statespace($structural_model, filter_type = $KalmanFilter{Float64}, verbose = $verbose)
 # 12th August 2019
 # BenchmarkTools.Trial: 
 #   memory estimate:  5.45 GiB
@@ -115,7 +115,7 @@ Q[[2; 3; 4; 6; 7; 8]] .= 0 # Zero on off diagonal elements
 #   evals/sample:     1
 
 
-bench_structural = @benchmark statespace($structural_model, filter_type = $UnivariateKalmanFilter, verbose = $verbose)
+bench_structural = @benchmark statespace($structural_model, filter_type = $UnivariateKalmanFilter{Float64}, verbose = $verbose)
 # 21th August 2019
 # BenchmarkTools.Trial:
 #   memory estimate:  3.93 GiB
