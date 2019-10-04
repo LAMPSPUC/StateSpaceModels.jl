@@ -1,5 +1,6 @@
+push!(LOAD_PATH, "C:\\Users\\mdietze\\Downloads\\cmder\\StateSpaceModels.jl\\src")
 using Documenter, StateSpaceModels
-
+cd("C:\\Users\\mdietze\\Downloads\\cmder\\StateSpaceModels.jl\\docs")
 makedocs(
     modules = [StateSpaceModels],
     doctest  = false,
