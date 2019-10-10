@@ -81,7 +81,18 @@ linear_trend
 
 The structural model is defined by
 
-<!-- TODO mathematical model -->
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_{t} &=  \mu_{t} + \gamma_{t} + \varepsilon_{t} \quad &\varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &= \mu_{t} + \nu_{t} + \xi_{t} \quad &\xi_{t} \sim \mathcal{N}(0, \sigma^2_{\xi})\\
+        \nu_{t+1} &= \nu_{t} + \zeta_{t} \quad &\zeta_{t} \sim \mathcal{N}(0, \sigma^2_{\zeta})\\
+        \gamma_{t+1} &= \sum_{j=1}^{s-1} \gamma_{t+1-j} + \omega_{t} \quad & \omega_{t} \sim \mathcal{N}(0, \sigma^2_{\omega})\\
+    \end{aligned}
+\end{gather*}
+```
+
+
 ```@docs
 structural
 ```
@@ -124,7 +135,7 @@ The implementation of the Kalman Filter follows the recursion
     \end{aligned}
 \end{gather*}
 ```
-where ``K_{t} = T P_{t} Z^{\top}_{t} F_{t}^{-1}``. The terms ``a_{t+1}`` and ``P_{t+1}`` can be simplifed to 
+where ``K_{t} = T P_{t} Z^{\top}_{t} F_{t}^{-1}``. The terms ``a_{t+1}`` and ``P_{t+1}`` can be simplifed to
 
 ```math
 \begin{gather*}
@@ -134,7 +145,7 @@ where ``K_{t} = T P_{t} Z^{\top}_{t} F_{t}^{-1}``. The terms ``a_{t+1}`` and ``P
 \end{gather*}
 ```
 
-In case of missing observation the mean of inovations ``v_{t}`` and variance of inovations ``F_{t}`` become `NaN` and the recursion becomes 
+In case of missing observation the mean of inovations ``v_{t}`` and variance of inovations ``F_{t}`` become `NaN` and the recursion becomes
 
 ```math
 \begin{gather*}
@@ -162,7 +173,7 @@ The implementation of the smoother follows the recursion
 ```
 where ``L_{t} = T - K_{t} Z_{t}``.
 
-In case of missing observation then ``r_{t-1}`` and ``N_{t-1}`` become 
+In case of missing observation then ``r_{t-1}`` and ``N_{t-1}`` become
 
 ```math
 \begin{gather*}
