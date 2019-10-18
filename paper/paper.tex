@@ -41,7 +41,7 @@ The contributions brought by these packages notwithstanding, there are currently
     \item to develop a package for time-series analysis with state-space models that is fully implemented in Julia, contrary to related packages in other languages that depend on C or Fortran \mbox{routines} \cite{kfas}.
 \end{enumerate}
 
-The remainder of this paper is organized as follows. In Section \ref{sec:statespace}, the Gaussian state-space framework is introduced. In Section \ref{sec:modeling}, the procedures for model specification are presented. Section \ref{sec:estimation} explains the filtering, estimation and smoothing processes. In Section \ref{sec:forecasting}, the forecasting and simulation procedures are presented. Section \ref{sec:applications} contains examples of applications that illustrate the use of the package. Finally, conclusions and future work are provided in Section \ref{sec:conclusion}
+The remainder of this paper is organized as follows. In Section \ref{sec:statespace}, the Gaussian state-space framework is introduced. In Section \ref{sec:modeling}, the procedures for model specification are presented. Section \ref{sec:estimation} explains the filtering, estimation and smoothing processes. Section \ref{sec:diagnostics} discusses the available diagnostics to evaluate the model specification and estimation. In Section \ref{sec:forecasting}, the forecasting and simulation procedures are presented. Section \ref{sec:applications} contains examples of applications that illustrate the use of the package. Finally, conclusions and future work are provided in Section \ref{sec:conclusion}.
 
 \section{Gaussian state-space framework} \label{sec:statespace}
 
@@ -145,10 +145,10 @@ model = structural(y, s; X = X)
 Apart from the well-known predefined models presented in Section \ref{subsec:predefined}, the package allows the input of any user-defined linear model through the definition of matrices $Z_{t}$, $T$, and $R$ through the following constructor:
 %
 \begin{lstlisting}[language = Julia]
-model = StateSpaceModel(y, Z, T, R)
+model = StateSpaceModel{Float64}(y, Z, T, R)
 \end{lstlisting}
 
-In the simpler case where $Z_{t}$ is constant, the argument \texttt{Z} can be input as an \texttt{Array\{Float64, 2\}}. Conversely, if $Z_{t}$ is time-varying, it must be input as an \texttt{Array\{Float64, 3\}} where the third dimension represents the time periods.
+In the simpler case where $Z_{t}$ is constant, the argument \texttt{Z} can be input as an \texttt{Array\{Float64, 2\}}. Conversely, if $Z_{t}$ is time-varying, it must be input as an \texttt{Array\{Float64, 3\}} where the third dimension represents the time periods. Any desired float precision can be employed within the model.
 
 \section{Filtering, estimation, and smoothing} \label{sec:estimation}
 
@@ -224,10 +224,10 @@ struct MyKalmanFilter <: AbstractFilter
 The choice of the filter type must be done in the estimation step as follows:
 %
 \begin{lstlisting}[language = Julia]
-ss = statespace(model; filter_type = SquareRootFilter)
+ss = statespace(model; filter_type = SquareRootFilter{Float64})
 \end{lstlisting}
 
-If no \texttt{filter\_type} is provided, the standard type \texttt{KalmanFilter} is utilized as a default option. Further information on Kalman filtering can be found in Chapter 4.3 of \cite{durbin2012time}.
+Filters allow any desired float precision. If no \texttt{filter\_type} is provided, the standard type \texttt{KalmanFilter\{Float64\}} is utilized as a default option. Further information on Kalman filtering can be found in Chapter 4.3 of \cite{durbin2012time}.
 
 \subsection{Estimation}
 
@@ -306,6 +306,22 @@ At the end of the filtering, estimation, and smoothing routine executed by the \
     \item ~\texttt{optimization\_method}: the defined optimization method.
 \end{itemize}
 
+\section{Diagnostics} \label{sec:diagnostics}
+
+As a way of evaluating the model specification and estimation, the package contains statistical diagnostics that can be conducted over the residuals. The available diagnostics are the Jarque-Bera normality test \cite{jarque1980efficient}, the Ljung-Box independence test \cite{box1970distribution}, and an homoscedasticity test \cite{durbin2012time}. The diagnostics can be run through function \texttt{diagnostics}.
+
+An example of the diagnostics log can be seen below.
+%
+\begin{lstlisting}[language = Julia]
+julia> diagnostics(ss)
+==============================================================
+                    Running diagnostics...
+                Jarque-Bera: p-value = 0.89683
+                  Ljung-Box: p-value = 0.95855
+           Homoscedasticity: p-value = 0.30752
+==============================================================
+\end{lstlisting}
+
 \section{Forecasting and Simulation} \label{sec:forecasting}
 
 Finally, after the model has been estimated, forecasting and Monte Carlo simulation can be conducted. In the case of forecasting, estimates for the future values of the time series are computed along with their probability distributions. Alternatively, it is possible to simulate an arbitrary number of future scenarios of the series, which is useful for a wide range of applications such as stochastic optimization.
@@ -378,7 +394,7 @@ In this case, our objective is to simulate a large set of future scenarios that 
 # Specify the state-space model
 model = structural(consumption, 12; X = temperature)
 # Estimate the state-space model
-ss = statespace(model; filter_type = SquareRootFilter)
+ss = statespace(model; filter_type = SquareRootFilter{Float64})
 # Number of months ahead to be simulated
 N = 24
 # Number of scenarios to be simulated
@@ -428,12 +444,12 @@ R = kron(Matrix{Float64}(I, p, p), [.5 * Δ^2; Δ])
 # Output (measurement) matrix
 Z = kron(Matrix{Float64}(I, p, p), [1 0])
 # User defined model
-model = StateSpaceModel(y, Z, T, R)
+model = StateSpaceModel{Float64}(y, Z, T, R)
 # Estimate vehicle speed and position
 ss = statespace(model)
 \end{lstlisting}
 
-In this example, we define the noise variances $H$ and $Q$, generate the noises and simulate a random vehicle trajectory using the state-space equations:
+In this example, we define the noise variances $H$ and $Q$, generate the noises and simulate a random vehicle trajectory using the state-space equations.
 %
 \begin{lstlisting}[language = Julia]
 # Generate random actuators
