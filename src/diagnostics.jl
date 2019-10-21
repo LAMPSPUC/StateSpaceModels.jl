@@ -1,9 +1,9 @@
 """
-    diagnostics(ss::StateSpace)
+    diagnostics(ss::StateSpace{T}) where T
 
 Run diagnostics and print results
 """
-function diagnostics(ss::StateSpace)
+function diagnostics(ss::StateSpace{T}) where T
     println("==============================================================")
     println("                    Running diagnostics...                    ")
     
@@ -29,7 +29,7 @@ function diagnostics(ss::StateSpace)
 end
 
 """
-    residuals(ss::StateSpace)
+    residuals(ss::StateSpace{T}) where T
 
 Obtain standardized residuals from a state-space model
 """
@@ -48,7 +48,7 @@ function residuals(ss::StateSpace{T}) where T
 end
 
 """
-    jarquebera(e::Matrix{T})
+    jarquebera(e::Matrix{T}) where T
 
 Run Jarque-Bera normality test and return p-values
 """
@@ -70,7 +70,7 @@ function jarquebera(e::Matrix{T}) where T
 end
 
 """
-    ljungbox(e::Matrix{T}; maxlag = 20)
+    ljungbox(e::Matrix{T}; maxlag::Int = 20) where T
 
 Run Ljung-Box independence test and return p-values
 """
@@ -89,7 +89,7 @@ function ljungbox(e::Matrix{T}; maxlag::Int = 20) where T
 end
 
 """
-    homoscedast(e::Matrix{T})
+    homoscedast(e::Matrix{T}) where T
 
 Run homoscedasticity test and return p-values
 """
