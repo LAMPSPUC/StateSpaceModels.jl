@@ -1,5 +1,5 @@
 function estimate_statespace(model::StateSpaceModel{T}, filter_type::DataType,
-                             opt_method::RandomSeedsLBFGS; verbose::Int = 1) where T <: AbstractFloat
+                             opt_method::RandomSeedsLBFGS; verbose::Int = 1) where T
 
     nseeds = opt_method.nseeds                         
     nseeds += 1 # creating additional seed for degenerate cases

@@ -1,14 +1,14 @@
 export structural, local_level, linear_trend
 
 """
-    structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(undef, 0, 0)) where Typ <: AbstractFloat
+    structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(undef, 0, 0)) where Typ <: Real
 
 Build state-space system for a given structural model with observations y, seasonality s, and, optionally, exogenous variables X.
 
 If `y` is provided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`. The same will happen to X, 
 if an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
 """
-function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(undef, 0, 0)) where Typ <: AbstractFloat
+function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(undef, 0, 0)) where Typ <: Real
 
     # Number of observations and endogenous variables
     y = y[:, :]
@@ -85,13 +85,13 @@ function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(und
 end
 
 """
-    local_level(y::VecOrMat{Typ}) where Typ <: AbstractFloat
+    local_level(y::VecOrMat{Typ}) where Typ <: Real
 
 Build state-space system for a local level model with observations y.
 
 If `y` is proided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
 """
-function local_level(y::VecOrMat{Typ}) where Typ <: AbstractFloat
+function local_level(y::VecOrMat{Typ}) where Typ <: Real
 
     # Number of observations and endogenous variables
     y = y[:, :]
@@ -111,13 +111,13 @@ function local_level(y::VecOrMat{Typ}) where Typ <: AbstractFloat
 end
 
 """
-    linear_trend(y::VecOrMat{Typ}) where Typ <: AbstractFloat
+    linear_trend(y::VecOrMat{Typ}) where Typ <: Real
 
 Build state-space system for a linear trend model with observations y.
 
 If `y` is proided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
 """
-function linear_trend(y::VecOrMat{Typ}) where Typ <: AbstractFloat
+function linear_trend(y::VecOrMat{Typ}) where Typ <: Real
 
     # Number of observations and endogenous variables
     y = y[:, :]

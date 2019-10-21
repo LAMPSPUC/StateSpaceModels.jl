@@ -1,9 +1,9 @@
 """
-    kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
+    kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: Real
 
 Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
-function kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ <: AbstractFloat
+function kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ
 
     time_invariant = model.mode == "time-invariant"
 
@@ -73,11 +73,11 @@ function kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Ty
 end
 
 """
-    smoother(model::StateSpaceModel, kfilter::KalmanFilter)
+    smoother(model::StateSpaceModel{Typ}, kfilter::KalmanFilter{Typ}) where Typ
 
 Smoother for state-space model.
 """
-function smoother(model::StateSpaceModel{Typ}, kfilter::KalmanFilter{Typ}) where Typ <: AbstractFloat
+function smoother(model::StateSpaceModel{Typ}, kfilter::KalmanFilter{Typ}) where Typ
 
     # Load dimensions data
     n, p, m, r = size(model)
@@ -139,7 +139,7 @@ end
 # *
 
 function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
-                               filter_type::Type{KalmanFilter{T}}) where T <: AbstractFloat
+                               filter_type::Type{KalmanFilter{T}}) where T
 
     # Build lower triangular matrices
     if p > 1
@@ -162,7 +162,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
 end
 
 function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel{T},
-                                   filter_type::Type{KalmanFilter{T}}) where T <: AbstractFloat
+                                   filter_type::Type{KalmanFilter{T}}) where T
 
     H, Q = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
 
@@ -174,7 +174,7 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel{T
 end
 
 function kfas(model::StateSpaceModel{T}, covariance::StateSpaceCovariance{T}, 
-              filter_type::Type{KalmanFilter{T}}) where T <: AbstractFloat
+              filter_type::Type{KalmanFilter{T}}) where T
 
     # Run filter and smoother 
     filtered_state = kalman_filter(model, covariance.H, covariance.Q)

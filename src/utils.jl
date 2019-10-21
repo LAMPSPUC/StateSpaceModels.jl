@@ -20,7 +20,7 @@ end
 
 
 # Linar Algebra wrappers
-function gram_in_time(mat::Array{T, 3}) where T <: AbstractFloat
+function gram_in_time(mat::Array{T, 3}) where T
     gram_in_time = similar(mat)
     @inbounds @views for t = 1:size(gram_in_time, 3)
         gram_in_time[:, :, t] = gram(mat[:, :, t])
@@ -28,7 +28,7 @@ function gram_in_time(mat::Array{T, 3}) where T <: AbstractFloat
     return gram_in_time
 end
 
-function gram(mat::AbstractArray{T}) where T <: AbstractFloat
+function gram(mat::AbstractArray{T}) where T
     if size(mat, 1) == 1
         gram_mat = Matrix{T}(undef, 1, 1)
         gram_mat[1, 1] = mat[1, 1]^2
@@ -39,16 +39,16 @@ function gram(mat::AbstractArray{T}) where T <: AbstractFloat
 end
 
 """
-    check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T <: AbstractFloat
+    check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T
 
 Return `true` if steady state was attained with respect to tolerance `tol`, `false` otherwise.
 The steady state is checked by the following equation. TODO
 """
-function check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T <: AbstractFloat
+function check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T
     return maximum(abs.((P_t1 - P_t)./P_t1)) < tol ? true : false
 end
 
-function check_steady_state(P::AbstractArray{T}, t::Int, tol::T) where T <: AbstractFloat
+function check_steady_state(P::AbstractArray{T}, t::Int, tol::T) where T
     @inbounds for j in axes(P, 2), i in axes(P, 1)
         if abs((P[i, j, t+1] - P[i, j, t])/P[i, j, t+1]) > tol
             return false
@@ -58,11 +58,11 @@ function check_steady_state(P::AbstractArray{T}, t::Int, tol::T) where T <: Abst
 end
 
 """
-    ensure_pos_sym!(M::Matrix{T}; ϵ::T = 1e-8) where T <: AbstractFloat
+    ensure_pos_sym!(M::Matrix{T}; ϵ::T = 1e-8) where T
 
 Ensure that matrix `M` is positive and symmetric to avoid numerical errors when numbers are small by doing `(M + M')/2 + ϵ*I`
 """
-function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = T(1e-8)) where T <: AbstractFloat
+function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = T(1e-8)) where T
     @inbounds for j in axes(M, 2), i in 1:j
         if i == j
             M[i, i, t] = (M[i, i, t] + M[i, i, t])/2 + ϵ
@@ -74,14 +74,14 @@ function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = T(1e-8)) where T <
     return 
 end
 
-function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractMatrix{T}, t::Int, offset::Int) where T <:AbstractFloat
+function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractMatrix{T}, t::Int, offset::Int) where T
     @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
         mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j]
     end
     return 
 end
 
-function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::Int, offset::Int) where T <:AbstractFloat
+function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::Int, offset::Int) where T
     @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
         mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j, t]
     end
@@ -91,9 +91,11 @@ end
 function invertF(F::Array{T, 3}, t::Int) where T
     return @inbounds @views size(F, 1) == 1 ? 1/(F[1, 1, t]) : inv(F[:, :, t])
 end
+
 function invertF(F::Vector{T}, t::Int) where T
     return 1/F[t]
 end
+
 function logdetF(F::Array{T, 3}, t::Int) where T
     return @inbounds @views logdet(F[:, :, t])
 end

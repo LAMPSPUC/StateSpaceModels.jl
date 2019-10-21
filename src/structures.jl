@@ -26,7 +26,7 @@ Abstract type used to implement an interface for generic optimization methods.
 abstract type AbstractOptimizationMethod end
 
 # Auxiliary structure for square-root Kalman filter
-mutable struct SquareRootFilter{T <: AbstractFloat} <: AbstractFilter
+mutable struct SquareRootFilter{T <: Real} <: AbstractFilter
     a::Matrix{T} # predictive state
     v::Matrix{T} # innovations
     sqrtP::Array{T, 3} # lower triangular matrix with sqrt-covariance of the predictive state
@@ -37,7 +37,7 @@ mutable struct SquareRootFilter{T <: AbstractFloat} <: AbstractFilter
 end
 
 # Auxiliary structure for Kalman filter
-mutable struct KalmanFilter{T <: AbstractFloat} <: AbstractFilter
+mutable struct KalmanFilter{T <: Real} <: AbstractFilter
     a::Matrix{T} # predictive state
     att::Matrix{T}
     v::Matrix{T} # innovations
@@ -50,7 +50,7 @@ mutable struct KalmanFilter{T <: AbstractFloat} <: AbstractFilter
 end
 
 # Auxiliary structure for univariate Kalman filter
-mutable struct UnivariateKalmanFilter{T <: AbstractFloat} <: AbstractFilter
+mutable struct UnivariateKalmanFilter{T <: Real} <: AbstractFilter
     a::Matrix{T} # predictive state
     att::Matrix{T}
     v::Vector{T} # innovations
@@ -63,24 +63,23 @@ mutable struct UnivariateKalmanFilter{T <: AbstractFloat} <: AbstractFilter
 end
 
 # Auxiliary structure for smoother
-mutable struct Smoother{T <: AbstractFloat} <: AbstractSmoother
+mutable struct Smoother{T <: Real} <: AbstractSmoother
     alpha::Matrix{T} # smoothed state
     V::Array{T, 3} # variance of smoothed state
 end
-
 
 # Concrete structs for optimization methods
 """
 TODO
 """
-mutable struct RandomSeedsLBFGS{T <: AbstractFloat} <: AbstractOptimizationMethod
+mutable struct RandomSeedsLBFGS{T <: Real} <: AbstractOptimizationMethod
     f_tol::T
     g_tol::T
     iterations::Int
     nseeds::Int
     seeds::Array{T}
 
-    function RandomSeedsLBFGS(; f_tol::T = 1e-6, g_tol::T = 1e-6, iterations::Int = 10^5, nseeds::Int = 3) where T <: AbstractFloat
+    function RandomSeedsLBFGS(; f_tol::T = 1e-6, g_tol::T = 1e-6, iterations::Int = 10^5, nseeds::Int = 3) where T <: Real
         return new{T}(f_tol, g_tol, 1e5, nseeds)
     end
 end
@@ -118,7 +117,7 @@ A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Typ},
 
 Alternatively, if `Z` is time-invariant, it can be input as a single ``p \\times m`` matrix.
 """
-struct StateSpaceModel{Typ <: AbstractFloat}
+struct StateSpaceModel{Typ <: Real}
     y::Matrix{Typ} # observations
     Z::Array{Typ, 3} # observation matrix
     T::Matrix{Typ} # state matrix
@@ -127,7 +126,7 @@ struct StateSpaceModel{Typ <: AbstractFloat}
     missing_observations::Vector{Int}
     mode::String
 
-    function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: AbstractFloat
+    function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
 
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -141,7 +140,7 @@ struct StateSpaceModel{Typ <: AbstractFloat}
         new{Typ}(y, Z, T, R, dim, find_missing_observations(y), "time-variant")
     end
 
-    function StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: AbstractFloat
+    function StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
 
         # Validate StateSpaceDimensions
         ny, py = size(y)
@@ -170,18 +169,18 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `H` Covariance matrix of the observation vector
 * `Q` Covariance matrix of the state vector
 """
-struct StateSpaceCovariance{T <: AbstractFloat}
+struct StateSpaceCovariance{T <: Real}
     H::Matrix{T}
     Q::Matrix{T}
 
     function StateSpaceCovariance(sqrtH::Matrix{T}, sqrtQ::Matrix{T},
-                                  filter_type::Type{SquareRootFilter{T}}) where T <: AbstractFloat
+                                  filter_type::Type{SquareRootFilter{T}}) where T <: Real
         return new{T}(gram(sqrtH), gram(sqrtQ))
     end
 
     function StateSpaceCovariance(H::Matrix{T}, Q::Matrix{T},
                                   filter_type::Union{Type{KalmanFilter{T}}, 
-                                                     Type{UnivariateKalmanFilter{T}}}) where T <: AbstractFloat
+                                                     Type{UnivariateKalmanFilter{T}}}) where T <: Real
         return new{T}(H, Q)
     end
 end
@@ -194,7 +193,7 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `alpha` Expected value of the smoothed state ``E(\\alpha_t|y_1, \\dots , y_n)``
 * `V` Error covariance matrix of smoothed state ``Var(\\alpha_t|y_1, \\dots , y_n)``
 """
-struct SmoothedState{T <: AbstractFloat}
+struct SmoothedState{T <: Real}
     alpha::Matrix{T} # smoothed state
     V::Array{T, 3} # variance of smoothed state
 end
@@ -213,7 +212,7 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `steadystate` Boolean to indicate if steady state was attained
 * `tsteady` Instant when steady state was attained; in case it was not, `tsteady = n+1`
 """
-struct FilterOutput{T <: AbstractFloat}
+struct FilterOutput{T <: Real}
     a::Matrix{T} # predictive state
     att::Matrix{T} # filtered state
     v::Matrix{T} # innovations
@@ -229,7 +228,7 @@ end
 
 A state-space structure containing the model, filter output, smoother output, covariance matrices, filter type and optimization method.
 """
-struct StateSpace{T <: AbstractFloat}
+struct StateSpace{T <: Real}
     model::StateSpaceModel{T}
     filter::FilterOutput{T}
     smoother::SmoothedState{T}
@@ -243,7 +242,7 @@ end
 
 A structure containing the diagnostics of a state-space model.
 """
-struct Diagnostics{T <: AbstractFloat}
+struct Diagnostics{T <: Real}
     p_jarquebera::Vector{T}
     p_ljungbox::Vector{T}
     p_homo::Vector{T}
