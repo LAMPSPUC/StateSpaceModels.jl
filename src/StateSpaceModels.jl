@@ -25,7 +25,7 @@ include("diagnostics.jl")
 Estimate the pre-specified state-space model.
 """
 function statespace(model::StateSpaceModel{T}; filter_type::DataType = KalmanFilter{T}, 
-                    optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1) where T <: AbstractFloat
+                    optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1) where T
 
     if !(verbose in [0, 1, 2])
         @warn("Incorrect verbose value input (should be 0, 1, or 2): switching to default value 1")
@@ -49,10 +49,10 @@ end
     kfas(model::StateSpaceModel, covariance::StateSpaceCovariance,
          filter_type::DataType)
 
-Perform kalman filter and smoother according to the chosen `filter_type`.
+Perform Kalman filter and smoother according to the chosen `filter_type`.
 """
 function kfas(model::StateSpaceModel{T}, covariance::StateSpaceCovariance{T},
-              filter_type::DataType) where T <: AbstractFloat
+              filter_type::DataType) where T
     error(filter_type , " not implemented") # Returns an error if it cannot
                                             # find a specialized kfas
 end

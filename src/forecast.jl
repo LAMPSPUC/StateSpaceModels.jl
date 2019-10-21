@@ -1,12 +1,12 @@
 export forecast, simulate
 
 """
-    forecast(ss::StateSpace, N::Int)
+    forecast(ss::StateSpace{Typ}, N::Int) where Typ
 
 Obtain the minimum mean square error forecasts N steps ahead. Returns the forecasts and the predictive distributions 
 at each time period.
 """
-function forecast(ss::StateSpace{Typ}, N::Int) where Typ <: AbstractFloat
+function forecast(ss::StateSpace{Typ}, N::Int) where Typ
 
     # Load estimated covariance matrices
     H = ss.covariance.H
@@ -53,12 +53,12 @@ function forecast(ss::StateSpace{Typ}, N::Int) where Typ <: AbstractFloat
 end
 
 """
-    simulate(ss::StateSpace, N::Int, S::Int)
+    simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ
 
 Simulate S future scenarios up to N steps ahead. Returns a p x N x S matrix where the dimensions represent, respectively,
 the number of series in the model, the number of steps ahead, and the number of scenarios.
 """
-function simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ <: AbstractFloat
+function simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ
 
     # Load estimated covariance matrices
     H = ss.covariance.H
@@ -96,11 +96,11 @@ function simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ <: AbstractFloa
 end
 
 """
-    prepare_forecast(ss::StateSpace, N::Int)
+    prepare_forecast(ss::StateSpace{Typ}, N::Int) where Typ
 
 Adjust matrix Z for forecasting and check for dimension errors.
 """
-function prepare_forecast(ss::StateSpace{Typ}, N::Int) where Typ <: AbstractFloat
+function prepare_forecast(ss::StateSpace{Typ}, N::Int) where Typ
 
     # Load system
     n, p, m, r = size(ss.model)

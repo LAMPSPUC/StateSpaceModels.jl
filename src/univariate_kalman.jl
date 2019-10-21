@@ -1,9 +1,9 @@
 """
-    kalman_filter(model::StateSpaceModel, H::Typ, Q::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
+    univariate_kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ
 
 Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
-function univariate_kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ <: AbstractFloat
+function univariate_kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ
 
     time_invariant = model.mode == "time-invariant"
 
@@ -73,11 +73,11 @@ function univariate_kalman_filter(model::StateSpaceModel, H::Matrix{Typ}, Q::Mat
 end
 
 """
-    univariate_smoother(model::StateSpaceModel, kfilter::UnivariateKalmanFilter)
+    univariate_smoother(model::StateSpaceModel{Typ}, kfilter::UnivariateKalmanFilter{Typ}) where Typ
 
 Smoother for state-space model.
 """
-function univariate_smoother(model::StateSpaceModel{Typ}, kfilter::UnivariateKalmanFilter{Typ}) where Typ <: AbstractFloat
+function univariate_smoother(model::StateSpaceModel{Typ}, kfilter::UnivariateKalmanFilter{Typ}) where Typ
 
     # Load dimensions data
     n, p, m, r = size(model)
@@ -139,7 +139,7 @@ end
 # *
 
 function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
-                               filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
+                               filter_type::Type{UnivariateKalmanFilter{T}}) where T
 
     # Build lower triangular matrices
     H = ones(1, 1)*psi[1]^2
@@ -155,8 +155,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
 end
 
 function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
-                                   filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
-
+                                   filter_type::Type{UnivariateKalmanFilter{T}}) where T
     H, Q = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
 
     # Obtain innovation v and its variance F
@@ -167,7 +166,7 @@ function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
 end
 
 function kfas(model::StateSpaceModel{T}, covariance::StateSpaceCovariance{T}, 
-              filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
+              filter_type::Type{UnivariateKalmanFilter{T}}) where T
 
     # Run filter and smoother 
     filtered_state = univariate_kalman_filter(model, covariance.H, covariance.Q)
