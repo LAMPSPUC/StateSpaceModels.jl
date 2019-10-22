@@ -35,8 +35,7 @@
         compare_forecast_simulation(ss, 10, 1000, 1e-3)
     end
 
-    @testset "Multivariate test" begin
-       
+    @testset "Basic multivariate test" begin
         y = [ones(20) collect(1:20)]
         model = structural(y, 2)
 

@@ -1,4 +1,4 @@
-using Test, StateSpaceModels, Statistics, CSV, LinearAlgebra
+using Test, StateSpaceModels, Statistics, CSV, LinearAlgebra, Random
 
 const SSM = StateSpaceModels
 

@@ -74,6 +74,18 @@ function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = T(1e-8)) where T
     return 
 end
 
+function ensure_pos_sym!(M::AbstractArray{T}; ϵ::T = T(1e-8)) where T
+    @inbounds for j in axes(M, 2), i in 1:j
+        if i == j
+            M[i, i] = (M[i, i] + M[i, i])/2 + ϵ
+        else
+            M[i, j] = (M[i, j] + M[j, i])/2
+            M[j, i] = M[i, j]
+        end
+    end
+    return 
+end
+
 function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractMatrix{T}, t::Int, offset::Int) where T
     @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
         mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j]
