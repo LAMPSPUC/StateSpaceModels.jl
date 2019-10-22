@@ -106,7 +106,7 @@ y = [0.0     # Deterministic local level generated time series
         @test isa(unimodel, StateSpaceModel)
         @test unimodel.mode == "time-invariant"
         
-        ss1 = statespace(unimodel)
+        ss1 = statespace(unimodel; verbose = 2)
         @test ss1.filter_type <: KalmanFilter
         @test isa(ss1, StateSpace)
         
