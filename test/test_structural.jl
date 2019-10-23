@@ -35,25 +35,6 @@
         compare_forecast_simulation(ss, 10, 1000, 1e-3)
     end
 
-    @testset "Multivariate test" begin
-       
-        y = [ones(20) collect(1:20)]
-        model = structural(y, 2)
-
-        @test isa(model, StateSpaceModel)
-        @test model.mode == "time-invariant"
-
-        ss = statespace(model)
-        diags = diagnostics(ss)
-        
-        sim  = simulate(ss, 10, 1000)
-
-        @test ss.filter_type <: KalmanFilter
-        @test mean(sim, dims = 3)[:, 1] ≈ ones(10) rtol = 1e-3
-        @test mean(sim, dims = 3)[:, 2] ≈ collect(21:30) rtol = 1e-3
-        compare_forecast_simulation(ss, 20, 1000, 1e-3)
-    end
-
     @testset "Error tests" begin
         y = ones(15, 1)
         @test_throws ErrorException structural(y, 2; X = ones(10, 2))
