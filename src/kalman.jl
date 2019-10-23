@@ -151,7 +151,7 @@ function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
         unknownsH = 1
     end
 
-    sqrtQ = kron(Matrix{T}(I, Int(r/p), Int(r/p)), tril!(ones(p, p)))
+    sqrtQ = kron(tril!(ones(p, p)), Matrix{T}(I, Int(r/p), Int(r/p)))
     sqrtQ[findall(isequal(1), sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
 
     # Obtain full matrices
