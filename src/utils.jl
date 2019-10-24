@@ -138,3 +138,14 @@ function Base.show(io::IO, model::StateSpaceModel)
     println("r = $(model.dim.r).")
     return nothing
 end
+
+function build_H(p::Int, T)
+    H = fill(NaN, p, p)
+    return T.(H)
+end
+
+function build_Q(r::Int, p::Int, T)
+    Q = kron(ones(p, p), Matrix{T}(I, Int(r/p), Int(r/p)))
+    Q[findall(isequal(1), Q)] .= NaN
+    return Q
+end

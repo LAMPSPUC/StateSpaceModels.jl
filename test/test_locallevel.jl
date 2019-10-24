@@ -100,20 +100,24 @@ y = [0.0     # Deterministic local level generated time series
 8.366964896750876]
 
 @testset "Local level model with Kalman filter" begin
-    unimodel = local_level(y)
+    unimodel1 = local_level(y)
 
-    @test isa(unimodel, StateSpaceModel)
-    @test unimodel.mode == "time-invariant"
-
-    ss1 = statespace(unimodel; verbose = 2)
+    @test isa(unimodel1, StateSpaceModel)
+    @test unimodel1.mode == "time-invariant"
+    
+    ss1 = statespace(unimodel1)
     @test ss1.filter_type <: KalmanFilter
     @test isa(ss1, StateSpace)
 
-    ss2 = statespace(unimodel; filter_type = SquareRootFilter{Float64})
+    unimodel2 = local_level(y)
+    
+    ss2 = statespace(unimodel2; filter_type = SquareRootFilter{Float64})
     @test ss2.filter_type <: SquareRootFilter
     @test isa(ss2, StateSpace)
 
-    ss3 = statespace(unimodel; filter_type = UnivariateKalmanFilter{Float64})
+    unimodel3 = local_level(y)
+    
+    ss3 = statespace(unimodel3; filter_type = UnivariateKalmanFilter{Float64})
     @test ss3.filter_type <: UnivariateKalmanFilter
     @test isa(ss3, StateSpace)
 
@@ -122,16 +126,18 @@ y = [0.0     # Deterministic local level generated time series
     @test ss2.filter.a ≈ ss1.filter.a rtol = 1e-3
     @test ss3.filter.a ≈ ss1.filter.a rtol = 1e-3
 
-    unimodel32 = local_level(Float32.(y))
-    ss4 = statespace(unimodel32; filter_type = KalmanFilter{Float32})
+    unimodel32_1 = local_level(Float32.(y))
+    ss4 = statespace(unimodel32_1; filter_type = KalmanFilter{Float32})
     @test ss4.filter_type <: KalmanFilter
     @test isa(ss4, StateSpace)
-    
-    ss5 = statespace(unimodel32; filter_type = SquareRootFilter{Float32})
+
+    unimodel32_2 = local_level(Float32.(y))
+    ss5 = statespace(unimodel32_2; filter_type = SquareRootFilter{Float32})
     @test ss5.filter_type <: SquareRootFilter
     @test isa(ss5, StateSpace)
     
-    ss6 = statespace(unimodel32; filter_type = UnivariateKalmanFilter{Float32})
+    unimodel32_3 = local_level(Float32.(y))
+    ss6 = statespace(unimodel32_3; filter_type = UnivariateKalmanFilter{Float32})
     @test ss6.filter_type <: UnivariateKalmanFilter
     @test isa(ss6, StateSpace)
 
@@ -171,6 +177,6 @@ end
     model = local_level(y)
     ss = statespace(model)
 
-    @test ss.covariance.H ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
-    @test ss.covariance.Q ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
+    @test ss.model.H ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
+    @test ss.model.Q ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
 end

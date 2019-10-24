@@ -1,9 +1,9 @@
 """
-    univariate_kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ
+    kalman_filter(model::StateSpaceModel; tol::Typ = 1e-5) where Typ
 
 Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
-function univariate_kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ
+function univariate_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) where Typ
 
     time_invariant = model.mode == "time-invariant"
 
@@ -33,7 +33,7 @@ function univariate_kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q
     fill_a1!(a)
     fill_P1!(P; bigkappa = Typ(1e6))
 
-    mul!(RQR, model.R, LinearAlgebra.BLAS.gemm('N', 'T', Typ(1.0), Q, model.R)) # RQR = R Q R'
+    mul!(RQR, model.R, LinearAlgebra.BLAS.gemm('N', 'T', Typ(1.0), model.Q, model.R)) # RQR = R Q R'
     # Kalman filter
     for t = 1:model.dim.n
         if t in model.missing_observations
@@ -55,7 +55,7 @@ function univariate_kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q
         else
             update_v!(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
             update_ZP!(ZP, model.Z, P, t) # ZP = Z[:, :, t] * P[:, :, t]
-            update_F!(F, ZP, model.Z, H, t) # F_t = Z_t * P_t * Z_t' + H
+            update_F!(F, ZP, model.Z, model.H, t) # F_t = Z_t * P_t * Z_t' + H
             update_P_Ztransp_Finv!(P_Ztransp_invF, ZP, F, t) # P_Ztransp_invF   = ZP' * invF(F, t)
             update_K!(K, P_Ztransp_invF, model.T, t) # K_t = T * P_t * Z_t * F^-1_t
             update_att!(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
@@ -73,7 +73,7 @@ function univariate_kalman_filter(model::StateSpaceModel{Typ}, H::Matrix{Typ}, Q
 end
 
 """
-    univariate_smoother(model::StateSpaceModel{Typ}, kfilter::UnivariateKalmanFilter{Typ}) where Typ
+    univariate_smoother(model::StateSpaceModel, kfilter::UnivariateKalmanFilter) where Typ
 
 Smoother for state-space model.
 """
@@ -133,43 +133,19 @@ function univariate_smoother(model::StateSpaceModel{Typ}, kfilter::UnivariateKal
     return Smoother(alpha, V)
 end
 
-# All filters have to implement the following functions
-# *
-# *
-# *
-
-function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
-                               filter_type::Type{UnivariateKalmanFilter{T}}) where T
-
-    # Build lower triangular matrices
-    H = ones(1, 1)*psi[1]^2
-    unknownsH = 1
-
-    sqrtQ = kron(tril!(ones(p, p)), Matrix{T}(I, Int(r/p), Int(r/p)))
-    sqrtQ[findall(isequal(1), sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
-
-    # Obtain full matrices
-    Q = gram(sqrtQ)
-
-    return T.(H), T.(Q)
-end
-
-function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
-                                   filter_type::Type{UnivariateKalmanFilter{T}}) where T
-    H, Q = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
+function get_log_likelihood_params(model::StateSpaceModel{T}, filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
 
     # Obtain innovation v and its variance F
-    kfilter = univariate_kalman_filter(model, H, Q)
+    kfilter = univariate_kalman_filter(model)
 
     # Return v and F
     return kfilter.v, kfilter.F
 end
 
-function kfas(model::StateSpaceModel{T}, covariance::StateSpaceCovariance{T}, 
-              filter_type::Type{UnivariateKalmanFilter{T}}) where T
+function kfas(model::StateSpaceModel{T}, filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
 
     # Run filter and smoother 
-    filtered_state = univariate_kalman_filter(model, covariance.H, covariance.Q)
+    filtered_state = univariate_kalman_filter(model)
     smoothed_state = univariate_smoother(model, filtered_state)
     v = Matrix{T}(undef, length(filtered_state.v), 1)
     v[:, 1] = filtered_state.v

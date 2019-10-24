@@ -1,9 +1,9 @@
 """
-    sqrt_kalman_filter(model::StateSpaceModel{Typ}, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = 1e-5) where Typ
+    sqrt_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) where Typ
 
 Square-root Kalman filter with big Kappa initialization.
 """
-function sqrt_kalman_filter(model::StateSpaceModel{Typ}, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = Typ(1e-5)) where Typ
+function sqrt_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) where Typ
 
     time_invariant = model.mode == "time-invariant"
 
@@ -13,6 +13,12 @@ function sqrt_kalman_filter(model::StateSpaceModel{Typ}, sqrtH::Matrix{Typ}, sqr
     # Load system
     y = model.y
     Z, T, R = ztr(model)
+
+    ensure_pos_sym!(model.H)
+    ensure_pos_sym!(model.Q)
+
+    sqrtH = cholesky(model.H).L
+    sqrtQ = cholesky(model.Q).L
 
     # Predictive state and its sqrt-covariance
     a     = Matrix{Typ}(undef, n+1, m)
@@ -115,7 +121,7 @@ function filtered_state(model::StateSpaceModel{Typ}, sqrt_filter::SquareRootFilt
 end
 
 """
-    sqrt_smoother(model::StateSpaceModel{Typ}, sqrt_filter::SquareRootFilter{Typ}) where Typ
+    sqrt_smoother(model::StateSpaceModel, sqrt_filter::SquareRootFilter) where Typ
 
 Square-root smoother for state space model.
 """
@@ -198,49 +204,17 @@ function sqrt_smoother(model::StateSpaceModel{Typ}, sqrt_filter::SquareRootFilte
     return Smoother(alpha, V)
 end
 
+function get_log_likelihood_params(model::StateSpaceModel, filter_type::Type{SquareRootFilter{T}}) where T
 
-# All filters have to have implemented the following functions
-# *
-# *
-# *
-
-function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
-                               filter_type::Type{SquareRootFilter{T}}) where T
-    # Observation sqrt-covariance matrix
-    if p > 1
-        sqrtH     = tril!(ones(p, p))
-        unknownsH = Int(p*(p + 1)/2)
-        sqrtH[findall(isequal(1), sqrtH)] = psi[1:unknownsH]
-    else
-        sqrtH = psi[1].*ones(1, 1)
-        unknownsH = 1
-    end
-
-    # State sqrt-covariance matrix
-    sqrtQ = kron(tril!(ones(p, p)), Matrix{T}(I, Int(r/p), Int(r/p)))
-    sqrtQ[findall(x -> x == 1, sqrtQ)] = psi[(unknownsH+1):Int(unknownsH + (r/p)*(p*(p + 1)/2))]
-
-    return T.(sqrtH), T.(sqrtQ)
-end
-
-function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel,
-                                   filter_type::Type{SquareRootFilter{T}}) where T
-
-    sqrtH, sqrtQ = statespace_covariance(psitilde, model.dim.p, model.dim.r, filter_type)
     # Obtain innovation v and its variance F
-    sqrt_sqrt_filter = sqrt_kalman_filter(model, sqrtH, sqrtQ)
+    sqrt_filter = sqrt_kalman_filter(model)
     # Return v and F
-    return sqrt_sqrt_filter.v, gram_in_time(sqrt_sqrt_filter.sqrtF)
+    return sqrt_filter.v, gram_in_time(sqrt_filter.sqrtF)
 end
 
-function kfas(model::StateSpaceModel{T}, covariance::StateSpaceCovariance{T},
-              filter_type::Type{SquareRootFilter{T}}) where T
-    # Compute sqrt matrices
-    sqrtH = cholesky(covariance.H).L # .L stands for Lower triangular
-    sqrtQ = cholesky(covariance.Q).L # .L stands for Lower triangular
-
+function kfas(model::StateSpaceModel{T}, filter_type::Type{SquareRootFilter{T}}) where T
     # Do the SquareRootFilter
-    filter_output  = sqrt_kalman_filter(model, sqrtH.data, sqrtQ.data)
+    filter_output  = sqrt_kalman_filter(model)
     smoothed_state = sqrt_smoother(model, filter_output)
     att, Ptt       = filtered_state(model, filter_output)
 

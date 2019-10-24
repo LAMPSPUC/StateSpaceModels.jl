@@ -9,8 +9,8 @@ at each time period.
 function forecast(ss::StateSpace{Typ}, N::Int) where Typ
 
     # Load estimated covariance matrices
-    H = ss.covariance.H
-    Q = ss.covariance.Q
+    H = ss.model.H
+    Q = ss.model.Q
 
     # Load system
     n, p, m, r = size(ss.model)
@@ -61,8 +61,8 @@ the number of series in the model, the number of steps ahead, and the number of 
 function simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ
 
     # Load estimated covariance matrices
-    H = ss.covariance.H
-    Q = ss.covariance.Q
+    H = ss.model.H
+    Q = ss.model.Q
 
     # Load system
     n, p, m, r = size(ss.model)
