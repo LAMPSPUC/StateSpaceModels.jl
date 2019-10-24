@@ -99,49 +99,78 @@ y = [0.0     # Deterministic local level generated time series
 6.165810835928076
 8.366964896750876]
 
-@testset "Local level" begin
-    @testset "Local level model with Kalman filter" begin
-        unimodel = local_level(y)
+@testset "Local level model with Kalman filter" begin
+    unimodel = local_level(y)
 
-        @test isa(unimodel, StateSpaceModel)
-        @test unimodel.mode == "time-invariant"
-        
-        ss1 = statespace(unimodel; verbose = 2)
-        @test ss1.filter_type <: KalmanFilter
-        @test isa(ss1, StateSpace)
-        
-        ss2 = statespace(unimodel; filter_type = SquareRootFilter{Float64})
-        @test ss2.filter_type <: SquareRootFilter
-        @test isa(ss2, StateSpace)
-        
-        ss3 = statespace(unimodel; filter_type = UnivariateKalmanFilter{Float64})
-        @test ss3.filter_type <: UnivariateKalmanFilter
-        @test isa(ss3, StateSpace)
+    @test isa(unimodel, StateSpaceModel)
+    @test unimodel.mode == "time-invariant"
 
-        @test ss2.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
-        @test ss3.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
-        @test ss2.filter.a ≈ ss1.filter.a rtol = 1e-3
-        @test ss3.filter.a ≈ ss1.filter.a rtol = 1e-3
+    ss1 = statespace(unimodel; verbose = 2)
+    @test ss1.filter_type <: KalmanFilter
+    @test isa(ss1, StateSpace)
 
-        unimodel32 = local_level(Float32.(y))
-        ss4 = statespace(unimodel32; filter_type = KalmanFilter{Float32})
-        @test ss4.filter_type <: KalmanFilter
-        @test isa(ss4, StateSpace)
-        
-        ss5 = statespace(unimodel32; filter_type = SquareRootFilter{Float32})
-        @test ss5.filter_type <: SquareRootFilter
-        @test isa(ss5, StateSpace)
-        
-        ss6 = statespace(unimodel32; filter_type = UnivariateKalmanFilter{Float32})
-        @test ss6.filter_type <: UnivariateKalmanFilter
-        @test isa(ss6, StateSpace)
+    ss2 = statespace(unimodel; filter_type = SquareRootFilter{Float64})
+    @test ss2.filter_type <: SquareRootFilter
+    @test isa(ss2, StateSpace)
 
-        @test ss5.smoother.alpha ≈ ss4.smoother.alpha rtol = 1e-2
-        @test ss6.smoother.alpha ≈ ss4.smoother.alpha rtol = 1e-2
-        @test ss5.filter.a ≈ ss4.filter.a rtol = 1e-2
-        @test ss6.filter.a ≈ ss4.filter.a rtol = 1e-2
-        @test typeof(ss4.filter.a) == Matrix{Float32}
-        @test typeof(ss5.filter.a) == Matrix{Float32}
-        @test typeof(ss6.filter.a) == Matrix{Float32}
+    ss3 = statespace(unimodel; filter_type = UnivariateKalmanFilter{Float64})
+    @test ss3.filter_type <: UnivariateKalmanFilter
+    @test isa(ss3, StateSpace)
+
+    @test ss2.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
+    @test ss3.smoother.alpha ≈ ss1.smoother.alpha rtol = 1e-3
+    @test ss2.filter.a ≈ ss1.filter.a rtol = 1e-3
+    @test ss3.filter.a ≈ ss1.filter.a rtol = 1e-3
+
+    unimodel32 = local_level(Float32.(y))
+    ss4 = statespace(unimodel32; filter_type = KalmanFilter{Float32})
+    @test ss4.filter_type <: KalmanFilter
+    @test isa(ss4, StateSpace)
+    
+    ss5 = statespace(unimodel32; filter_type = SquareRootFilter{Float32})
+    @test ss5.filter_type <: SquareRootFilter
+    @test isa(ss5, StateSpace)
+    
+    ss6 = statespace(unimodel32; filter_type = UnivariateKalmanFilter{Float32})
+    @test ss6.filter_type <: UnivariateKalmanFilter
+    @test isa(ss6, StateSpace)
+
+    @test ss5.smoother.alpha ≈ ss4.smoother.alpha rtol = 1e-2
+    @test ss6.smoother.alpha ≈ ss4.smoother.alpha rtol = 1e-2
+    @test ss5.filter.a ≈ ss4.filter.a rtol = 1e-2
+    @test ss6.filter.a ≈ ss4.filter.a rtol = 1e-2
+    @test typeof(ss4.filter.a) == Matrix{Float32}
+    @test typeof(ss5.filter.a) == Matrix{Float32}
+    @test typeof(ss6.filter.a) == Matrix{Float32}
+end
+
+@testset "Correlated multivariate test" begin
+    # Define error covariances
+    dist_H = MvNormal([1.0 0.5;
+                        0.5 1.0])
+
+    dist_Q = MvNormal([1.0 0.5;
+                        0.5 1.0])
+
+    # Sample two observation series from defined errors
+    Random.seed!(1)
+    n = 1000
+    p = 2
+    y = Matrix{Float64}(undef, n, p)
+    α = Matrix{Float64}(undef, n, p)
+
+    model = local_level(y)
+    α[1, :] = [1.0, 1.0]
+
+    for t = 1:n-1
+        y[t, :]   = model.Z[:, :, t]*α[t, :] + rand(dist_H)
+        α[t+1, :] = model.T*α[t, :] + model.R*rand(dist_Q)
     end
+    y[n, :] = model.Z[:, :, n]*α[n, :] + rand(dist_H)
+
+    model = local_level(y)
+    ss = statespace(model)
+
+    @test ss.covariance.H ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
+    @test ss.covariance.Q ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
 end
