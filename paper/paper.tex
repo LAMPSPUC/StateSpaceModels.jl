@@ -160,7 +160,7 @@ After specifying the model, the estimation step can be called with the function 
 ss = statespace(model; verbose = 1)
 \end{lstlisting}
 
-In this step, the Kalman filtering, the maximum likelihood estimation of the fixed parameters, and the smoothing are conducted. The optional argument \texttt{verbose}, which defaults to 1, specifies the verbosity: 0 for no output, 1 for some progress information, and 2 for progress information as well as the optimization log.
+In this step, the Kalman filtering, the maximum likelihood estimation of the fixed parameters, and the smoothing are conducted. The optional argument \texttt{verbose}, which defaults to 1, specifies the verbosity: 0 for no output, 1 for some progress information, 2 for progress information and summary of the optimization result and 3 for progress information as well as the full optimization log.
 
 An example of the estimation log with default verbosity can be seen below.
 %

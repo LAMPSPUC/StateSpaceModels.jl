@@ -9,6 +9,7 @@ function estimate_statespace(model::StateSpaceModel{T}, filter_type::DataType,
     seeds         = Matrix{T}(undef, npsi, nseeds)
     loglikelihood = Vector{T}(undef, nseeds)
     psi           = Matrix{T}(undef, npsi, nseeds)
+    optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
 
     # Initial conditions
     seedrange = collect(T, -1e3:0.1:1e3)
@@ -38,19 +39,23 @@ function estimate_statespace(model::StateSpaceModel{T}, filter_type::DataType,
                             LBFGS(), Optim.Options(f_tol = opt_method.f_tol, 
                                                    g_tol = opt_method.g_tol, 
                                                    iterations = opt_method.iterations,
-                                                   show_trace = (verbose == 2 ? true : false) ))
+                                                   show_trace = (verbose == 3 ? true : false) ))
         loglikelihood[iseed] = -optseed.minimum
         psi[:, iseed] = optseed.minimizer
+        push!(optseeds, optseed)
 
         print_loglikelihood(verbose, iseed, loglikelihood, t0)
     end
 
+    best_seed = argmax(loglikelihood)
+
     print_estimation_end(verbose, loglikelihood)
+    verbose >= 2 && println("Best seed optimization result: \n $(optseeds[best_seed])")
 
     # Put seeds in the model struct
     opt_method.seeds = seeds
 
-    bestpsi = psi[:, argmax(loglikelihood)]
+    bestpsi = psi[:, best_seed]
     H, Q    = statespace_covariance(bestpsi, model.dim.p, model.dim.r, filter_type)
 
     return StateSpaceCovariance(H, Q, filter_type)

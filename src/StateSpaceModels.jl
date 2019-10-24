@@ -27,8 +27,8 @@ Estimate the pre-specified state-space model.
 function statespace(model::StateSpaceModel{T}; filter_type::DataType = KalmanFilter{T}, 
                     optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1) where T
 
-    if !(verbose in [0, 1, 2])
-        @warn("Incorrect verbose value input (should be 0, 1, or 2): switching to default value 1")
+    if !(verbose in [0, 1, 2, 3])
+        @warn("Incorrect verbose value input (should be 0, 1, 2 or 3): switching to default value 1")
         verbose = 1
     end
 
