@@ -151,28 +151,19 @@ y = [0.0     # Deterministic local level generated time series
 end
 
 @testset "Correlated multivariate test" begin
-    # Define error covariances
-    dist_H = MvNormal([1.0 0.5;
-                        0.5 1.0])
-
-    dist_Q = MvNormal([1.0 0.5;
-                        0.5 1.0])
-
     # Sample two observation series from defined errors
     Random.seed!(1)
     n = 1000
     p = 2
-    y = Matrix{Float64}(undef, n, p)
-    α = Matrix{Float64}(undef, n, p)
+    α = Matrix{Float64}(undef, 1, p)
+    y = ones(n, p)
 
     model = local_level(y)
+    model.Q .= [1.0 0.5; 0.5 1.0]
+    model.H .= [1.0 0.5; 0.5 1.0]
     α[1, :] = [1.0, 1.0]
 
-    for t = 1:n-1
-        y[t, :]   = model.Z[:, :, t]*α[t, :] + rand(dist_H)
-        α[t+1, :] = model.T*α[t, :] + model.R*rand(dist_Q)
-    end
-    y[n, :] = model.Z[:, :, n]*α[n, :] + rand(dist_H)
+    y, α_n = statespace_recursion(model, α)
 
     model = local_level(y)
     ss = statespace(model)
@@ -181,8 +172,9 @@ end
     @test ss.model.Q ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
 end
 
-# push!(LOAD_PATH, "/home/guilhermebodin/Documents/Github/StateSpaceModels.jl/src")
-# using StateSpaceModels
+@testset "Unknowns in Z, T and R" begin
+    #TODO
+end
 
 # Z = [1.0][:, :]
 # T = [1.0][:, :]

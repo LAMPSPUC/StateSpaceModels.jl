@@ -60,7 +60,7 @@ Evaluate ``\\ell(\\psi;y_n)= -\\frac{np}{2}\\log2\\pi - \\frac{1}{2} \\sum_{t=1}
 function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, unknowns::Unknowns, 
                                valid_insts::Vector{Int}, filter_type::DataType) where T
     # Fill all psitilde in the model
-    fill_model_with_psitilde!(model, psitilde, unknowns)
+    fill_model_with_parameters!(model, psitilde, unknowns)
     # Calculate v and F 
     v, F = get_log_likelihood_params(model, filter_type)
     # Compute log-likelihood based on v and F

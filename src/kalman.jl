@@ -1,5 +1,5 @@
 """
-    kalman_filter(model::StateSpaceModel; tol::Typ = 1e-5) where Typ
+    kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) where Typ
 
 Kalman filter with big Kappa initialization, i.e., initializing state variances as 1e6.
 """
@@ -73,7 +73,7 @@ function kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) where 
 end
 
 """
-    smoother(model::StateSpaceModel, kfilter::KalmanFilter) where Typ
+    smoother(model::StateSpaceModel{Typ}, kfilter::KalmanFilter{Typ}) where Typ
 
 Smoother for state-space model.
 """

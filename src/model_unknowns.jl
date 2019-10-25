@@ -27,7 +27,7 @@ function find_nans_Z(Z::Array{T, 3}) where T
         cart_idxs[i] = findall(isnan, Z[:, :, i])
     end
 
-    # Guarantee that the unkown is the same across all t
+    # Guarantee that the unknown is the same across all t
     @assert all_indexes_are_equal(cart_idxs)
 
     return cart_idxs[1]
@@ -54,7 +54,7 @@ function num_unknowns(dict::Dict{String, Vector{CartesianIndex}})
     return n
 end
 
-function fill_model_with_psitilde!(model::StateSpaceModel{Typ}, psitilde::Vector{Typ}, unknowns::Unknowns) where Typ
+function fill_model_with_parameters!(model::StateSpaceModel{Typ}, psitilde::Vector{Typ}, unknowns::Unknowns) where Typ
     # The order to fill the model is Z => T => R => sqrtH => sqrtQ
     offset = 0
 

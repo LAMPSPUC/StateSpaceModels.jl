@@ -61,6 +61,10 @@
         @test show(model) == nothing
         @test show(ss) == nothing
     end
+
+    @testset "statespace_recursion" begin
+        #TODO
+    end
 end
 
 function compare_forecast_simulation(ss::StateSpace, N::Int, S::Int, rtol::Float64)

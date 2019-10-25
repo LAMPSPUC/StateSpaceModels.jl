@@ -83,7 +83,7 @@ function estimate_statespace!(model::StateSpaceModel{T}, filter_type::DataType,
     opt_method.seeds = seeds
     # Take the best seed and fill the model with it
     bestpsi = psi[:, best_seed]
-    fill_model_with_psitilde!(model, bestpsi, unknowns)
+    fill_model_with_parameters!(model, bestpsi, unknowns)
 
     return 
 end
