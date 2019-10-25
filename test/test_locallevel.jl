@@ -180,3 +180,36 @@ end
     @test ss.model.H ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
     @test ss.model.Q ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
 end
+
+# push!(LOAD_PATH, "/home/guilhermebodin/Documents/Github/StateSpaceModels.jl/src")
+# using StateSpaceModels
+
+# Z = [1.0][:, :]
+# T = [1.0][:, :]
+# R = [1.0][:, :]
+# ssm = StateSpaceModel(y[:, :], Z, T, R)
+# ssm.H[1] = 1.42
+# ssm.Q[1] = NaN
+
+# opt_method = RandomSeedsLBFGS()
+# ss = statespace(ssm; optimization_method = opt_method)
+# ss.model.H
+# ss.model.Q
+
+# unimodel1 = local_level(y)
+# ss1 = statespace(unimodel1)
+
+# Z = [NaN][:, :]
+# T = [1.0][:, :]
+# R = [1.0][:, :]
+# ssm = StateSpaceModel(y[:, :], Z, T, R)
+# ssm.H[1] = NaN
+# ssm.Q[1] = 1.24
+
+# opt_method = RandomSeedsLBFGS(nseeds = 10)
+# ss = statespace(ssm; optimization_method = opt_method)
+# ss.model.Z
+# ss.model.T
+# ss.model.R
+# ss.model.H
+# ss.model.Q

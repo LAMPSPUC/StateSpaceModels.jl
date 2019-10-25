@@ -1,4 +1,4 @@
-export size, ztr
+export size, ztr, copy
 
 """
     size(model::StateSpaceModel)
@@ -137,6 +137,10 @@ function Base.show(io::IO, model::StateSpaceModel)
     println("m = $(model.dim.m),")
     println("r = $(model.dim.r).")
     return nothing
+end
+
+function copy(ssm::StateSpaceModel)
+    return StateSpaceModel(copy(ssm.y), copy(ssm.Z), copy(ssm.T), copy(ssm.R), copy(ssm.H), copy(ssm.Q), ssm.mode)
 end
 
 function build_H(p::Int, T)

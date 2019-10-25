@@ -56,41 +56,41 @@ end
 
 function fill_model_with_psitilde!(model::StateSpaceModel{Typ}, psitilde::Vector{Typ}, unknowns::Unknowns) where Typ
     # The order to fill the model is Z => T => R => sqrtH => sqrtQ
-    offset = 1
+    offset = 0
 
     # Fill Z
     for un_Z in unknowns.unknown_indexes["Z"]
+        offset += 1
         for t in axes(model.Z, 3)
             model.Z[un_Z, t] = psitilde[offset]
         end
-        offset += 1
     end
 
     # Fill T
     for un_T in unknowns.unknown_indexes["T"]
-        model.T[un_T] = psitilde[offset]
         offset += 1
+        model.T[un_T] = psitilde[offset]
     end
 
     # Fill R
     for un_R in unknowns.unknown_indexes["R"]
-        model.R[un_R] = psitilde[offset]
         offset += 1
+        model.R[un_R] = psitilde[offset]
     end
 
     # Fill sqrtH in the H matrix and do a gram (XX') after
     for un_H in unknowns.unknown_indexes["sqrtH"]
-        model.H[un_H] = psitilde[offset]
         offset += 1
+        model.H[un_H] = psitilde[offset]
     end
-    fill_H!(model, gram(tril(model.H)))
+    !isempty(unknowns.unknown_indexes["sqrtH"]) && fill_H!(model, gram(tril(model.H)))
 
     # Fill sqrtQ in the Q matrix and do a gram (XX') after
     for un_Q in unknowns.unknown_indexes["sqrtQ"]
-        model.Q[un_Q] = psitilde[offset]
         offset += 1
+        model.Q[un_Q] = psitilde[offset]
     end
-    fill_Q!(model, gram(tril(model.Q)))
+    !isempty(unknowns.unknown_indexes["sqrtQ"]) && fill_Q!(model, gram(tril(model.Q)))
 
     return 
 end

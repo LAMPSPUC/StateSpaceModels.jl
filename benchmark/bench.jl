@@ -1,4 +1,3 @@
-push!(LOAD_PATH, "/home/guilhermebodin/Documents/Github/StateSpaceModels.jl/src")
 using StateSpaceModels, BenchmarkTools, CSV
 # Local level series
 locallevel_series = CSV.read("./benchmark/locallevel.csv"; header = false)

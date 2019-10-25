@@ -68,23 +68,6 @@ mutable struct Smoother{T <: Real} <: AbstractSmoother
     V::Array{T, 3} # variance of smoothed state
 end
 
-# Concrete structs for optimization methods
-"""
-TODO
-"""
-mutable struct RandomSeedsLBFGS{T <: Real} <: AbstractOptimizationMethod
-    f_tol::T
-    g_tol::T
-    iterations::Int
-    nseeds::Int
-    seeds::Array{T}
-
-    function RandomSeedsLBFGS(; f_tol::T = 1e-6, g_tol::T = 1e-6, iterations::Int = 10^5, nseeds::Int = 3) where T <: Real
-        return new{T}(f_tol, g_tol, 1e5, nseeds)
-    end
-end
-
-
 """
     StateSpaceDimensions
 
@@ -128,6 +111,20 @@ struct StateSpaceModel{Typ <: Real}
     dim::StateSpaceDimensions
     missing_observations::Vector{Int}
     mode::String
+
+    function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, 
+                             H::Matrix{Typ}, Q::Matrix{Typ}, mode::String) where Typ <: Real
+        ny, py = size(y)
+        pz, mz, nz = size(Z)
+        mt1, mt2 = size(T)
+        mr, rr = size(R)
+        if !((mz == mt1 == mt2 == mr) && (pz == py))
+            error("StateSpaceModel dimension mismatch")
+        end
+        dim = StateSpaceDimensions(ny, py, mr, rr)
+
+        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), mode)
+    end
 
     function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
 
