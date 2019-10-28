@@ -172,36 +172,54 @@ end
     @test ss.model.Q ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
 end
 
-@testset "Unknowns in Z, T and R" begin
-    #TODO
+function test_model_estimation(nan_pos::Int, n; rtol = 1e-1, nseeds = 3, seed = 1)
+    Random.seed!(seed)
+
+    @assert nan_pos in collect(1:5)
+
+    y = ones(n, 1)
+    Z = [1.0][:, :]
+    T = [1.0][:, :]
+    R = [1.0][:, :]
+    model = SSM.StateSpaceModel(y, Z, T, R)
+    model.H[1] = 1.0
+    model.Q[1] = 1.0
+
+    # Generate series
+    y, α_n = SSM.statespace_recursion(model, [1.0][:, :])
+    # Write y inside the model
+    model.y .= y
+
+    # fill with nans
+    if nan_pos == 1
+        model.Z .= NaN
+    elseif nan_pos == 2
+        model.T .= NaN
+    elseif nan_pos == 3
+        model.R .= NaN
+    elseif nan_pos == 4
+        model.H.= NaN
+    elseif nan_pos == 5
+        model.Q .= NaN
+    end
+
+    opt_method = SSM.RandomSeedsLBFGS(nseeds = nseeds)
+    ss = SSM.statespace(model; optimization_method = opt_method, verbose = 0)
+    
+    @test ss.model.Z[1] ≈ 1.0 rtol = rtol
+    @test ss.model.Z[end] ≈ 1.0 rtol = rtol
+    @test ss.model.T[1] ≈ 1.0 rtol = rtol
+    @test ss.model.R[1] ≈ 1.0 rtol = rtol
+    @test ss.model.H[1] ≈ 1.0 rtol = rtol
+    @test ss.model.Q[1] ≈ 1.0 rtol = rtol
 end
 
-# Z = [1.0][:, :]
-# T = [1.0][:, :]
-# R = [1.0][:, :]
-# ssm = StateSpaceModel(y[:, :], Z, T, R)
-# ssm.H[1] = 1.42
-# ssm.Q[1] = NaN
-
-# opt_method = RandomSeedsLBFGS()
-# ss = statespace(ssm; optimization_method = opt_method)
-# ss.model.H
-# ss.model.Q
-
-# unimodel1 = local_level(y)
-# ss1 = statespace(unimodel1)
-
-# Z = [NaN][:, :]
-# T = [1.0][:, :]
-# R = [1.0][:, :]
-# ssm = StateSpaceModel(y[:, :], Z, T, R)
-# ssm.H[1] = NaN
-# ssm.Q[1] = 1.24
-
-# opt_method = RandomSeedsLBFGS(nseeds = 10)
-# ss = statespace(ssm; optimization_method = opt_method)
-# ss.model.Z
-# ss.model.T
-# ss.model.R
-# ss.model.H
-# ss.model.Q
+@testset "Unknowns in Z, T, R, H and QQPair" begin
+    n = 1000
+    seed = 9
+    test_model_estimation(1, n, seed = seed)
+    test_model_estimation(2, n, seed = seed)
+    test_model_estimation(3, n, seed = seed)
+    test_model_estimation(4, n, seed = seed)
+    test_model_estimation(5, n, seed = seed)
+end
