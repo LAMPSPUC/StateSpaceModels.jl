@@ -41,8 +41,8 @@ function statespace_recursion(model::StateSpaceModel{Typ}, initial_a::Matrix{Typ
         error("intial_a must be a 1 by $p matrix.")
     end
 
-    y = Matrix{Float64}(undef, n, p)
-    α = Matrix{Float64}(undef, n, p)
+    y = Matrix{Typ}(undef, n, p)
+    α = Matrix{Typ}(undef, n, p)
     α[1, :] = initial_a
 
     for t = 1:n-1
