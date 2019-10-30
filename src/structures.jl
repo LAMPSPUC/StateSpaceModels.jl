@@ -113,30 +113,23 @@ struct StateSpaceModel{Typ <: Real}
     mode::String
 
     function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, 
-                             H::Matrix{Typ}, Q::Matrix{Typ}, mode::String) where Typ <: Real
-        ny, py = size(y)
-        pz, mz, nz = size(Z)
-        mt1, mt2 = size(T)
-        mr, rr = size(R)
-        if !((mz == mt1 == mt2 == mr) && (pz == py))
-            error("StateSpaceModel dimension mismatch")
-        end
-        dim = StateSpaceDimensions(ny, py, mr, rr)
+                             H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
+        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), "time-variant")
+    end
 
-        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), mode)
+    function StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, 
+                             H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
+        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), "time-invariant")
     end
 
     function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
 
-        # Validate StateSpaceDimensions
-        ny, py = size(y)
-        pz, mz, nz = size(Z)
-        mt1, mt2 = size(T)
-        mr, rr = size(R)
-        if !((mz == mt1 == mt2 == mr) && (pz == py))
-            error("StateSpaceModel dimension mismatch")
-        end
-        dim = StateSpaceDimensions(ny, py, mr, rr)
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
 
         # Build H and Q matrices with NaNs
         H = build_H(dim.p, Typ)
@@ -146,19 +139,12 @@ struct StateSpaceModel{Typ <: Real}
 
     function StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
 
-        # Validate StateSpaceDimensions
-        ny, py = size(y)
-        pz, mz = size(Z)
-        mt, mt = size(T)
-        mr, rr = size(R)
-        if !((mz == mt == mr) && (pz == py))
-            error("StateSpaceModel dimension mismatch")
-        end
-        dim = StateSpaceDimensions(ny, py, mr, rr)
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
 
         # Build Z
-        Zvar = Array{Typ, 3}(undef, pz, mz, ny)
-        for t in 1:ny, i in axes(Z, 1), j in axes(Z, 2)
+        Zvar = Array{Typ, 3}(undef, dim.p, dim.m, dim.n)
+        for t in 1:dim.n, i in axes(Z, 1), j in axes(Z, 2)
             Zvar[i, j, t] = Z[i, j] # Zvar[:, :, t] = Z
         end
 

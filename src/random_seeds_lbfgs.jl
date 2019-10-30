@@ -57,9 +57,8 @@ function estimate_statespace!(model::StateSpaceModel{T}, filter_type::DataType,
 
     # Optimization
     for iseed = 1:nseeds
-        model_opt = copy(model)
         try
-            optseed = optimize(psitilde -> statespace_likelihood(psitilde, model_opt, unknowns, valid_insts, filter_type), seeds[:, iseed],
+            optseed = optimize(psitilde -> statespace_likelihood(psitilde, model, unknowns, valid_insts, filter_type), seeds[:, iseed],
                                 LBFGS(), Optim.Options(f_tol = opt_method.f_tol, 
                                                        g_tol = opt_method.g_tol, 
                                                        iterations = opt_method.iterations,

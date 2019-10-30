@@ -63,7 +63,67 @@
     end
 
     @testset "statespace_recursion" begin
-        #TODO
+        # Unkonws error
+        y = ones(15)
+        model = local_level(y)
+        initial_a = [1.0][:, :]
+        @test_throws ErrorException("StateSpaceModel has unkown parameters.") statespace_recursion(model, initial_a)
+
+        # initial_a dimension mismatch
+        y = ones(15)
+        model = local_level(y)
+        model.H .= [1e-8]
+        model.Q .= [1e-8]
+        initial_a = [1.0 1.0]
+        @test_throws ErrorException("intial_a must be a 1 by 1 matrix.") statespace_recursion(model, initial_a)
+
+        # univariate local_level
+        y = ones(15)
+        model = local_level(y)
+        model.H .= [1e-8]
+        model.Q .= [1e-8]
+        initial_a = [1.0][:, :]
+        y, a = statespace_recursion(model, initial_a)
+        @test y ≈ ones(15) atol = 1e-3 rtol = 1e-3
+        @test a ≈ ones(15) atol = 1e-3 rtol = 1e-3
+
+        # univariate linear_trend
+        y = collect(1.0:15.0)
+        model = linear_trend(y)
+        model.H .= [1e-8]
+        model.Q .= [1e-8 0
+                    0 1e-8]
+        initial_a = [1.0 0.5]
+        y, a = statespace_recursion(model, initial_a)
+        @test y ≈ collect(1.0:0.5:8.0) atol = 1e-3 rtol = 1e-3
+        @test a ≈ [collect(1.0:0.5:8.0) 0.5*ones(15)] atol = 1e-3 rtol = 1e-3
+
+        # multivariate local_level
+        y = ones(15, 4)
+        model = local_level(y)
+        model.H .= Diagonal(1e-8*ones(4))
+        model.Q .= Diagonal(1e-8*ones(4))
+        initial_a = ones(1, 4)
+        y, a = statespace_recursion(model, initial_a)
+        @test y ≈ ones(15, 4) atol = 1e-3 rtol = 1e-3
+        @test a ≈ ones(15, 4) atol = 1e-3 rtol = 1e-3
+
+        # univariate linear_trend
+        y_c = collect(1.0:15.0)
+        y = [y_c y_c y_c y_c]
+        model = linear_trend(y)
+        model.H .= Diagonal(1e-8*ones(4))
+        model.Q .= Diagonal(1e-8*ones(8))
+        initial_a = [1.0 0.5 1.0 0.5 1.0 0.5 1.0 0.5]
+        y, a = statespace_recursion(model, initial_a)
+        @test y[:, 1] ≈ collect(1.0:0.5:8.0) atol = 1e-3 rtol = 1e-3
+        @test y[:, 2] ≈ collect(1.0:0.5:8.0) atol = 1e-3 rtol = 1e-3
+        @test y[:, 3] ≈ collect(1.0:0.5:8.0) atol = 1e-3 rtol = 1e-3
+        @test y[:, 4] ≈ collect(1.0:0.5:8.0) atol = 1e-3 rtol = 1e-3
+        @test a[:, [1, 2]] ≈ [collect(1.0:0.5:8.0) 0.5*ones(15)] atol = 1e-3 rtol = 1e-3
+        @test a[:, [3, 4]] ≈ [collect(1.0:0.5:8.0) 0.5*ones(15)] atol = 1e-3 rtol = 1e-3
+        @test a[:, [5, 6]] ≈ [collect(1.0:0.5:8.0) 0.5*ones(15)] atol = 1e-3 rtol = 1e-3
+        @test a[:, [7, 8]] ≈ [collect(1.0:0.5:8.0) 0.5*ones(15)] atol = 1e-3 rtol = 1e-3
     end
 end
 
