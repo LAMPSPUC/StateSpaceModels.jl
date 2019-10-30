@@ -104,7 +104,8 @@ structural
 
 You can also build your own custom model by passing all or some of the matrices that compose the state-space model.
 
-Currently there is a list of constructors that allow you to define a new model. When building the `StateSpaceModel` the parameters 
+Currently there is a list of constructors that allow you to define a new model. When building the `StateSpaceModel` the parameters
+to be estimated will be indicated with a `NaN`.
 
 ```julia
  StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
