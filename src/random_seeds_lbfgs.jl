@@ -68,7 +68,8 @@ function estimate_statespace!(model::StateSpaceModel{T}, filter_type::DataType,
             push!(optseeds, optseed)
 
             print_loglikelihood(verbose, iseed, loglikelihood, t0)
-        catch
+        catch err
+            println(err)
             println("seed diverged")
         end
     end

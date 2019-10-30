@@ -28,7 +28,7 @@ function statespace_recursion(model::StateSpaceModel{Typ}, initial_a::Matrix{Typ
     # If model has any unknows is not possible to perform the recursion
     unknowns = Unknowns(model)
     if unknowns.n_unknowns != 0
-        error("StateSpaceModel has unkown parameters.")
+        error("StateSpaceModel has unknown parameters.")
     end
 
     # Save the distributions H and Q
@@ -38,7 +38,7 @@ function statespace_recursion(model::StateSpaceModel{Typ}, initial_a::Matrix{Typ
     p, m, n = size(model.Z)
 
     if size(initial_a, 2) != m
-        error("intial_a must be a 1 by $p matrix.")
+        error("intial_a must be a 1 by $m matrix.")
     end
 
     y = Matrix{Typ}(undef, n, p)

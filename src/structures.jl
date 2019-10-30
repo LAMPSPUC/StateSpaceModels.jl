@@ -123,7 +123,12 @@ struct StateSpaceModel{Typ <: Real}
                              H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
-        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), "time-invariant")
+        Zvar = Array{Typ, 3}(undef, dim.p, dim.m, dim.n)
+        for t in 1:dim.n, i in axes(Z, 1), j in axes(Z, 2)
+            Zvar[i, j, t] = Z[i, j]
+        end
+
+        return new{Typ}(y, Zvar, T, R, H, Q, dim, find_missing_observations(y), "time-invariant")
     end
 
     function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real

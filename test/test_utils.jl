@@ -63,11 +63,11 @@
     end
 
     @testset "statespace_recursion" begin
-        # Unkonws error
+        # Unknowns error
         y = ones(15)
         model = local_level(y)
         initial_a = [1.0][:, :]
-        @test_throws ErrorException("StateSpaceModel has unkown parameters.") statespace_recursion(model, initial_a)
+        @test_throws ErrorException("StateSpaceModel has unknown parameters.") statespace_recursion(model, initial_a)
 
         # initial_a dimension mismatch
         y = ones(15)
