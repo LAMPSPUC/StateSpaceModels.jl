@@ -48,6 +48,9 @@ StateSpace
 ```
 
 ## Predefined models
+
+The package provides some constructors for some classic state space models.
+
 The local level model is defined by
 
 ```math
@@ -96,6 +99,21 @@ The structural model is defined by
 ```@docs
 structural
 ```
+
+## Custom models
+
+You can also build your own custom model by passing all or some of the matrix that compose the state-space model.
+
+Currently there is a list of constructors that allow you to define a new model.
+
+```julia
+ StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+ StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+ StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+ StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+```
+
+When you don't pass the `H` and `Q` matrices the constructor automatically fills thm with `NaN`.
 
 ## Estimation
 The model estimation is made using the function `statespace(model; filter_type = KalmanFilter, optimization_method = RandomSeedsLBFGS(), verbose = 1)`. It receives as argument the pre-specified `StateSpaceModel` object `model`. Optionally, the user can define the Kalman filter variant to be used, the optimization method and the verbosity level.
