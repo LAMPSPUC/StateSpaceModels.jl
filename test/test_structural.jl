@@ -11,8 +11,8 @@
         @test ss.filter_type <: KalmanFilter
         @test isa(ss, StateSpace)
 
-        @test all(ss.covariance.H .< 1e-6)
-        @test all(ss.covariance.Q .< 1e-6)
+        @test all(ss.model.H .< 1e-6)
+        @test all(ss.model.Q .< 1e-6)
         compare_forecast_simulation(ss, 20, 1000, 1e-3)
     end
 
@@ -29,8 +29,8 @@
 
         @test ss.filter_type <: KalmanFilter
         @test isa(ss, StateSpace)
-        @test all(ss.covariance.H .< 1e-6)
-        @test all(ss.covariance.Q .< 1e-6)
+        @test all(ss.model.H .< 1e-6)
+        @test all(ss.model.Q .< 1e-6)
 
         compare_forecast_simulation(ss, 10, 1000, 1e-3)
     end

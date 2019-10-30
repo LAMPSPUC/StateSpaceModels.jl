@@ -30,16 +30,10 @@ function compute_log_likelihood_multivariate(n::Int, p::Int, v::Matrix{T}, F::Ar
     return log_likelihood
 end
 
-function get_log_likelihood_params(psitilde::Vector{T}, model::StateSpaceModel{T},
+function get_log_likelihood_params(model::StateSpaceModel{T},
                                    filter_type::DataType) where T
     error(filter_type , " not implemented") # Returns an error if it cannot 
                                             # find a specialized get_log_likelihood_params
-end
-
-function statespace_covariance(psi::Vector{T}, p::Int, r::Int,
-                               filter_type::DataType) where T
-    error(filter_type , " not implemented") # Returns an error if it cannot 
-                                            # find a specialized statespace_covariance
 end
 
 function valid_instants(model::StateSpaceModel{T}) where T
@@ -55,7 +49,7 @@ function valid_instants(model::StateSpaceModel{T}) where T
 end
 
 """
-    statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel{T}, 
+statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, unknowns::Unknowns, 
                             valid_insts::Vector{Int}, filter_type::DataType) where T
 
 Compute log-likelihood concerning hyperparameter vector psitilde (``\\psi``)
@@ -63,10 +57,12 @@ Compute log-likelihood concerning hyperparameter vector psitilde (``\\psi``)
 Evaluate ``\\ell(\\psi;y_n)= -\\frac{np}{2}\\log2\\pi - \\frac{1}{2} \\sum_{t=1}^n \\log |F_t| - 
 \\frac{1}{2} \\sum_{t=1}^n v_t^{\\top} F_t^{-1} v_t ``
 """
-function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel{T}, 
+function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, unknowns::Unknowns, 
                                valid_insts::Vector{Int}, filter_type::DataType) where T
+    # Fill all psitilde in the model
+    fill_model_with_parameters!(model, psitilde, unknowns)
     # Calculate v and F 
-    v, F = get_log_likelihood_params(psitilde, model, filter_type)
+    v, F = get_log_likelihood_params(model, filter_type)
     # Compute log-likelihood based on v and F
     return compute_log_likelihood(model.dim.n, model.dim.p, v, F, valid_insts)
 end

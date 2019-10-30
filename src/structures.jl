@@ -1,4 +1,4 @@
-export StateSpaceDimensions, StateSpaceModel, StateSpaceCovariance, SmoothedState,
+export StateSpaceDimensions, StateSpaceModel, SmoothedState,
         FilterOutput, StateSpace
 
 export KalmanFilter, SquareRootFilter, UnivariateKalmanFilter
@@ -68,23 +68,6 @@ mutable struct Smoother{T <: Real} <: AbstractSmoother
     V::Array{T, 3} # variance of smoothed state
 end
 
-# Concrete structs for optimization methods
-"""
-TODO
-"""
-mutable struct RandomSeedsLBFGS{T <: Real} <: AbstractOptimizationMethod
-    f_tol::T
-    g_tol::T
-    iterations::Int
-    nseeds::Int
-    seeds::Array{T}
-
-    function RandomSeedsLBFGS(; f_tol::T = 1e-6, g_tol::T = 1e-6, iterations::Int = 10^5, nseeds::Int = 3) where T <: Real
-        return new{T}(f_tol, g_tol, 1e5, nseeds)
-    end
-end
-
-
 """
     StateSpaceDimensions
 
@@ -112,76 +95,68 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `Z` A ``p \\times m \\times n`` matrix
 * `T` A ``m \\times m`` matrix
 * `R` A ``m \\times r`` matrix
+* `H` A ``p \\times p`` matrix
+* `Q` A ``r \\times r`` matrix
 
 A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ})`.
-
 Alternatively, if `Z` is time-invariant, it can be input as a single ``p \\times m`` matrix.
 """
 struct StateSpaceModel{Typ <: Real}
-    y::Matrix{Typ} # observations
-    Z::Array{Typ, 3} # observation matrix
-    T::Matrix{Typ} # state matrix
-    R::Matrix{Typ} # state error matrix
+    y::Matrix{Typ} # Observations
+    Z::Array{Typ, 3} # Observation matrix
+    T::Matrix{Typ} # State matrix
+    R::Matrix{Typ} # State error matrix
+    H::Matrix{Typ} # Covariance matrix of the observation vector
+    Q::Matrix{Typ} # Covariance matrix of the state vector
     dim::StateSpaceDimensions
     missing_observations::Vector{Int}
     mode::String
 
+    function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, 
+                             H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
+        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), "time-variant")
+    end
+
+    function StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, 
+                             H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
+        Zvar = Array{Typ, 3}(undef, dim.p, dim.m, dim.n)
+        for t in 1:dim.n, i in axes(Z, 1), j in axes(Z, 2)
+            Zvar[i, j, t] = Z[i, j]
+        end
+
+        return new{Typ}(y, Zvar, T, R, H, Q, dim, find_missing_observations(y), "time-invariant")
+    end
+
     function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
 
-        # Validate StateSpaceDimensions
-        ny, py = size(y)
-        pz, mz, nz = size(Z)
-        mt1, mt2 = size(T)
-        mr, rr = size(R)
-        if !((mz == mt1 == mt2 == mr) && (pz == py))
-            error("StateSpaceModel dimension mismatch")
-        end
-        dim = StateSpaceDimensions(ny, py, mr, rr)
-        new{Typ}(y, Z, T, R, dim, find_missing_observations(y), "time-variant")
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
+
+        # Build H and Q matrices with NaNs
+        H = build_H(dim.p, Typ)
+        Q = build_Q(dim.r, dim.p, Typ)
+        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), "time-variant")
     end
 
     function StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
 
-        # Validate StateSpaceDimensions
-        ny, py = size(y)
-        pz, mz = size(Z)
-        mt, mt = size(T)
-        mr, rr = size(R)
-        if !((mz == mt == mr) && (pz == py))
-            error("StateSpaceModel dimension mismatch")
-        end
-        dim = StateSpaceDimensions(ny, py, mr, rr)
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
 
         # Build Z
-        Zvar = Array{Typ, 3}(undef, pz, mz, ny)
-        for t in 1:ny, i in axes(Z, 1), j in axes(Z, 2)
+        Zvar = Array{Typ, 3}(undef, dim.p, dim.m, dim.n)
+        for t in 1:dim.n, i in axes(Z, 1), j in axes(Z, 2)
             Zvar[i, j, t] = Z[i, j] # Zvar[:, :, t] = Z
         end
-        new{Typ}(y, Zvar, T, R, dim, find_missing_observations(y), "time-invariant")
-    end
-end
 
-"""
-    StateSpaceCovariance
-
-Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
-
-* `H` Covariance matrix of the observation vector
-* `Q` Covariance matrix of the state vector
-"""
-struct StateSpaceCovariance{T <: Real}
-    H::Matrix{T}
-    Q::Matrix{T}
-
-    function StateSpaceCovariance(sqrtH::Matrix{T}, sqrtQ::Matrix{T},
-                                  filter_type::Type{SquareRootFilter{T}}) where T <: Real
-        return new{T}(gram(sqrtH), gram(sqrtQ))
-    end
-
-    function StateSpaceCovariance(H::Matrix{T}, Q::Matrix{T},
-                                  filter_type::Union{Type{KalmanFilter{T}}, 
-                                                     Type{UnivariateKalmanFilter{T}}}) where T <: Real
-        return new{T}(H, Q)
+        # Build H and Q matrices with NaNs
+        H = build_H(dim.p, Typ)
+        Q = build_Q(dim.r, dim.p, Typ)
+        return new{Typ}(y, Zvar, T, R, H, Q, dim, find_missing_observations(y), "time-invariant")
     end
 end
 
@@ -225,14 +200,13 @@ end
 
 """
     StateSpace
-
+    
 A state-space structure containing the model, filter output, smoother output, covariance matrices, filter type and optimization method.
 """
 struct StateSpace{T <: Real}
     model::StateSpaceModel{T}
     filter::FilterOutput{T}
     smoother::SmoothedState{T}
-    covariance::StateSpaceCovariance{T}
     filter_type::DataType
     optimization_method::AbstractOptimizationMethod
 end

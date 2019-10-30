@@ -1,4 +1,4 @@
-export size, ztr
+export size, ztr, copy, statespace_recursion
 
 """
     size(model::StateSpaceModel)
@@ -16,6 +16,42 @@ Return the state space model arrays `Z`, `T` and `R` of the `StateSpaceModel`
 """
 function ztr(model::StateSpaceModel)
     return model.Z, model.T, model.R
+end
+
+"""
+    statespace_recursion(model::StateSpaceModel{Typ}, N::Int, initial_a::Matrix{Typ}) where Typ
+
+Runs the recursion of a state space model ignoring the y.
+"""
+function statespace_recursion(model::StateSpaceModel{Typ}, initial_a::Matrix{Typ}) where Typ
+
+    # If model has any unknows is not possible to perform the recursion
+    unknowns = Unknowns(model)
+    if unknowns.n_unknowns != 0
+        error("StateSpaceModel has unknown parameters.")
+    end
+
+    # Save the distributions H and Q
+    dist_H = MvNormal(model.H)
+    dist_Q = MvNormal(model.Q)
+
+    p, m, n = size(model.Z)
+
+    if size(initial_a, 2) != m
+        error("intial_a must be a 1 by $m matrix.")
+    end
+
+    y = Matrix{Typ}(undef, n, p)
+    α = Matrix{Typ}(undef, n, m)
+    α[1, :] = initial_a
+
+    for t = 1:n-1
+        y[t, :]   = model.Z[:, :, t]*α[t, :] + rand(dist_H)
+        α[t+1, :] = model.T*α[t, :] + model.R*rand(dist_Q)
+    end
+    y[n, :] = model.Z[:, :, n]*α[n, :] + rand(dist_H)
+
+    return y, α
 end
 
 
@@ -137,4 +173,37 @@ function Base.show(io::IO, model::StateSpaceModel)
     println("m = $(model.dim.m),")
     println("r = $(model.dim.r).")
     return nothing
+end
+
+function build_H(p::Int, T)
+    H = fill(NaN, p, p)
+    return T.(H)
+end
+
+function build_Q(r::Int, p::Int, T)
+    Q = kron(ones(p, p), Matrix{T}(I, Int(r/p), Int(r/p)))
+    Q[findall(isequal(1), Q)] .= NaN
+    return Q
+end
+
+function build_ss_dim(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+    ny, py = size(y)
+    pz, mz, nz = size(Z)
+    mt1, mt2 = size(T)
+    mr, rr = size(R)
+    if !((mz == mt1 == mt2 == mr) && (pz == py))
+        error("StateSpaceModel dimension mismatch")
+    end
+    return StateSpaceDimensions(ny, py, mr, rr)
+end
+
+function build_ss_dim(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+    ny, py = size(y)
+    pz, mz = size(Z)
+    mt, mt = size(T)
+    mr, rr = size(R)
+    if !((mz == mt == mr) && (pz == py))
+        error("StateSpaceModel dimension mismatch")
+    end
+    return StateSpaceDimensions(ny, py, mr, rr)
 end

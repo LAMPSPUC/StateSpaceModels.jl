@@ -100,20 +100,24 @@ y = [0.0     # Deterministic local level generated time series
 8.366964896750876]
 
 @testset "Local level model with Kalman filter" begin
-    unimodel = local_level(y)
+    unimodel1 = local_level(y)
 
-    @test isa(unimodel, StateSpaceModel)
-    @test unimodel.mode == "time-invariant"
-
-    ss1 = statespace(unimodel; verbose = 2)
+    @test isa(unimodel1, StateSpaceModel)
+    @test unimodel1.mode == "time-invariant"
+    
+    ss1 = statespace(unimodel1)
     @test ss1.filter_type <: KalmanFilter
     @test isa(ss1, StateSpace)
 
-    ss2 = statespace(unimodel; filter_type = SquareRootFilter{Float64})
+    unimodel2 = local_level(y)
+    
+    ss2 = statespace(unimodel2; filter_type = SquareRootFilter{Float64})
     @test ss2.filter_type <: SquareRootFilter
     @test isa(ss2, StateSpace)
 
-    ss3 = statespace(unimodel; filter_type = UnivariateKalmanFilter{Float64})
+    unimodel3 = local_level(y)
+    
+    ss3 = statespace(unimodel3; filter_type = UnivariateKalmanFilter{Float64})
     @test ss3.filter_type <: UnivariateKalmanFilter
     @test isa(ss3, StateSpace)
 
@@ -122,16 +126,18 @@ y = [0.0     # Deterministic local level generated time series
     @test ss2.filter.a ≈ ss1.filter.a rtol = 1e-3
     @test ss3.filter.a ≈ ss1.filter.a rtol = 1e-3
 
-    unimodel32 = local_level(Float32.(y))
-    ss4 = statespace(unimodel32; filter_type = KalmanFilter{Float32})
+    unimodel32_1 = local_level(Float32.(y))
+    ss4 = statespace(unimodel32_1; filter_type = KalmanFilter{Float32})
     @test ss4.filter_type <: KalmanFilter
     @test isa(ss4, StateSpace)
-    
-    ss5 = statespace(unimodel32; filter_type = SquareRootFilter{Float32})
+
+    unimodel32_2 = local_level(Float32.(y))
+    ss5 = statespace(unimodel32_2; filter_type = SquareRootFilter{Float32})
     @test ss5.filter_type <: SquareRootFilter
     @test isa(ss5, StateSpace)
     
-    ss6 = statespace(unimodel32; filter_type = UnivariateKalmanFilter{Float32})
+    unimodel32_3 = local_level(Float32.(y))
+    ss6 = statespace(unimodel32_3; filter_type = UnivariateKalmanFilter{Float32})
     @test ss6.filter_type <: UnivariateKalmanFilter
     @test isa(ss6, StateSpace)
 
@@ -145,32 +151,75 @@ y = [0.0     # Deterministic local level generated time series
 end
 
 @testset "Correlated multivariate test" begin
-    # Define error covariances
-    dist_H = MvNormal([1.0 0.5;
-                        0.5 1.0])
-
-    dist_Q = MvNormal([1.0 0.5;
-                        0.5 1.0])
-
     # Sample two observation series from defined errors
     Random.seed!(1)
     n = 1000
     p = 2
-    y = Matrix{Float64}(undef, n, p)
-    α = Matrix{Float64}(undef, n, p)
+    α = Matrix{Float64}(undef, 1, p)
+    y = ones(n, p)
 
     model = local_level(y)
+    model.Q .= [1.0 0.5; 0.5 1.0]
+    model.H .= [1.0 0.5; 0.5 1.0]
     α[1, :] = [1.0, 1.0]
 
-    for t = 1:n-1
-        y[t, :]   = model.Z[:, :, t]*α[t, :] + rand(dist_H)
-        α[t+1, :] = model.T*α[t, :] + model.R*rand(dist_Q)
-    end
-    y[n, :] = model.Z[:, :, n]*α[n, :] + rand(dist_H)
+    y, α_n = statespace_recursion(model, α)
 
     model = local_level(y)
     ss = statespace(model)
 
-    @test ss.covariance.H ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
-    @test ss.covariance.Q ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
+    @test ss.model.H ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
+    @test ss.model.Q ≈ [1.0 0.5; 0.5 1.0] rtol = 1e-1
+end
+
+function test_model_estimation(nan_pos::Int, n; rtol = 1e-1, nseeds = 3, seed = 1)
+    Random.seed!(seed)
+
+    @assert nan_pos in collect(1:5)
+
+    y = ones(n, 1)
+    Z = [1.0][:, :]
+    T = [1.0][:, :]
+    R = [1.0][:, :]
+    model = SSM.StateSpaceModel(y, Z, T, R)
+    model.H[1] = 1.0
+    model.Q[1] = 1.0
+
+    # Generate series
+    y, α_n = SSM.statespace_recursion(model, [1.0][:, :])
+    # Write y inside the model
+    model.y .= y
+
+    # fill with nans
+    if nan_pos == 1
+        model.Z .= NaN
+    elseif nan_pos == 2
+        model.T .= NaN
+    elseif nan_pos == 3
+        model.R .= NaN
+    elseif nan_pos == 4
+        model.H.= NaN
+    elseif nan_pos == 5
+        model.Q .= NaN
+    end
+
+    opt_method = SSM.RandomSeedsLBFGS(nseeds = nseeds)
+    ss = SSM.statespace(model; optimization_method = opt_method, verbose = 0)
+    
+    @test ss.model.Z[1] ≈ 1.0 rtol = rtol
+    @test ss.model.Z[end] ≈ 1.0 rtol = rtol
+    @test ss.model.T[1] ≈ 1.0 rtol = rtol
+    @test ss.model.R[1] ≈ 1.0 rtol = rtol
+    @test ss.model.H[1] ≈ 1.0 rtol = rtol
+    @test ss.model.Q[1] ≈ 1.0 rtol = rtol
+end
+
+@testset "Unknowns in Z, T, R, H and QQPair" begin
+    n = 1000
+    seed = 9
+    test_model_estimation(1, n, seed = seed)
+    test_model_estimation(2, n, seed = seed)
+    test_model_estimation(3, n, seed = seed)
+    test_model_estimation(4, n, seed = seed)
+    test_model_estimation(5, n, seed = seed)
 end

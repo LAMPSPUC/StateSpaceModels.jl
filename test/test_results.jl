@@ -2,24 +2,28 @@ AP = CSV.read("../examples/AirPassengers.csv")
 logAP = log.(Vector{Float64}(AP[!, :Passengers]))
 
 @testset "Air passengers with Kalman filter" begin
-    model = structural(logAP, 12)
+    model1 = structural(logAP, 12)
 
-    @test isa(model, StateSpaceModel)
-    @test model.mode == "time-invariant"
+    @test isa(model1, StateSpaceModel)
+    @test model1.mode == "time-invariant"
     
-    ss1 = statespace(model)
+    ss1 = statespace(model1)
     
     @test ss1.filter_type <: KalmanFilter
     @test isa(ss1, StateSpace)
     compare_forecast_simulation(ss1, 20, 1000, 1e-2)
+
+    model2 = structural(logAP, 12)
     
-    ss2 = statespace(model; filter_type = SquareRootFilter{Float64})
+    ss2 = statespace(model2; filter_type = SquareRootFilter{Float64})
     
     @test ss2.filter_type <: SquareRootFilter
     @test isa(ss2, StateSpace)
     compare_forecast_simulation(ss2, 20, 1000, 1e-2)
+
+    model3 = structural(logAP, 12)
     
-    ss3 = statespace(model; filter_type = UnivariateKalmanFilter{Float64})
+    ss3 = statespace(model3; filter_type = UnivariateKalmanFilter{Float64})
     
     @test ss3.filter_type <: UnivariateKalmanFilter
     @test isa(ss3, StateSpace)
