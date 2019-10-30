@@ -54,7 +54,7 @@ function sqrt_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) w
 
     # Square-root Kalman filter
     for t = 1:n
-        v[t, :] = y[t, :] - Z[:, :, t]*a[t, :]
+        v[t, :] = y[t, :] - Z[:, :, t]*a[t, :] - model.d[t, :]
         if steadystate
             sqrtF[:, :, t] = sqrtF[:, :, t-1]
             K[:, :, t] = K[:, :, t-1]
@@ -71,7 +71,7 @@ function sqrt_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) w
 
             # Kalman gain and predictive state update
             K[:, :, t]       = U2star[:, :, t]*inv(sqrtF[:, :, t])
-            a[t+1, :]        = T*a[t, :] + K[:, :, t]*v[t, :]
+            a[t+1, :]        = T*a[t, :] + K[:, :, t]*v[t, :] + model.c[t, :]
             sqrtP[:, :, t+1] = Ustar[range1, range1]
 
             # Checking if steady state was attained
@@ -111,7 +111,7 @@ function filtered_state(model::StateSpaceModel{Typ}, sqrt_filter::SquareRootFilt
 
     for t = 1:n
         PZF = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
-        att[t, :]    = a[t, :] + PZF * v[t, :]
+        att[t, :]    = a[t, :] + PZF * v[t, :] + model.c[t, :]
         Ptt[:, :, t] = P[:, :, t] - PZF * Z[:, :, t] * P[:, :, t]
         ensure_pos_sym!(Ptt, t)
     end

@@ -27,26 +27,26 @@ function repeat_vector_t_plus_1!(mat::Matrix{T}, t::Int) where T
     return 
 end
 
-function big_update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ
-    @views @inbounds mul!(a[t+1, :], T, att[t, :])
+function big_update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, c::Matrix{Typ}, t::Int) where Typ
+    @views @inbounds mul!(a[t+1, :], T, att[t, :]) #TODO add c
     return 
 end
-function small_update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ
+function small_update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, c::Matrix{Typ}, t::Int) where Typ
     @inbounds for i in axes(a, 2)
-        a[t+1, i] = zero(Typ)
+        a[t+1, i] = c[t, i]
         for j in axes(T, 2)
             a[t+1, i] += T[i, j]*att[t, j]
         end
     end
     return 
 end
-function update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, t::Int) where Typ
+function update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, c::Matrix{Typ}, t::Int) where Typ
     # Here there is a trade-off between memory and speed, usually if the dimension of a is smaller than 15 
     # it is more performant to do the hard-coded version (small_update_a)
     if size(a, 2) < 16
-        small_update_a!(a, att, T, t)
+        small_update_a!(a, att, T, c, t)
     else
-        big_update_a!(a, att, T, t)
+        big_update_a!(a, att, T, c, t)
     end
     return 
 end
@@ -107,10 +107,10 @@ function update_P!(P::Array{Typ, 3}, T::Matrix{Typ}, Ptt::Array{Typ, 3}, RQR::Ma
     return 
 end
 
-function update_v!(v::Matrix{T}, y::Matrix{T}, Z::Array{T, 3}, a::Matrix{T}, t::Int) where T
+function update_v!(v::Matrix{T}, y::Matrix{T}, Z::Array{T, 3}, d::Matrix{T}, a::Matrix{T}, t::Int) where T
     # v[t, :] = y[t, :] - Z[:, :, t]*a[t, :]
     @inbounds for i in axes(Z, 1)
-        v[t, i] = y[t, i]
+        v[t, i] = y[t, i] - d[t, i]
         for j in axes(Z, 2)
             v[t, i] -= Z[i, j, t]*a[t, j]
         end
@@ -118,9 +118,9 @@ function update_v!(v::Matrix{T}, y::Matrix{T}, Z::Array{T, 3}, a::Matrix{T}, t::
     return 
 end
 
-function update_v!(v::Vector{T}, y::Matrix{T}, Z::Array{T, 3}, a::Matrix{T}, t::Int) where T
+function update_v!(v::Vector{T}, y::Matrix{T}, Z::Array{T, 3}, d::Matrix{T}, a::Matrix{T}, t::Int) where T
     # v[t, :] = y[t, :] - Z[:, :, t]*a[t, :]
-    v[t] = y[t, 1]
+    v[t] = y[t, 1] - d[t, 1]
     @inbounds for j in axes(Z, 2)
         v[t] -= Z[1, j, t]*a[t, j]
     end

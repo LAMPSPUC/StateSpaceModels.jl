@@ -186,7 +186,14 @@ function build_Q(r::Int, p::Int, T)
     return Q
 end
 
-function build_ss_dim(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+function y_to_matrix(y::Vector{T}) where T
+    return convert(Matrix{T}, y)
+end
+function y_to_matrix(y::Matrix{T}) where T
+    return y
+end
+
+function build_ss_dim(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ
     ny, py = size(y)
     pz, mz, nz = size(Z)
     mt1, mt2 = size(T)
@@ -197,7 +204,7 @@ function build_ss_dim(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matri
     return StateSpaceDimensions(ny, py, mr, rr)
 end
 
-function build_ss_dim(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+function build_ss_dim(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ
     ny, py = size(y)
     pz, mz = size(Z)
     mt, mt = size(T)

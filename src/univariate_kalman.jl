@@ -42,25 +42,25 @@ function univariate_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e
             F[t] = NaN
             update_att!(att, a, t) # att_t = a_t
             update_Ptt!(Ptt, P, t) # Ptt_t = P_t
-            update_a!(a, att, model.T, t) # a_t+1 = T * att_t
+            update_a!(a, att, model.T, model.c, t) # a_t+1 = T * att_t + c_t
             update_P!(P, model.T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
         elseif steadystate
-            update_v!(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
+            update_v!(v, model.y, model.Z, model.d, a, t) # v_t = y_t - Z_t * a_t - d_t
             F[t] = F[t-1]
             repeat_vector_t_plus_1!(K, t-1) # K[:, t]   = K[:, t-1]
             update_att!(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
             repeat_matrix_t_plus_1!(Ptt, t-1) # Ptt_t = Ptt_t-1
-            update_a!(a, att, model.T, t) # a_t+1 = T * att_t
+            update_a!(a, att, model.T, model.c, t) # a_t+1 = T * att_t + c_t
             repeat_matrix_t_plus_1!(P, t) # P_t+1 = P_t
         else
-            update_v!(v, model.y, model.Z, a, t) # v_t = y_t - Z_t * a_t
+            update_v!(v, model.y, model.Z, model.d, a, t) # v_t = y_t - Z_t * a_t - d_t
             update_ZP!(ZP, model.Z, P, t) # ZP = Z[:, :, t] * P[:, :, t]
             update_F!(F, ZP, model.Z, model.H, t) # F_t = Z_t * P_t * Z_t' + H
             update_P_Ztransp_Finv!(P_Ztransp_invF, ZP, F, t) # P_Ztransp_invF   = ZP' * invF(F, t)
             update_K!(K, P_Ztransp_invF, model.T, t) # K_t = T * P_t * Z_t * F^-1_t
             update_att!(att, a, P_Ztransp_invF, v, t) # att_t = a_t + P_t * Z_t * F^-1_t * v_t
             update_Ptt!(Ptt, P, P_Ztransp_invF, ZP, t) # Ptt_t = P_t - P_t * Z_t' * F^-1_t * Z_t * P_t
-            update_a!(a, att, model.T, t) # a_t+1 = T * att_t
+            update_a!(a, att, model.T, model.c, t) # a_t+1 = T * att_t + c_t
             update_P!(P, model.T, Ptt, RQR, t) # P_t+1 = T * Ptt_t * T' + RQR'
             if time_invariant && check_steady_state(P, t, tol)
                 steadystate = true
