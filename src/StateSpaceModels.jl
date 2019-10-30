@@ -2,7 +2,7 @@ module StateSpaceModels
 
 using Optim, Distributions, LinearAlgebra, StaticArrays, Dates, Printf, StatsBase
 
-import Base: size, show, copy
+import Base: size, show
 
 export statespace, kfas, diagnostics
 
