@@ -46,10 +46,10 @@ function statespace_recursion(model::StateSpaceModel{Typ}, initial_a::Matrix{Typ
     α[1, :] = initial_a
 
     for t = 1:n-1
-        y[t, :]   = model.Z[:, :, t]*α[t, :] + rand(dist_H)
-        α[t+1, :] = model.T*α[t, :] + model.R*rand(dist_Q)
+        y[t, :]   = model.Z[:, :, t]*α[t, :] + model.d[t, :] + rand(dist_H)
+        α[t+1, :] = model.T*α[t, :] + model.c[t, :] + model.R*rand(dist_Q)
     end
-    y[n, :] = model.Z[:, :, n]*α[n, :] + rand(dist_H)
+    y[n, :] = model.Z[:, :, n]*α[n, :] +  model.d[n, :] + rand(dist_H)
 
     return y, α
 end
