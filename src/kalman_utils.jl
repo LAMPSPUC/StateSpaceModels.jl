@@ -28,7 +28,10 @@ function repeat_vector_t_plus_1!(mat::Matrix{T}, t::Int) where T
 end
 
 function big_update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, c::Matrix{Typ}, t::Int) where Typ
-    @views @inbounds mul!(a[t+1, :], T, att[t, :]) #TODO add c
+    @views @inbounds mul!(a[t+1, :], T, att[t, :])
+    for i in axes(a, 2)
+        a[t + 1, i] += c[t, i]
+    end
     return 
 end
 function small_update_a!(a::Matrix{Typ}, att::Matrix{Typ}, T::Matrix{Typ}, c::Matrix{Typ}, t::Int) where Typ
