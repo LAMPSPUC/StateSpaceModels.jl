@@ -41,7 +41,6 @@ NID
 ```@docs
 StateSpaceDimensions
 StateSpaceModel
-StateSpaceCovariance
 SmoothedState
 FilterOutput
 StateSpace
