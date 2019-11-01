@@ -175,15 +175,17 @@ end
 function test_model_estimation(nan_pos::Int, n; rtol = 1e-1, nseeds = 3, seed = 1)
     Random.seed!(seed)
 
-    @assert nan_pos in collect(1:5)
+    @assert nan_pos in collect(1:7)
 
     y = ones(n, 1)
     Z = [1.0][:, :]
     T = [1.0][:, :]
     R = [1.0][:, :]
-    model = SSM.StateSpaceModel(y, Z, T, R)
-    model.H[1] = 1.0
-    model.Q[1] = 1.0
+    d = zeros(n, 1)
+    c = zeros(n, 1)
+    H = [1.0][:, :]
+    Q = [1.0][:, :]
+    model = SSM.StateSpaceModel(y, Z, T, R, d, c, H, Q)
 
     # Generate series
     y, α_n = SSM.statespace_recursion(model, [1.0][:, :])
@@ -198,8 +200,12 @@ function test_model_estimation(nan_pos::Int, n; rtol = 1e-1, nseeds = 3, seed = 
     elseif nan_pos == 3
         model.R .= NaN
     elseif nan_pos == 4
-        model.H.= NaN
+        model.d .= NaN
     elseif nan_pos == 5
+        model.c .= NaN
+    elseif nan_pos == 6
+        model.H .= NaN
+    elseif nan_pos == 7
         model.Q .= NaN
     end
 
@@ -210,16 +216,21 @@ function test_model_estimation(nan_pos::Int, n; rtol = 1e-1, nseeds = 3, seed = 
     @test ss.model.Z[end] ≈ 1.0 rtol = rtol
     @test ss.model.T[1] ≈ 1.0 rtol = rtol
     @test ss.model.R[1] ≈ 1.0 rtol = rtol
+    @test ss.model.d[1] ≈ 0.0 rtol = rtol
+    @test ss.model.c[1] ≈ 0.0 rtol = rtol
     @test ss.model.H[1] ≈ 1.0 rtol = rtol
     @test ss.model.Q[1] ≈ 1.0 rtol = rtol
 end
 
-@testset "Unknowns in Z, T, R, H and QQPair" begin
+@testset "Unknowns in Z, T, R, H and Q" begin
     n = 1000
     seed = 9
+    err = ErrorException("StateSpaceModels does not currently support estimating parameters in neither c and d.")
     test_model_estimation(1, n, seed = seed)
     test_model_estimation(2, n, seed = seed)
     test_model_estimation(3, n, seed = seed)
-    test_model_estimation(4, n, seed = seed)
-    test_model_estimation(5, n, seed = seed)
+    @test_throws err test_model_estimation(4, n, seed = seed)
+    @test_throws err test_model_estimation(5, n, seed = seed)
+    test_model_estimation(6, n, seed = seed)
+    test_model_estimation(7, n, seed = seed)
 end

@@ -7,10 +7,16 @@ mutable struct Unknowns
         dict["Z"] = find_nans_Z(ssm.Z)
         dict["T"] = find_nans(ssm.T)
         dict["R"] = find_nans(ssm.R)
+        dict["d"] = find_nans(ssm.d)
+        dict["c"] = find_nans(ssm.c)
         dict["sqrtH"] = find_nans_cov(ssm.H)
         dict["sqrtQ"] = find_nans_cov(ssm.Q)
 
         n_unknowns = num_unknowns(dict)
+
+        if !isempty(dict["d"]) || !isempty(dict["c"])
+            error("StateSpaceModels does not currently support estimating parameters in neither c and d.")
+        end
 
         return new(n_unknowns, dict)
     end
@@ -76,6 +82,18 @@ function fill_model_with_parameters!(model::StateSpaceModel{Typ}, psitilde::Vect
     for un_R in unknowns.unknown_indexes["R"]
         offset += 1
         model.R[un_R] = psitilde[offset]
+    end
+
+    # Fill d
+    for un_d in unknowns.unknown_indexes["d"]
+        offset += 1
+        model.d[un_d] = psitilde[offset]
+    end
+
+    # Fill c
+    for un_c in unknowns.unknown_indexes["c"]
+        offset += 1
+        model.c[un_c] = psitilde[offset]
     end
 
     # Fill sqrtH in the H matrix and do a gram (XX') after
