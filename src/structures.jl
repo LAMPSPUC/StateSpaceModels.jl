@@ -233,7 +233,7 @@ struct StateSpace{T <: Real}
     filter::FilterOutput{T}
     smoother::SmoothedState{T}
     filter_type::DataType
-    optimization_method::AbstractOptimizationMethod
+    opt_method::AbstractOptimizationMethod
 end
 
 """

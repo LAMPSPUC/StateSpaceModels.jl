@@ -162,7 +162,7 @@ end
 function Base.show(io::IO, ss::StateSpace)
     println("An estimated state-space model with")
     println("filter_type = $(ss.filter_type),")
-    println("optimization_method = $(typeof(ss.optimization_method)).")
+    println("optimization_method = $(typeof(ss.opt_method)).")
     return nothing
 end
 

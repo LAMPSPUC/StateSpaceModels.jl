@@ -209,8 +209,8 @@ function test_model_estimation(nan_pos::Int, n; rtol = 1e-1, nseeds = 3, seed = 
         model.Q .= NaN
     end
 
-    opt_method = SSM.RandomSeedsLBFGS(nseeds = nseeds)
-    ss = SSM.statespace(model; optimization_method = opt_method, verbose = 0)
+    opt_method = SSM.BFGS(model, [[0.999]])
+    ss = SSM.statespace(model; opt_method = opt_method, verbose = 0)
     
     @test ss.model.Z[1] ≈ 1.0 rtol = rtol
     @test ss.model.Z[end] ≈ 1.0 rtol = rtol

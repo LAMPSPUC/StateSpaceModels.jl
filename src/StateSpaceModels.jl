@@ -12,7 +12,8 @@ include("utils.jl")
 include("model_unknowns.jl")
 include("models.jl")
 include("estimation.jl")
-include("random_seeds_lbfgs.jl")
+include("lbfgs.jl")
+include("bfgs.jl")
 include("kalman_utils.jl")
 include("univariate_kalman.jl")
 include("kalman.jl")
@@ -27,7 +28,7 @@ Estimate the pre-specified state-space model. The function will only estimate th
 only perform the filter and smoother computations.
 """
 function statespace(model::StateSpaceModel{T}; filter_type::DataType = KalmanFilter{T}, 
-                    optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1) where T
+                    opt_method::AbstractOptimizationMethod = LBFGS(model, 3), verbose::Int = 1) where T
 
     if !(verbose in [0, 1, 2, 3])
         @warn("Incorrect verbose value input (should be 0, 1, 2 or 3): switching to default value 1")
@@ -37,14 +38,14 @@ function statespace(model::StateSpaceModel{T}; filter_type::DataType = KalmanFil
     print_header(verbose)
 
     # Maximum likelihood estimation
-    estimate_statespace!(model, filter_type, optimization_method; verbose = verbose)
+    estimate_statespace!(model, filter_type, opt_method; verbose = verbose)
 
     # Kalman filter and smoothing
     filter_output, smoothed_state = kfas(model, filter_type)
 
     print_bottom(verbose)
 
-    return StateSpace{T}(model, filter_output, smoothed_state, filter_type, optimization_method)
+    return StateSpace{T}(model, filter_output, smoothed_state, filter_type, opt_method)
 end
 
 """
