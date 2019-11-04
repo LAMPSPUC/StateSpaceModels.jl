@@ -11,9 +11,7 @@ end
 
 function print_estimation_start(verbose::Int, nseeds::Int)
     if verbose > 0
-        println("    Initiating maximum likelihood estimation with $(nseeds-1) seeds.    ") 
-        println("--------------------------------------------------------------")
-        println("             Seed 0 is aimed at degenerate cases.             ")
+        println("    Initiating maximum likelihood estimation with $(nseeds) seeds.    ") 
         println("--------------------------------------------------------------")
         println("||    seed    |     log-likelihood      |      time (s)     ||")
     end
@@ -23,7 +21,7 @@ function print_loglikelihood(verbose::Int, iseed::Int, loglikelihood::Vector{T},
     if verbose > 0
         t1 = now() - t0
 
-        str_seed   = @sprintf("%d", iseed-1) * "    |"
+        str_seed   = @sprintf("%d", iseed) * "    |"
         str_loglik = @sprintf("%.4f", loglikelihood[iseed]) * "      |"
         str_time   = @sprintf("%.2f", t1.value/1000) * "     ||"
 
