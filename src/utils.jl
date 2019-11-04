@@ -46,10 +46,10 @@ function statespace_recursion(model::StateSpaceModel{Typ}, initial_a::Matrix{Typ
     α[1, :] = initial_a
 
     for t = 1:n-1
-        y[t, :]   = model.Z[:, :, t]*α[t, :] + rand(dist_H)
-        α[t+1, :] = model.T*α[t, :] + model.R*rand(dist_Q)
+        y[t, :]   = model.Z[:, :, t]*α[t, :] + model.d[t, :] + rand(dist_H)
+        α[t+1, :] = model.T*α[t, :] + model.c[t, :] + model.R*rand(dist_Q)
     end
-    y[n, :] = model.Z[:, :, n]*α[n, :] + rand(dist_H)
+    y[n, :] = model.Z[:, :, n]*α[n, :] +  model.d[n, :] + rand(dist_H)
 
     return y, α
 end
@@ -78,7 +78,7 @@ end
     check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T
 
 Return `true` if steady state was attained with respect to tolerance `tol`, `false` otherwise.
-The steady state is checked by the following equation. TODO
+The steady state is checked by the following equation `maximum(abs.((P_t1 - P_t)./P_t1)) < tol`.
 """
 function check_steady_state(P_t1::Matrix{T}, P_t::Matrix{T}, tol::T) where T
     return maximum(abs.((P_t1 - P_t)./P_t1)) < tol ? true : false
@@ -186,7 +186,14 @@ function build_Q(r::Int, p::Int, T)
     return Q
 end
 
-function build_ss_dim(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+function y_to_matrix(y::Vector{T}) where T
+    return convert(Matrix{T}, y)
+end
+function y_to_matrix(y::Matrix{T}) where T
+    return y
+end
+
+function build_ss_dim(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ
     ny, py = size(y)
     pz, mz, nz = size(Z)
     mt1, mt2 = size(T)
@@ -197,7 +204,7 @@ function build_ss_dim(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matri
     return StateSpaceDimensions(ny, py, mr, rr)
 end
 
-function build_ss_dim(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+function build_ss_dim(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ
     ny, py = size(y)
     pz, mz = size(Z)
     mt, mt = size(T)

@@ -95,32 +95,46 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `Z` A ``p \\times m \\times n`` matrix
 * `T` A ``m \\times m`` matrix
 * `R` A ``m \\times r`` matrix
+* `d` A ``n \\times p`` matrix
+* `c` A ``n \\times m`` matrix
 * `H` A ``p \\times p`` matrix
 * `Q` A ``r \\times r`` matrix
 
-A `StateSpaceModel` object can be defined using `StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ})`.
-Alternatively, if `Z` is time-invariant, it can be input as a single ``p \\times m`` matrix.
+There are multiple constructors for the StateSpaceModel:
+
+`StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real`
+`StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real`
+`StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real`
+`StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real`
 """
 struct StateSpaceModel{Typ <: Real}
     y::Matrix{Typ} # Observations
     Z::Array{Typ, 3} # Observation matrix
     T::Matrix{Typ} # State matrix
     R::Matrix{Typ} # State error matrix
+    d::Matrix{Typ} # Mean adjustments for the observation equation
+    c::Matrix{Typ} # Mean adjustments for the state equation
     H::Matrix{Typ} # Covariance matrix of the observation vector
     Q::Matrix{Typ} # Covariance matrix of the state vector
     dim::StateSpaceDimensions
     missing_observations::Vector{Int}
     mode::String
 
-    function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, 
-                             H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+    function StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, 
+                             d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+
+        # Convert y to a Matrix
+        y = y_to_matrix(y)
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
-        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), "time-variant")
+        return new{Typ}(y, Z, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-variant")
     end
 
-    function StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, 
-                             H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+    function StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, 
+                             d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+
+        # Convert y to a Matrix
+        y = y_to_matrix(y)
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
         Zvar = Array{Typ, 3}(undef, dim.p, dim.m, dim.n)
@@ -128,21 +142,28 @@ struct StateSpaceModel{Typ <: Real}
             Zvar[i, j, t] = Z[i, j]
         end
 
-        return new{Typ}(y, Zvar, T, R, H, Q, dim, find_missing_observations(y), "time-invariant")
+        return new{Typ}(y, Zvar, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-invariant")
     end
 
-    function StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
-
+    function StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+        # Convert y to a Matrix
+        y = y_to_matrix(y)
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
+
+        # Build c and d with zeros
+        d = zeros(dim.n, dim.p)
+        c = zeros(dim.n, dim.m)
 
         # Build H and Q matrices with NaNs
         H = build_H(dim.p, Typ)
         Q = build_Q(dim.r, dim.p, Typ)
-        return new{Typ}(y, Z, T, R, H, Q, dim, find_missing_observations(y), "time-variant")
+        return new{Typ}(y, Z, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-variant")
     end
 
-    function StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+    function StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+        # Convert y to a Matrix
+        y = y_to_matrix(y)
 
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
@@ -153,10 +174,14 @@ struct StateSpaceModel{Typ <: Real}
             Zvar[i, j, t] = Z[i, j] # Zvar[:, :, t] = Z
         end
 
+        # Build c and d with zeros
+        d = zeros(dim.n, dim.p)
+        c = zeros(dim.n, dim.m)
+
         # Build H and Q matrices with NaNs
         H = build_H(dim.p, Typ)
         Q = build_Q(dim.r, dim.p, Typ)
-        return new{Typ}(y, Zvar, T, R, H, Q, dim, find_missing_observations(y), "time-invariant")
+        return new{Typ}(y, Zvar, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-invariant")
     end
 end
 

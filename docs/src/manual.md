@@ -7,8 +7,8 @@ In this package we consider the following state-space model
 ```math
 \begin{gather*}
     \begin{aligned}
-        y_{t} &= Z_{t} \alpha_{t}  + \varepsilon_{t}, \quad \quad \quad t = 1 \dots n, \\
-        \alpha_{t+1} &= T \alpha_{t} + R \eta_{t},
+        y_{t} &= Z_{t} \alpha_{t} + d_{t} + \varepsilon_{t}, \quad \quad \quad t = 1 \dots n, \\
+        \alpha_{t+1} &= T \alpha_{t} + c_{t} + R \eta_{t},
     \end{aligned}
 \end{gather*}
 ```
@@ -41,7 +41,6 @@ NID
 ```@docs
 StateSpaceDimensions
 StateSpaceModel
-StateSpaceCovariance
 SmoothedState
 FilterOutput
 StateSpace
