@@ -1,4 +1,4 @@
-@testset "regresison" begin
+@testset "regression" begin
     Random.seed!(10)
     beta = [10; 20; 30]
     n = 1000
