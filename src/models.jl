@@ -152,7 +152,7 @@ function regression(y::VecOrMat{Typ}, X::VecOrMat{Typ}) where Typ <: Real
     @assert n_X == n_y
 
     if p_y > 1
-        error("StateSpaceModels currently supports regression for univariate series y.")
+        error("StateSpaceModels currently supports regression only for univariate cases.")
     end
 
     # Fill Z
