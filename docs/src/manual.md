@@ -237,7 +237,7 @@ StateSpaceModels.statespace_likelihood
 
 ## Optimization methods
 
-StateSpaceModels has an interface that allows users to define their own optimization method. It is easilly integrated with Optim.jl
+StateSpaceModels has an interface that allows users to define their own optimization methods. It is easily integrated with Optim.jl.
 
 ### LBFGS
 
