@@ -1,4 +1,4 @@
-export structural, local_level, linear_trend
+export structural, local_level, linear_trend, regression
 
 """
     structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(undef, 0, 0)) where Typ <: Real
@@ -134,4 +134,39 @@ function linear_trend(y::VecOrMat{Typ}) where Typ <: Real
     R = kron(Matrix{Typ}(I, p, p),[1 0; 0 1])
 
     return StateSpaceModel(y, Z, T, R)
+end
+
+"""
+    regression(y::VecOrMat{Typ}, X::VecOrMat{Typ}) where Typ <: Real
+
+Build state-space system for estimating a regression model ``y_t = X_t\\beta_t + \\varpsilon_t``. Once the model is estimated
+the user can recover the parameter ``\\hat \\beta`` by the querying the smoothed states of the model.
+"""
+function regression(y::VecOrMat{Typ}, X::VecOrMat{Typ}) where Typ <: Real
+    # Certify that they are matrices
+    y = ensure_is_matrix(y)
+    X = ensure_is_matrix(X)
+    # Assert sizes are adequate
+    n_y, p_y = size(y)
+    n_X, p_X = size(X)
+    @assert n_X == n_y
+
+    if p_y > 1
+        error("StateSpaceModels currently supports regression for univariate series y.")
+    end
+
+    # Fill Z
+    Z = Array{Typ, 3}(undef, p_y, p_X, n_X)
+    for t in 1:n_X
+        Z[:, :, t] = X[t, :]
+    end
+    T = Matrix{Typ}(I, p_X, p_X)
+    R = zeros(Typ, p_X, 1)
+    Q = zeros(Typ, 1, 1)
+    d = zeros(n_y, p_y)
+    c = zeros(n_X, p_X)
+    # H is the only variable to estimate
+    H = build_H(p_y, Typ)
+
+    return StateSpaceModel(y, Z, T, R, d, c, H, Q)
 end
