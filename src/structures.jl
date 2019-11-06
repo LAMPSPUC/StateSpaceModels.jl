@@ -124,7 +124,7 @@ struct StateSpaceModel{Typ <: Real}
                              d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
 
         # Convert y to a Matrix
-        y = y_to_matrix(y)
+        y = ensure_is_matrix(y)
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
         return new{Typ}(y, Z, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-variant")
@@ -134,7 +134,7 @@ struct StateSpaceModel{Typ <: Real}
                              d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
 
         # Convert y to a Matrix
-        y = y_to_matrix(y)
+        y = ensure_is_matrix(y)
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
         Zvar = Array{Typ, 3}(undef, dim.p, dim.m, dim.n)
@@ -147,7 +147,7 @@ struct StateSpaceModel{Typ <: Real}
 
     function StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
         # Convert y to a Matrix
-        y = y_to_matrix(y)
+        y = ensure_is_matrix(y)
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
 
@@ -163,7 +163,7 @@ struct StateSpaceModel{Typ <: Real}
 
     function StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
         # Convert y to a Matrix
-        y = y_to_matrix(y)
+        y = ensure_is_matrix(y)
 
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)

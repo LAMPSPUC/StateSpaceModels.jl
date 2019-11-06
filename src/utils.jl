@@ -186,10 +186,10 @@ function build_Q(r::Int, p::Int, T)
     return Q
 end
 
-function y_to_matrix(y::Vector{T}) where T
-    return convert(Matrix{T}, y)
+function ensure_is_matrix(y::Vector{T}) where T
+    return y[:, :]
 end
-function y_to_matrix(y::Matrix{T}) where T
+function ensure_is_matrix(y::Matrix{T}) where T
     return y
 end
 
@@ -213,4 +213,9 @@ function build_ss_dim(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{
         error("StateSpaceModel dimension mismatch")
     end
     return StateSpaceDimensions(ny, py, mr, rr)
+end
+
+function has_unknowns(model::StateSpaceModel{T}) where T
+    unknowns = Unknowns(model)
+    return unknowns.n_unknowns == 0 ? false : true
 end

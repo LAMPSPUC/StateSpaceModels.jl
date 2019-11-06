@@ -99,6 +99,13 @@ The structural model is defined by
 structural
 ```
 
+A regression can also be defined in terms of state-space model. We consider the simple model ``y_t = X_t\\beta_t + \\varpsilon_t`` where 
+``\varepsilon_{t} \sim \mathcal{N}(0, H_t)``. This can be written in the state-space form by doing ``Z_t = X_t, T_t = I, R = 0`` and ``Q = 0``
+
+```@docs
+regression
+```
+
 ## Custom models
 
 You can also build your own custom model by passing all or some of the matrices that compose the state-space model.
@@ -230,10 +237,18 @@ StateSpaceModels.statespace_likelihood
 
 ## Optimization methods
 
-### RandomSeedsLBFGS
+StateSpaceModels has an interface that allows users to define their own optimization methods. It is easily integrated with Optim.jl.
+
+### LBFGS
 
 ```@docs
-StateSpaceModels.RandomSeedsLBFGS
+StateSpaceModels.LBFGS
+```
+
+### BFGS
+
+```@docs
+StateSpaceModels.BFGS
 ```
 
 ## Optimization methods interface
