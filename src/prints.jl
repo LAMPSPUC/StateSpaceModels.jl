@@ -34,15 +34,25 @@ function print_loglikelihood(verbose::Int, iseed::Int, loglikelihood::Vector{T},
     end
 end
 
-function print_estimation_end(verbose::Int, loglikelihood::Vector{T}) where T
+function print_estimation_end(verbose::Int, log_lik::T, aic::T, bic::T) where T
     if verbose > 0
-        str = "                  Log-likelihood: "
-        str_loglik = @sprintf("%.4f", maximum(loglikelihood)) * "                  "
-        str *= " "^max(0, 62 - length(str_loglik) - length(str)) * str_loglik
+        str_1 = "                  Log-likelihood: "
+        str_log_lik = @sprintf("%.4f", log_lik) * "                  "
+        str_1 *= " "^max(0, 62 - length(str_log_lik) - length(str_1)) * str_log_lik
+
+        str_2 = "                             AIC: "
+        str_aic = @sprintf("%.4f", aic) * "                  "
+        str_2 *= " "^max(0, 62 - length(str_aic) - length(str_2)) * str_aic
+
+        str_3 = "                             BIC: "
+        str_bic = @sprintf("%.4f", bic) * "                  "
+        str_3 *= " "^max(0, 62 - length(str_bic) - length(str_3)) * str_bic
 
         println("--------------------------------------------------------------")
         println("           Maximum likelihood estimation complete.            ")
-        println(str)
+        println(str_1)
+        println(str_2)
+        println(str_3)
     end
 end
 

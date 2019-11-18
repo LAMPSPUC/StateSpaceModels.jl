@@ -78,3 +78,68 @@ function estimate_statespace(model::StateSpaceModel{T}, filter_type::DataType,
     error(optimization_method , " not implemented") # Returns an error if it cannot 
                                                     # find a specialized estimate_statespace
 end
+
+function AIC(n_unknowns::Int, log_lik::T) where T
+    return T(2 * n_unknowns - 2 * log_lik)
+end
+
+function BIC(n::Int, n_unknowns::Int, log_lik::T) where T
+    return T(log(n) * n_unknowns - 2 * log_lik)
+end
+
+function estimate_statespace!(model::StateSpaceModel{T}, filter_type::DataType,
+                              opt_method::AbstractOptimizationMethod{T}; verbose::Int = 1) where T
+
+
+    unknowns = Unknowns(model)
+
+    if unknowns.n_unknowns == 0
+        @warn("StateSpaceModel has no parameters to be estimated.")
+        return model
+    end
+ 
+    n_psi          = unknowns.n_unknowns
+    loglikelihood = Vector{T}(undef, opt_method.n_seeds)
+    psi           = Matrix{T}(undef, n_psi, opt_method.n_seeds)
+    optseeds      = Vector{Optim.OptimizationResults}(undef, 0)
+
+    print_estimation_start(verbose, opt_method.n_seeds)
+
+    # compute the valid instants to evaluate loglikelihood
+    valid_insts = valid_instants(model)
+
+    t0 = now()
+
+    # Optimization
+    for (i, seed) in enumerate(opt_method.seeds)
+        try
+            optseed = optimize(psitilde -> statespace_likelihood(psitilde, model, unknowns, valid_insts, filter_type), seed,
+                            opt_method.method, Optim.Options(f_tol = opt_method.f_tol, 
+                                                             g_tol = opt_method.g_tol, 
+                                                             iterations = opt_method.iterations,
+                                                             show_trace = (verbose == 3 ? true : false) ))
+            loglikelihood[i] = -optseed.minimum
+            psi[:, i] = optseed.minimizer
+            push!(optseeds, optseed)
+
+            print_loglikelihood(verbose, i, loglikelihood, t0)
+        catch err
+            println(err)
+            println("seed diverged")
+        end
+    end
+
+    log_lik, best_seed = findmax(loglikelihood)
+
+    aic = AIC(n_psi, log_lik)
+    bic = BIC(length(model.y), n_psi, log_lik)
+
+    print_estimation_end(verbose, log_lik, aic, bic)
+    verbose >= 2 && println("Best seed optimization result: \n $(optseeds[best_seed])")
+
+    # Take the best seed and fill the model with it
+    bestpsi = psi[:, best_seed]
+    fill_model_with_parameters!(model, bestpsi, unknowns)
+
+    return 
+end

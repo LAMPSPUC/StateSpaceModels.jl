@@ -19,11 +19,11 @@ Abstract type used to implement an interface for generic smoothers.
 abstract type AbstractSmoother end
 
 """
-    AbstractOptimizationMethod
+    AbstractOptimizationMethod{T}
 
 Abstract type used to implement an interface for generic optimization methods.
 """
-abstract type AbstractOptimizationMethod end
+abstract type AbstractOptimizationMethod{T} end
 
 # Auxiliary structure for square-root Kalman filter
 mutable struct SquareRootFilter{T <: Real} <: AbstractFilter
