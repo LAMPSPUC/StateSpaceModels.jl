@@ -35,8 +35,6 @@ Current features:
   3. Homoscedasticity test
 
 Planned features:
-* Exact initialization of the Kalman filter
-* EM algorithm for maximum likelihood estimation
 * Univariate treatment of multivariate models
 
 [build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
