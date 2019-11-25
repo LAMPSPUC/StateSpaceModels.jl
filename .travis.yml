@@ -11,15 +11,15 @@ matrix:
 notifications:
     email: false
 sudo: false
-addons:
-    apt_packages:
-        - gfortran
-        - liblapack-dev
-        - libgmp-dev
-        - libglpk-dev
-after_success:
-    - echo $TRAVIS_JULIA_VERSION
-    - julia -e 'import Pkg; Pkg.add("Documenter")'
-    - julia -e 'import Pkg; cd(Pkg.dir("StateSpaceModels")); include(joinpath("docs", "make.jl"))'
-    # push coverage results to Codecov
-    - julia --inline=no -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+branches:
+  only:
+    - master
+codecov: true
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.0
+      os: linux
+      script:
+        - julia --project=docs -e 'using Pkg; Pkg.add(PackageSpec(path=pwd()))'
+        - julia --project=docs --color=yes docs/make.jl
