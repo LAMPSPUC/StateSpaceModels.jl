@@ -11,9 +11,10 @@ using CSV, StateSpaceModels, Plots, Statistics, Dates
 AP = CSV.read("AirPassengers.csv")
 
 # Take the log of the series
-logAP = log.(Array{Float64}(AP[:Passengers]))
+logAP = log.(Vector{Float64}(AP[:Passengers]))
 
-p1 = plot(AP[:Date], logAP, label = "AirPassengers timeseries", size = (1000, 500))
+# Plot the data
+p1 = plot(AP[:Date], logAP, label = "Log-airline passengers", legend = :topleft, color = :black)
 ```
 
 ![Log of Air Passengers time series](./assets/logofairpassengers.png)
