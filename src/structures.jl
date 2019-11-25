@@ -87,7 +87,7 @@ struct StateSpaceDimensions
 end
 
 """
-    StateSpaceModel{Typ}
+    StateSpaceModel{Typ <: Real}}
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
@@ -99,13 +99,6 @@ Following the notation of on the book \"Time Series Analysis by State Space Meth
 * `c` A ``n \\times m`` matrix
 * `H` A ``p \\times p`` matrix
 * `Q` A ``r \\times r`` matrix
-
-There are multiple constructors for the StateSpaceModel:
-
-`StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real`
-`StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real`
-`StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real`
-`StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real`
 """
 struct StateSpaceModel{Typ <: Real}
     y::Matrix{Typ} # Observations
@@ -186,7 +179,7 @@ struct StateSpaceModel{Typ <: Real}
 end
 
 """
-    SmoothedState
+    SmoothedState{T <: Real}
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
@@ -199,7 +192,7 @@ struct SmoothedState{T <: Real}
 end
 
 """
-    FilterOutput
+    FilterOutput{T <: Real}
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
@@ -224,7 +217,7 @@ struct FilterOutput{T <: Real}
 end
 
 """
-    StateSpace
+    StateSpace{T <: Real}
     
 A state-space structure containing the model, filter output, smoother output, covariance matrices, filter type and optimization method.
 """
@@ -237,7 +230,7 @@ struct StateSpace{T <: Real}
 end
 
 """
-    Diagnostics
+    Diagnostics{T <: Real}
 
 A structure containing the diagnostics of a state-space model.
 """
