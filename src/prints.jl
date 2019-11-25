@@ -1,7 +1,7 @@
 function print_header(verbose::Int)
     if verbose > 0
         println("==============================================================")
-        println("                  StateSpaceModels.jl v0.2.3                  ")
+        println("                  StateSpaceModels.jl v0.3.0                  ")
         println(" (c) Raphael Saavedra, Guilherme Bodin, and Mario Souto, 2019 ")
         println("--------------------------------------------------------------")
         println("            Starting state-space model estimation.            ")

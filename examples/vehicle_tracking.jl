@@ -23,11 +23,11 @@ Z = kron(Matrix{Float64}(I, p, p), [1. 0])
 
 # Generate random actuators
 Q = .5 * Matrix{Float64}(I, q, q)
-η = MvNormal(zeros(q), Q)
+η = MvNormal(Q)
 
 # Generate random measurement noise
 H = 2. * Matrix{Float64}(I, p, p)
-ε = MvNormal(zeros(p), H)
+ε = MvNormal(H)
 
 # Simulate vehicle trajectory
 α = zeros(n + 1, m)

@@ -11,9 +11,10 @@ using CSV, StateSpaceModels, Plots, Statistics, Dates
 AP = CSV.read("AirPassengers.csv")
 
 # Take the log of the series
-logAP = log.(Array{Float64}(AP[:Passengers]))
+logAP = log.(Vector{Float64}(AP[:Passengers]))
 
-p1 = plot(AP[:Date], logAP, label = "AirPassengers timeseries", size = (1000, 500))
+# Plot the data
+p1 = plot(AP[:Date], logAP, label = "Log-airline passengers", legend = :topleft, color = :black)
 ```
 
 ![Log of Air Passengers time series](./assets/logofairpassengers.png)
@@ -57,7 +58,7 @@ p3 = plot!(p1, newdates, pred, label = "Forecast")
 
 ## Vehicle tracking
 
-In order to illustrate one application that does not fall into any of the predefined models, thus requiring a user-defined model, let us consider an example from control theory. More precisely, we are going to use StateSpaceModels.jl to track a vehicle from noisy sensor data. In this case, ``y_t`` is a ``2 \times 1`` observation vector representing the corrupted measurements of the vehicle's position on the two-dimensional plane in instant ``t``. Since sensors collect the observations with the presence of additive Gaussian noise, we need to filter the observation in order to obtain a better estimate of the vehicle's position.
+In order to illustrate one application that does not fall into any of the predefined models, thus requiring a user-defined model, let us consider an example from control theory. More precisely, we are going to use StateSpaceModels.jl to track a vehicle from noisy sensor data. In this case, ``y_t`` is a ``2 \times 1`` observation vector representing the corrupted measurements of the vehicle's position on the two-dimensional plane in instant ``t``. Since sensors collect the observations with the presence of additive Gaussian noise, we need to filter the observation in order to obtain a better estimate of the vehicle's position. The full code to run this example is in the example folder.
 
 The position and speed in each dimension compose the state of the vehicle. Let us refer to ``x_t^{(d)}`` as the position on the axis ``d`` and to ``\dot{x}^{(d)}_t`` as the speed on the axis ``d`` in instant ``t``. Additionally, let ``\eta^{(d)}_t`` be the input drive force on the axis ``d``, which acts as state noise. For a single dimension, we can describe the vehicle dynamics as
 ```math
@@ -95,10 +96,10 @@ In this example, we define the noise variances ``H`` and ``Q``, generate the noi
 ```julia
 # Generate random actuators
 Q = .5 * Matrix{Float64}(I, q, q)
-η = MvNormal(zeros(q), Q)
+η = MvNormal(Q)
 # Generate random measurement noise
 H = 2. * Matrix{Float64}(I, p, p)
-ε = MvNormal(zeros(p), H)
+ε = MvNormal(H)
 # Simulate vehicle trajectory
 α = zeros(n + 1, m)
 y = zeros(n, p)

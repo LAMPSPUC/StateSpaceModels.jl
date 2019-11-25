@@ -70,8 +70,8 @@ function simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ
     Z, T, R, d, c = prepare_forecast(ss, N)
 
     # Distribution of the state space errors
-    dist_ϵ = MvNormal(zeros(p), H)
-    dist_η = MvNormal(zeros(r), Q)
+    dist_ϵ = MvNormal(H)
+    dist_η = MvNormal(Q)
 
     αsim = Array{Typ, 3}(undef, N, m, S)
     ysim = Array{Typ, 3}(undef, N, p, S)
