@@ -87,7 +87,7 @@ struct StateSpaceDimensions
 end
 
 """
-    StateSpaceModel{Typ <: Real}}
+    StateSpaceModel{Typ <: Real}
 
 Following the notation of on the book \"Time Series Analysis by State Space Methods\" (2012) by J. Durbin and S. J. Koopman.
 
