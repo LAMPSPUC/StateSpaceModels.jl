@@ -139,8 +139,8 @@ end
 """
     regression(y::VecOrMat{Typ}, X::VecOrMat{Typ}) where Typ <: Real
 
-Build state-space system for estimating a regression model ``y_t = X_t\\beta_t + \\varpsilon_t``. Once the model is estimated
-the user can recover the parameter ``\\hat \\beta`` by the querying the smoothed states of the model.
+Build state-space system for estimating a regression model ``y_t = X_t\\beta_t + \\varepsilon_t``. Once the model is estimated
+the user can recover the parameter ``\\hat{\\beta}`` by the querying the smoothed states of the model.
 """
 function regression(y::VecOrMat{Typ}, X::VecOrMat{Typ}) where Typ <: Real
     # Certify that they are matrices
