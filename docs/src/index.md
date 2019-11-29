@@ -31,8 +31,6 @@ Current features:
   3. Homoscedasticity test
 
 Planned features:
-* Exact initialization of the Kalman filter
-* EM algorithm for maximum likelihood estimation
 * Univariate treatment of multivariate models
 
 ## Citing StateSpaceModels.jl
