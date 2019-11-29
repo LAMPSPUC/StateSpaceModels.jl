@@ -49,7 +49,7 @@ function valid_instants(model::StateSpaceModel{T}) where T
 end
 
 """
-statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, unknowns::Unknowns, 
+    statespace_loglik(psitilde::Vector{T}, model::StateSpaceModel, unknowns::Unknowns, 
                             valid_insts::Vector{Int}, filter_type::DataType) where T
 
 Compute log-likelihood concerning hyperparameter vector psitilde (``\\psi``)
@@ -57,7 +57,7 @@ Compute log-likelihood concerning hyperparameter vector psitilde (``\\psi``)
 Evaluate ``\\ell(\\psi;y_n)= -\\frac{np}{2}\\log2\\pi - \\frac{1}{2} \\sum_{t=1}^n \\log |F_t| - 
 \\frac{1}{2} \\sum_{t=1}^n v_t^{\\top} F_t^{-1} v_t ``
 """
-function statespace_likelihood(psitilde::Vector{T}, model::StateSpaceModel, unknowns::Unknowns, 
+function statespace_loglik(psitilde::Vector{T}, model::StateSpaceModel, unknowns::Unknowns, 
                                valid_insts::Vector{Int}, filter_type::DataType) where T
     # Fill all psitilde in the model
     fill_model_with_parameters!(model, psitilde, unknowns)
@@ -113,7 +113,7 @@ function estimate_statespace!(model::StateSpaceModel{T}, filter_type::DataType,
     # Optimization
     for (i, seed) in enumerate(opt_method.seeds)
         try
-            optseed = optimize(psitilde -> statespace_likelihood(psitilde, model, unknowns, valid_insts, filter_type), seed,
+            optseed = optimize(psitilde -> statespace_loglik(psitilde, model, unknowns, valid_insts, filter_type), seed,
                             opt_method.method, Optim.Options(f_tol = opt_method.f_tol, 
                                                              g_tol = opt_method.g_tol, 
                                                              iterations = opt_method.iterations,

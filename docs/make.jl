@@ -4,7 +4,7 @@ makedocs(
     modules = [StateSpaceModels],
     doctest  = false,
     clean    = true,
-    format   = Documenter.HTML(),
+    format   = Documenter.HTML(mathengine = Documenter.MathJax()),
     sitename = "StateSpaceModels.jl",
     authors = "Raphael Saavedra, Guilherme Bodin, and Mario Souto",
     pages = [

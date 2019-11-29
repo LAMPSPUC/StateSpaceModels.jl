@@ -99,7 +99,7 @@ The structural model is defined by
 structural
 ```
 
-A regression can also be defined in terms of state-space model. We consider the simple model ``y_t = X_t\\beta_t + \\varpsilon_t`` where 
+A regression can also be defined in terms of state-space model. We consider the simple model ``y_t = X_t \beta_t + \varepsilon_t`` where 
 ``\varepsilon_{t} \sim \mathcal{N}(0, H_t)``. This can be written in the state-space form by doing ``Z_t = X_t, T_t = I, R = 0`` and ``Q = 0``
 
 ```@docs
@@ -230,9 +230,9 @@ StateSpaceModels.AbstractSmoother
 kfas
 ```
 
-Every filter must provide its own version of the `statespace_likelihood` function
+Every filter must provide its own version of the `statespace_loglik` function
 ```@docs
-StateSpaceModels.statespace_likelihood
+StateSpaceModels.statespace_loglik
 ```
 
 ## Optimization methods
