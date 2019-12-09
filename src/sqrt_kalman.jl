@@ -40,7 +40,7 @@ function sqrt_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) w
 
     # Initial state: big Kappa initialization
     a[1, :]        = zeros(m, 1)
-    sqrtP[:, :, 1]    = 1e6 .* Matrix(I, m, m)
+    sqrtP[:, :, 1]    = 1e3 .* Matrix(I, m, m)
 
     # Pre-allocating for performance
     zeros_pr = zeros(p, r)
