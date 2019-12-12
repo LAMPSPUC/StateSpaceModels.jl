@@ -9,6 +9,9 @@
 
     ss = statespace(model)
 
-    @test ss.smoother.alpha[end, :] ≈ [10; 20; 30] rtol = 1e-2
+    beta_OLS = X\y
+
+    # The result should be the same of OLS
+    @test ss.filter.att[end, :] ≈ beta_OLS rtol = 1e-4
     @test ss.model.H[1] ≈ 1.0 rtol = 1e-2
 end
