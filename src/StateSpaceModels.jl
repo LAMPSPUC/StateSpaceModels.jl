@@ -21,7 +21,7 @@ include("forecast.jl")
 include("diagnostics.jl")
 
 """
-    statespace(model::StateSpaceModel; filter_type::DataType = KalmanFilter, optimization_method::AbstractOptimizationMethod = RandomSeedsLBFGS(), verbose::Int = 1)
+    statespace(model; filter_type = KalmanFilter, opt_method = LBFGS(), verbose = 1)
 
 Estimate the pre-specified state-space model. The function will only estimate the entries that are declared `NaN`. If there are no NaNs in the `model` it will
 only perform the filter and smoother computations.
