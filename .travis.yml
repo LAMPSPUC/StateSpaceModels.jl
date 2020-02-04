@@ -1,25 +1,30 @@
 language: julia
-os:
-    - linux
+
 julia:
-    - 1.0
-    - 1.1
-    - 1.2
-matrix:
-    allow_failures:
-        - julia: nightly
+  - 1.0
+  - 1.1
+  - 1.2
+
+os:
+  - linux
+
+after_success:
+  - julia --project -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  
 notifications:
     email: false
-sudo: false
+
 branches:
   only:
     - master
-codecov: true
+
 jobs:
   include:
     - stage: "Documentation"
       julia: 1.0
       os: linux
       script:
-        - julia --project=docs -e 'using Pkg; Pkg.add(PackageSpec(path=pwd()))'
-        - julia --project=docs --color=yes docs/make.jl
+        - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
+                                    Pkg.develop(PackageSpec(path=pwd()))'
+        - julia --project=docs/ docs/make.jl
+      after_success: skip
