@@ -3,13 +3,13 @@
 
 Run diagnostics and print results
 """
-function diagnostics(ss::StateSpace{T}) where T
+function diagnostics(ss::StateSpace{T}; maxlag::Integer = 20) where T
     println("==============================================================")
     println("                    Running diagnostics...                    ")
     
     e = residuals(ss)
     pvalueJB = jarquebera(e)
-    pvalueLB = ljungbox(e)
+    pvalueLB = ljungbox(e; maxlag = maxlag)
     pvalueH  = homoscedast(e)
 
     p = ss.model.dim.p

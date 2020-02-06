@@ -11,10 +11,10 @@ using CSV, StateSpaceModels, Plots, Statistics, Dates
 AP = CSV.read("AirPassengers.csv")
 
 # Take the log of the series
-logAP = log.(Vector{Float64}(AP[:Passengers]))
+logAP = log.(Vector{Float64}(AP.Passengers))
 
 # Plot the data
-p1 = plot(AP[:Date], logAP, label = "Log-airline passengers", legend = :topleft, color = :black)
+p1 = plot(AP.Date, logAP, label = "Log-airline passengers", legend = :topleft, color = :black)
 ```
 
 ![Log of Air Passengers time series](./assets/logofairpassengers.png)
@@ -29,25 +29,23 @@ model = structural(logAP, 12)
 Estimating the model gives us the trend and seasonal components of the time series.
 
 ```julia
-# Estimate a StateSpace structure
 ss = statespace(model)
 
-# Analyze its decomposition in trend and seasonal
-p2 = plot(AP[:Date], [ss.smoother.alpha[:, 1] ss.smoother.alpha[:, 3]], layout = (2, 1),
-            label = ["Trend component" "Seasonal component"], legend = :topleft)
+# Analyze its decomposition in trend, slope and seasonal components
+p2 = plot(AP.Date, [ss.smoother.alpha[:, 1] ss.smoother.alpha[:, 2] ss.smoother.alpha[:, 3]], layout = (3, 1),
+            label = ["Trend" "Slope" "Seasonal"], legend = :topleft)
 ```
 
 ![Trend and seasonal components for log of Air Passengers](./assets/logap_components.png)
 
-We can also forecast this time series. In this example, we will forecast 24 months ahead.
+We can forecast this time series. In this example we will forecast 24 months ahead.
 
 ```julia
-# Forecast 24 months ahead
 N = 24
 pred, dist = forecast(ss, N)
 
 # Define forecasting dates
-firstdate = AP[:Date][end] + Month(1)
+firstdate = AP.Date[end] + Month(1)
 newdates = collect(firstdate:Month(1):firstdate + Month(N - 1))
 
 p3 = plot!(p1, newdates, pred, label = "Forecast")
@@ -55,6 +53,15 @@ p3 = plot!(p1, newdates, pred, label = "Forecast")
 
 ![Forecast for log of Air Passengers](./assets/logap_forecast.png)
 
+Another feature of StateSpaceModels.jl is to simulate scenarios of the time series. In this example
+we will simulate 10 scenarios for 24 months ahead.
+
+```julia
+sim = simulate(ss, N, 10)
+p4 = plot!(p1, newdates, sim[:, 1, :], label = "", color = "Grey", width = 0.2)
+```
+
+![Scenarios for log of Air Passengers](./assets/logap_scenarios.png)
 
 ## Vehicle tracking
 
