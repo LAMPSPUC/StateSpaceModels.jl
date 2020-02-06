@@ -31,9 +31,9 @@ Estimating the model gives us the trend and seasonal components of the time seri
 ```julia
 ss = statespace(model)
 
-# Analyze its decomposition in level, trend and seasonal
+# Analyze its decomposition in trend, slope and seasonal components
 p2 = plot(AP.Date, [ss.smoother.alpha[:, 1] ss.smoother.alpha[:, 2] ss.smoother.alpha[:, 3]], layout = (3, 1),
-            label = ["Level component" "Trend component" "Seasonal component"], legend = :topleft)
+            label = ["Trend" "Slope" "Seasonal"], legend = :topleft)
 ```
 
 ![Trend and seasonal components for log of Air Passengers](./assets/logap_components.png)
@@ -54,10 +54,9 @@ p3 = plot!(p1, newdates, pred, label = "Forecast")
 ![Forecast for log of Air Passengers](./assets/logap_forecast.png)
 
 Another feature of StateSpaceModels.jl is to simulate scenarios of the time series. In this example
-we will simulate 10 scenarios for 24 months ahead
+we will simulate 10 scenarios for 24 months ahead.
 
 ```julia
-# 10 scenarios for 24 months ahead
 sim = simulate(ss, N, 10)
 p4 = plot!(p1, newdates, sim[:, 1, :], label = "", color = "Grey", width = 0.2)
 ```

@@ -15,9 +15,9 @@ model = structural(logAP, 12)
 # Estimate the state-space model
 ss = statespace(model)
 
-# Analyze its decomposition in level, trend and seasonal
+# Analyze its decomposition in trend, slope and seasonal components
 p2 = plot(AP.Date, [ss.smoother.alpha[:, 1] ss.smoother.alpha[:, 2] ss.smoother.alpha[:, 3]], layout = (3, 1),
-            label = ["Level component" "Trend component" "Seasonal component"], legend = :topleft)
+            label = ["Trend" "Slope" "Seasonal"], legend = :topleft)
 
 # Forecast 24 months ahead
 N = 24
