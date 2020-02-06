@@ -1,5 +1,5 @@
 AP = CSV.read("../examples/AirPassengers.csv")
-logAP = log.(Vector{Float64}(AP[!, :Passengers]))
+logAP = log.(Vector{Float64}(AP.Passengers))
 
 @testset "Air passengers with Kalman filter" begin
     model1 = structural(logAP, 12)
