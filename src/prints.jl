@@ -1,17 +1,17 @@
 function print_header(verbose::Int)
     if verbose > 0
         println("==============================================================")
-        println("                  StateSpaceModels.jl v0.3.0                  ")
+        println("                  StateSpaceModels.jl v0.3.2                  ")
         println(" (c) Raphael Saavedra, Guilherme Bodin, and Mario Souto, 2019 ")
         println("--------------------------------------------------------------")
         println("            Starting state-space model estimation.            ")
-        
+
     end
 end
 
 function print_estimation_start(verbose::Int, nseeds::Int)
     if verbose > 0
-        println("    Initiating maximum likelihood estimation with $(nseeds) seeds.    ") 
+        println("    Initiating maximum likelihood estimation with $(nseeds) seeds.    ")
         println("--------------------------------------------------------------")
         println("||    seed    |     log-likelihood      |      time (s)     ||")
     end
