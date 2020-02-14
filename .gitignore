@@ -5,3 +5,4 @@ docs/build/
 deps/deps.jl
 Manifest.toml
 .DS_Store
+.github
