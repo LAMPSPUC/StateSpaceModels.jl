@@ -138,6 +138,33 @@ struct StateSpaceModel{Typ <: Real}
         return new{Typ}(y, Zvar, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-invariant")
     end
 
+    function StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, 
+                             H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+
+        # Convert y to a Matrix
+        y = ensure_is_matrix(y)
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
+        return new{Typ}(y, Zvar, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-variant")
+    end
+
+    function StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, 
+                             H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+
+        # Convert y to a Matrix
+        y = ensure_is_matrix(y)
+        # Build StateSpaceDimensions
+        dim = build_ss_dim(y, Z, T, R)
+        Zvar = Array{Typ, 3}(undef, dim.p, dim.m, dim.n)
+        for t in 1:dim.n, i in axes(Z, 1), j in axes(Z, 2)
+            Zvar[i, j, t] = Z[i, j]
+        end
+        d = zeros(dim.n, dim.p)
+        c = zeros(dim.n, dim.m)
+
+        return new{Typ}(y, Zvar, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-invariant")
+    end
+
     function StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
         # Convert y to a Matrix
         y = ensure_is_matrix(y)
@@ -145,8 +172,8 @@ struct StateSpaceModel{Typ <: Real}
         dim = build_ss_dim(y, Z, T, R)
 
         # Build c and d with zeros
-        d = zeros(size(Z, 3), dim.p)
-        c = zeros(size(Z, 3), dim.m)
+        d = zeros(dim.n, dim.p)
+        c = zeros(dim.n, dim.m)
 
         # Build H and Q matrices with NaNs
         H = build_H(dim.p, Typ)

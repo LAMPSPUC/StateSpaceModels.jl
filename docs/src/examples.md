@@ -87,26 +87,43 @@ where ``\alpha_t = (x_t^{(1)}, \dot{x}^{(1)}_{t}, x_t^{(2)}, \dot{x}^{(2)}_{t})^
 
 We can formulate the vehicle tracking problem in StateSpaceModels.jl as:
 ```julia
+using StateSpaceModels, Distributions, LinearAlgebra, Plots, Random
+
+# Fix seed
+Random.seed!(1)
+
+# Number of observations
+n = 400
+# State dimension (2d position + 2d speed)
+m = 4
+# Measurements dimension (2d noisy position)
+p = 2
+# Control dimension (2d acceleration)
+q = 2
+
+# Damping ratio
+ρ = 0.05
+# Time delta
+Δ = 1.0
+
 # State transition matrix
-T = kron(Matrix{Float64}(I, p, p), [1 (1 - ρ * Δ / 2) * Δ; 0 (1 - ρ * Δ)])
+T = kron(Matrix{Float64}(I, p, p), [1.0 (1.0 - ρ * Δ / 2.0) * Δ; 0.0 (1.0 - ρ * Δ)])
 # Input matrix
-R = kron(Matrix{Float64}(I, p, p), [.5 * Δ^2; Δ])
+R = kron(Matrix{Float64}(I, p, p), [0.5 * Δ^2; Δ])
 # Output (measurement) matrix
-Z = kron(Matrix{Float64}(I, p, p), [1 0])
-# User defined model
-model = StateSpaceModel(y, Z, T, R)
-# Estimate vehicle speed and position
-ss = statespace(model)
+Z = kron(Matrix{Float64}(I, p, p), [1.0 0.0])
 ```
 
 In this example, we define the noise variances ``H`` and ``Q``, generate the noises and simulate a random vehicle trajectory using the state-space equations:
 ```julia
 # Generate random actuators
-Q = .5 * Matrix{Float64}(I, q, q)
+Q = 0.5 * Matrix{Float64}(I, q, q)
 η = MvNormal(Q)
+
 # Generate random measurement noise
-H = 2. * Matrix{Float64}(I, p, p)
+H = 2.0 * Matrix{Float64}(I, p, p)
 ε = MvNormal(H)
+
 # Simulate vehicle trajectory
 α = zeros(n + 1, m)
 y = zeros(n, p)
@@ -114,8 +131,18 @@ for t in 1:n
     y[t, :] = Z * α[t, :] + rand(ε)
     α[t + 1, :] = T * α[t, :] + R * rand(η)  
 end
+α = α[1:n, :]
+
+# User defined model
+model = StateSpaceModel(y, Z, T, R)
+# Estimate vehicle speed and position
+ss = statespace(model)
+
+# StateSpaceModels.jl correctly estimated the parameters H and Q
+ss.model.H
+ss.model.Q
 ```
 
 An illustration of the results can be seen in the following figure. It can be seen that the measurements are reasonably noisy when compared to the true position. Furthermore, the estimated positions, represented by the smoothed state, effectively estimate the true positions with small inaccuracies.
 
-![Vehicle tracking](./assets/vehicle_tracking.png)
+![Vehicle tracking](./assets/vehicle_tracking.gif)
