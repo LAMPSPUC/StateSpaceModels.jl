@@ -53,3 +53,10 @@ If you use StateSpaceModels.jl in your work, we kindly ask you to cite the follo
     journal={arXiv preprint arXiv:1908.01757},
     year={2019}
     }
+
+
+## Examples 
+
+This gif was generated in the [Vehicle tracking](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Vehicle-tracking-1)
+example in the documentation.
+![Vehicle tracking](./docs/src/assets/vehicle_tracking.gif)

@@ -1,3 +1,4 @@
+push!(LOAD_PATH, "/home/guilhermebodin/Documents/Github/StateSpaceModels.jl/src")
 using StateSpaceModels, Distributions, LinearAlgebra, Plots, Random
 
 # Number of observations
@@ -44,6 +45,10 @@ model = StateSpaceModel(y, Z, T, R)
 # Estimate vehicle speed and position
 ss = statespace(model)
 
-plot(y[:, 1], y[:, 2], label="Measured position", line=:scatter, lw=2, markeralpha=0.2, color=:black, title="Vehicle tracking")
-plot!(α[:, 1], α[:, 3], label="True position", lw=3, color=:indianred)
-plot!(ss.smoother.alpha[:, 1], ss.smoother.alpha[:, 3], label="Estimated position", lw=2, color=:forestgreen)
+anim = @animate for i in 1:n
+    plot(y[1:i, 1], y[1:i, 2], label="Measured position", line=:scatter, lw=2, markeralpha=0.2, color=:black, title="Vehicle tracking")
+    plot!(α[1:i, 1], α[1:i, 3], label="True position", lw=3, color=:indianred)
+    plot!(ss.filter.a[2:i+1, 1], ss.filter.a[2:i+1, 3], label="Estimated position", lw=2, color=:forestgreen)
+end
+
+gif(anim, "vehicle_tracking.gif", fps = 15)
