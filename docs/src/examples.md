@@ -143,6 +143,16 @@ ss.model.H
 ss.model.Q
 ```
 
-An illustration of the results can be seen in the following figure. It can be seen that the measurements are reasonably noisy when compared to the true position. Furthermore, the estimated positions, represented by the smoothed state, effectively estimate the true positions with small inaccuracies.
+An illustration of the results can be seen in the following figure. It can be seen that the measurements are reasonably noisy when compared to the true position. Furthermore, the estimated positions, represented by the filtered state, effectively estimate the true positions with small inaccuracies.
+
+```julia
+anim = @animate for i in 1:n
+    plot(y[1:i, 1], y[1:i, 2], label="Measured position", line=:scatter, lw=2, markeralpha=0.2, color=:black, title="Vehicle tracking")
+    plot!(α[1:i, 1], α[1:i, 3], label="True position", lw=3, color=:indianred)
+    plot!(ss.filter.a[2:i+1, 1], ss.filter.a[2:i+1, 3], label="Estimated position", lw=2, color=:forestgreen)
+end
+
+gif(anim, "vehicle_tracking.gif", fps = 15)
+```
 
 ![Vehicle tracking](./assets/vehicle_tracking.gif)

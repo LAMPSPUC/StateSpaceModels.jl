@@ -53,3 +53,17 @@ If you use StateSpaceModels.jl in your work, we kindly ask you to cite the follo
     journal={arXiv preprint arXiv:1908.01757},
     year={2019}
     }
+
+## Examples
+
+### Airline passengers
+
+These plots were generated in the [Airline Passengers](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Air-Passengers-1) example.
+
+![Vehicle tracking](./docs/src/assets/logap_componenets.png)
+
+### Vehicle tracking
+
+This gif was generated in the [Vehicle tracking](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Vehicle-tracking-1) example.
+
+![Vehicle tracking](./docs/src/assets/vehicle_tracking.gif)
