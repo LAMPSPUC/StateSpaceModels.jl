@@ -172,8 +172,8 @@ struct StateSpaceModel{Typ <: Real}
         dim = build_ss_dim(y, Z, T, R)
 
         # Build c and d with zeros
-        d = zeros(dim.n, dim.p)
-        c = zeros(dim.n, dim.m)
+        d = zeros(size(Z, 3), dim.p)
+        c = zeros(size(Z, 3), dim.m)
 
         # Build H and Q matrices with NaNs
         H = build_H(dim.p, Typ)
