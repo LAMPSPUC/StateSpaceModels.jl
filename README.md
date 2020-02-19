@@ -58,9 +58,9 @@ If you use StateSpaceModels.jl in your work, we kindly ask you to cite the follo
 
 ### Airline passengers
 
-These plots were generated in the [Airline Passengers](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Air-Passengers-1) example.
+These plots were generated in the [Airline passengers](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Air-Passengers-1) example.
 
-![Vehicle tracking](./docs/src/assets/logap_componenets.png)
+![Airline passengers](./docs/src/assets/logap_components.png)
 
 ### Vehicle tracking
 
