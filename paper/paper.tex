@@ -33,7 +33,7 @@ There are several packages focused on state-space models for time-series analysi
     \item ~\texttt{ControlSystems.jl} \cite{controlsystemsjl}, a package aimed at control applications with numerous features, including state-space modeling.
 \end{itemize}
 
-The contributions brought by these packages notwithstanding, there are currently no state-space model packages aimed at time-series analysis in Julia. Furthermore, some have not been updated for a long time and are not functional in Julia 1.0. Thus, the main objectives of \texttt{StateSpaceModels.jl} \cite{statespacemodels} are:
+The contributions brought by these packages notwithstanding, there are currently no state-space model packages aimed at time-series analysis in Julia. Thus, the main objectives of \texttt{StateSpaceModels.jl} \cite{statespacemodels} are:
 
 \begin{enumerate}
     \item to fill this gap by implementing a general and intuitive framework in Julia for modeling, estimating, forecasting and simulating time series with state-space models;
@@ -99,11 +99,13 @@ model = local_level(y)
 \end{lstlisting}
 %
 \noindent where \texttt{y} is an observation vector in the univariate case or a matrix in column-wise fashion in the multivariate case, i.e., each column representing a variable and each line representing a time period.
+
+While very simple, the local level model can be successfully applied to a wide array of problems wherein one wants to estimate some magnitude that varies over time. For instance, in \cite{koopman2000stamp}, an illustrative example utilizes water inflow data from the river Nile.
 %
 
 \subsubsection{Linear trend model}
 
-The linear trend model consists of a local level model with the addition of a stochastic slope term, as seen in Eq. \eqref{eq:lineartrend1}--\eqref{eq:lineartrend3}. A linear trend \texttt{StateSpaceModel} can be created using:
+The linear trend model consists of a local level model with the addition of a stochastic slope term, as seen in Eq. \eqref{eq:lineartrend1}--\eqref{eq:lineartrend3}. Note that it differs from the local level model due to the inclusion of the slope $\nu_{t}$ in \eqref{eq:lineartrend2}. A linear trend \texttt{StateSpaceModel} can be created using:
 %
 \begin{lstlisting}[language = Julia]
 model = linear_trend(y)
@@ -120,11 +122,13 @@ The basic structural model consists of three stochastic components: trend, slope
     \gamma_{t+1} &= \sum_{j=1}^{s-1} \gamma_{t+1-j} + \omega_{t}, \quad \omega_{t} \sim N(0, \sigma^{2}_\omega). \label{eq:structural4}
 \end{align}
 %
-In this model, there is a stochastic trend that contains a slope component, similarly to the linear trend model. Furthermore, a stochastic seasonal component is modeled so that its sum over the seasonality period $s$ is equal to zero except for a noise factor. A basic structural \texttt{StateSpaceModel} can be created using:
+In this model, there is a stochastic trend that contains a slope component, exactly as the linear trend model. Furthermore, a stochastic seasonal component is modeled such that its sum over the seasonality period $s$ is equal to zero except for a noise factor. A basic structural \texttt{StateSpaceModel} can be created using:
 %
 \begin{lstlisting}[language = Julia]
 model = structural(y, s)
 \end{lstlisting}
+
+The idea of the seasonal component is to account for effects that have a periodic nature, such as monthly temperature over each year.
 
 Additionally, a structural model can contain exogenous variables, also known as explanatory variables. Exogenous variables represent external factors that are correlated to the phenomenon in question and can, thus, be used to improve the estimation and forecasting by increasing the available information. This model is identical to \eqref{eq:structural1}--\eqref{eq:structural4} except for the observation equation, which has an additional exogenous factor:
 %
@@ -189,7 +193,7 @@ julia> ss = statespace(model)
 
 \subsection{Filtering}
 
-The filtering step derives the predictive and filtered states as well as their covariance matrices at every time period via the Kalman filter. The predictive state and its variance are given by
+The filtering step computes the predictive and filtered states as well as their covariance matrices at every time period via the Kalman filter. The predictive state and its variance are given by
 %
 \begin{align}
     a_{t+1} &= \mathbb{E}[\alpha_{t+1} | Y_{t}], \\
@@ -237,7 +241,7 @@ The Kalman filter is responsible for deriving estimates for the predictive state
     \ell(Y_{n}) = -\frac{np}{2} \log 2 \pi - \frac{1}{2} \sum_{t=1}^{n} (\log |F_{t}| + v_{t}^{\top} F_{t}^{-1} v_{t}),
 \end{align}
 %
-which depends on the innovations and their covariance matrix at each time period. Therefore, at each optimization iteration, the Kalman filter needs to be executed.
+which depends on the innovations and their covariance matrix at each time period. Therefore, at each iteration of the optimization, the Kalman filter needs to be executed to compute the objective function.
 
 The implemented optimization method \texttt{RandomSeedsLBFGS} generates random initial values for the parameters and then uses the L-BFGS algorithm \cite{liu1989limited} to maximize the log-likelihood function via the unconstrained optimization package \texttt{Optim.jl} \cite{mogensen2018optim}.
 
@@ -308,7 +312,7 @@ At the end of the filtering, estimation, and smoothing routine executed by the \
 
 \section{Diagnostics} \label{sec:diagnostics}
 
-As a way of evaluating the model specification and estimation, the package contains statistical diagnostics that can be conducted over the residuals. The available diagnostics are the Jarque-Bera normality test \cite{jarque1980efficient}, the Ljung-Box independence test \cite{box1970distribution}, and an homoscedasticity test \cite{durbin2012time}. The diagnostics can be run through function \texttt{diagnostics}.
+As a way of evaluating the model specification and estimation, the package contains basic statistical diagnostics that can be conducted over the residuals. The available diagnostics are the Jarque-Bera normality test \cite{jarque1980efficient}, the Ljung-Box independence test \cite{box1970distribution}, and an homoscedasticity test \cite{durbin2012time}. The diagnostics can be run through function \texttt{diagnostics}.
 
 An example of the diagnostics log can be seen below.
 %
@@ -346,7 +350,7 @@ In this section, we present several practical applications which can be addresse
 
 \subsection{Airline passengers}
 
-As a first example, let us use the classical monthly airline passengers time series. In order to avoid multiplicative effects, we use the well-known approach of taking the log of the series. Fig. \ref{fig:log_airline_forecast} shows the log-airline passengers time series. We can estimate a structural \texttt{StateSpaceModel} as follows.
+As a first example, let us use the classical monthly airline passengers time series. In order to avoid multiplicative effects, we use the well-known approach of taking the log of the series \cite{lutkepohl2012role}. Fig. \ref{fig:log_airline_forecast} shows the log-airline passengers time series. We can estimate a structural \texttt{StateSpaceModel} as follows.
 %
 \begin{lstlisting}[language = Julia]
 # Load the AirPassengers dataset
@@ -359,7 +363,7 @@ model = structural(logAP, 12)
 ss = statespace(model)
 \end{lstlisting}
 
-By estimating a structural model, we can analyzed the individual components of the series, such as trend and seasonality. These components are presented in Fig. \ref{fig:log_airline_components} and represent dimensions 1 and 3 of the smoothed state, respectively.
+By estimating a structural model, we can analyze the individual components of the series, such as trend and seasonality. These components are presented in Fig. \ref{fig:log_airline_components} and represent dimensions 1 and 3 of the smoothed state, respectively.
 
 We can also forecast the following two years of the time series by using the \texttt{forecast} function. The result is displayed in Fig. \ref{fig:log_airline_forecast}.
 %
