@@ -226,6 +226,8 @@ end
 Ensure dimensions of `c` and `d` are coherent.
 """
 function assert_dimensions(c::Matrix{T}, d::Matrix{T}, dim::StateSpaceDimensions) where T
-    @assert size(d) == (dim.n, dim.p)
-    @assert size(c) == (dim.n, dim.m)
+    @assert size(d, 1) >= dim.n
+    @assert size(d, 2) == dim.p
+    @assert size(c, 1) >= dim.n
+    @assert size(c, 2) == dim.m
 end

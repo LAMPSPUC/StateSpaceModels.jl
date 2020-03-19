@@ -5,9 +5,9 @@
 
         @test isa(model, StateSpaceModel)
         @test model.mode == "time-invariant"
-        
+
         ss = statespace(model)
-        
+
         @test ss.filter_type <: KalmanFilter
         @test isa(ss, StateSpace)
 
@@ -45,7 +45,7 @@
         end
         T = [1. 1; 0 1]
         R = [1. 0; 0 1]
-        
+
         model = StateSpaceModel(y, Z, T, R)
         ss = statespace(model)
         @test_throws ErrorException sim = simulate(ss, 10, 1000)
