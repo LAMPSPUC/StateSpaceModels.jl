@@ -113,34 +113,46 @@ struct StateSpaceModel{Typ <: Real}
     missing_observations::Vector{Int}
     mode::String
 
-    function StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, 
+    function StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ},
                              d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
 
         # Convert y to a Matrix
         y = ensure_is_matrix(y)
+
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
+
+        # Ensure dimensions are coherent
+        assert_dimensions(c, d, dim)
+
         return new{Typ}(y, Z, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-variant")
     end
 
-    function StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, 
+    function StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ},
                              d::Matrix{Typ}, c::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
 
         # Convert y to a Matrix
         y = ensure_is_matrix(y)
+
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
+
         Zvar = Array{Typ, 3}(undef, dim.p, dim.m, dim.n)
         for t in 1:dim.n, i in axes(Z, 1), j in axes(Z, 2)
             Zvar[i, j, t] = Z[i, j]
         end
 
+        # Ensure dimensions are coherent
+        assert_dimensions(c, d, dim)
+
         return new{Typ}(y, Zvar, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-invariant")
     end
 
     function StateSpaceModel(y::VecOrMat{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+
         # Convert y to a Matrix
         y = ensure_is_matrix(y)
+
         # Build StateSpaceDimensions
         dim = build_ss_dim(y, Z, T, R)
 
@@ -151,10 +163,15 @@ struct StateSpaceModel{Typ <: Real}
         # Build H and Q matrices with NaNs
         H = build_H(dim.p, Typ)
         Q = build_Q(dim.r, dim.p, Typ)
+
+        # Ensure dimensions are coherent
+        assert_dimensions(c, d, dim)
+
         return new{Typ}(y, Z, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-variant")
     end
 
     function StateSpaceModel(y::VecOrMat{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+
         # Convert y to a Matrix
         y = ensure_is_matrix(y)
 
@@ -174,6 +191,10 @@ struct StateSpaceModel{Typ <: Real}
         # Build H and Q matrices with NaNs
         H = build_H(dim.p, Typ)
         Q = build_Q(dim.r, dim.p, Typ)
+
+        # Ensure dimensions are coherent
+        assert_dimensions(c, d, dim)
+
         return new{Typ}(y, Zvar, T, R, d, c, H, Q, dim, find_missing_observations(y), "time-invariant")
     end
 end
@@ -218,7 +239,7 @@ end
 
 """
     StateSpace{T <: Real}
-    
+
 A state-space structure containing the model, filter output, smoother output, covariance matrices, filter type and optimization method.
 """
 struct StateSpace{T <: Real}

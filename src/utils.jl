@@ -70,7 +70,7 @@ function gram(mat::AbstractArray{T}) where T
         gram_mat[1, 1] = mat[1, 1]^2
         return gram_mat
     else
-        return LinearAlgebra.BLAS.gemm('N', 'T', mat, mat) # mat*mat'    
+        return LinearAlgebra.BLAS.gemm('N', 'T', mat, mat) # mat*mat'
     end
 end
 
@@ -107,7 +107,7 @@ function ensure_pos_sym!(M::AbstractArray{T}, t::Int; ϵ::T = T(1e-8)) where T
             M[j, i, t] = M[i, j, t]
         end
     end
-    return 
+    return
 end
 
 function ensure_pos_sym!(M::AbstractArray{T}; ϵ::T = T(1e-8)) where T
@@ -119,21 +119,21 @@ function ensure_pos_sym!(M::AbstractArray{T}; ϵ::T = T(1e-8)) where T
             M[j, i] = M[i, j]
         end
     end
-    return 
+    return
 end
 
 function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractMatrix{T}, t::Int, offset::Int) where T
     @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
         mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j]
     end
-    return 
+    return
 end
 
 function sum_matrix!(mat_prin::AbstractArray{T}, mat_sum::AbstractArray{T}, t::Int, offset::Int) where T
     @inbounds for j in axes(mat_prin, 2), i in axes(mat_prin, 1)
         mat_prin[i, j, t + offset] = mat_prin[i, j, t + offset] + mat_sum[i, j, t]
     end
-    return 
+    return
 end
 
 function invertF(F::Array{T, 3}, t::Int) where T
@@ -218,4 +218,16 @@ end
 function has_unknowns(model::StateSpaceModel{T}) where T
     unknowns = Unknowns(model)
     return unknowns.n_unknowns == 0 ? false : true
+end
+
+"""
+    assert_dimensions(c::Matrix{T}, d::Matrix{T}, dim::StateSpaceDimensions) where T
+
+Ensure dimensions of `c` and `d` are coherent.
+"""
+function assert_dimensions(c::Matrix{T}, d::Matrix{T}, dim::StateSpaceDimensions) where T
+    @assert size(d, 1) >= dim.n
+    @assert size(d, 2) == dim.p
+    @assert size(c, 1) >= dim.n
+    @assert size(c, 2) == dim.m
 end
