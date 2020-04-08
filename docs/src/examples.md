@@ -1,5 +1,48 @@
 # Examples
 
+## Nile river annual flow
+
+As the first example let us study the annual flow of the Nile river using a local level model [`local_level`](@ref).
+
+```julia
+using CSV, StateSpaceModels, Plots, Dates
+
+# Load the Nile annual flow dataset
+nile = CSV.read("Nile.csv")
+
+# Convert data to an array of Float64
+flow = Float64.(nile.Flow)
+
+# Plot the data
+p1 = plot(nile.Year, flow, label = "Annual flow", legend = :topright, color = :black)
+```
+![Nile river annual flow](./assets/nile_flow.png)
+
+Estimate the local level model and plot the innovations
+```julia
+# Specify the state-space model
+model = local_level(flow)
+
+# Estimate the state-space model
+ss = statespace(model)
+
+# Innovations
+p2 = plot(nile.Year, ss.filter.v, label = "Innovations (v_t)", legend = :topright, color = :black)
+```
+![innovations of the model](./assets/nile_innovations.png)
+
+Plot the filtered state and its confidence interval 
+```julia
+# Plot filtered state and 90% confidence interval
+std_ptt = sqrt.(ss.filter.Ptt[1, 1, :])
+att = vec(ss.filter.att)
+lb = vec(att + 1.64 * std_ptt)
+ub = vec(att - 1.64 * std_ptt)
+p3 = plot!(p1, nile.Year, att, ribbon = [ub - att, lb + att], 
+           label = "Filtered state (att)", color = :red, fillalpha = 0.1)
+```
+![Nile filtered state](./assets/nile_filtered_state.png)
+
 ## Air Passengers
 
 Let's take the classical Air Passenger time series as an example. In order to avoid multiplicative effects, we use the well-known approach of taking the log of the series. The code is in the example folder.

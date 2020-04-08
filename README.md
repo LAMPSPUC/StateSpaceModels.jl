@@ -56,6 +56,12 @@ If you use StateSpaceModels.jl in your work, we kindly ask you to cite the follo
 
 ## Examples
 
+### Nile
+
+These plots were generated in the [Nile river](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Nile-river-annual-flow-1) example.
+
+![Nile filtered state](./docs/src/assets/nile_filtered_state.png)
+
 ### Airline passengers
 
 These plots were generated in the [Airline passengers](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Air-Passengers-1) example.
