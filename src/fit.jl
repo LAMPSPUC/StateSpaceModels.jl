@@ -1,5 +1,7 @@
+export fit
+
 function fit(model::StateSpaceModel;
-    filter::KalmanFilter = default_filter(model),
+             filter::KalmanFilter = default_filter(model),
              optimizer::Optimizer = Optimizer(Optim.LBFGS()))
     return fit(model, filter, optimizer)
 end

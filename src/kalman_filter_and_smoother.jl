@@ -1,6 +1,8 @@
 # This file define interfaces with the filters defined in the filters folder
 abstract type KalmanFilter end
 
+export loglike
+
 const HALF_LOG_2_PI = 0.5 * log(2 * pi)
 
 # Default loglikelihood function for optimization

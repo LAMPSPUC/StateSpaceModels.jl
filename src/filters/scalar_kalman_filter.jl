@@ -1,3 +1,5 @@
+export ScalarKalmanFilter
+
 # This method is similar to the univariate kalman filter but
 # exploits the fact that the dimension of the state is 1
 mutable struct ScalarKalmanState{Fl <: AbstractFloat}
@@ -50,7 +52,7 @@ mutable struct ScalarKalmanFilter{Fl <: Real} <: KalmanFilter
 
     function ScalarKalmanFilter(a1::Fl,
                                 P1::Fl,
-                                skip_llk_instants::Int = 0,
+                                skip_llk_instants::Int = 1,
                                 steadystate_tol::Fl = Fl(1e-5)) where Fl
         kalman_state = ScalarKalmanState(a1, P1)
         return new{Fl}(steadystate_tol, a1, P1, 

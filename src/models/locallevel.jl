@@ -1,3 +1,5 @@
+export LocalLevel
+
 """
 """
 struct LocalLevel{Fl <: Real} <: StateSpaceModel
@@ -30,7 +32,7 @@ function default_filter(::LocalLevel{Fl}) where Fl
     a1 = zero(Fl)
     P1 = Fl(1e6)
     steadystate_tol = Fl(1e-5)
-    return ScalarKalmanFilter(a1, P1, 0, steadystate_tol)
+    return ScalarKalmanFilter(a1, P1, 1, steadystate_tol)
 end
 function initial_hyperparameters!(model::LocalLevel{Fl}) where Fl
     initial_hyperparameters = Dict{String, Fl}(
@@ -41,13 +43,14 @@ function initial_hyperparameters!(model::LocalLevel{Fl}) where Fl
     return
 end
 function constraint_hyperparameters!(model::LocalLevel{Fl}) where Fl
-    update_constrained_value!(model, "sigma2_ε", get_unconstrained_value(model, "sigma2_ε")^2)
-    update_constrained_value!(model, "sigma2_η", get_unconstrained_value(model, "sigma2_η")^2)
+    constrain_variance(model, "sigma2_ε")
+    constrain_variance(model, "sigma2_η")
     return
 end
 function unconstraint_hyperparameters!(model::LocalLevel{Fl}) where Fl
-    update_unconstrained_value!(model, "sigma2_ε", sqrt(get_constrained_value(model, "sigma2_ε")))
-    update_unconstrained_value!(model, "sigma2_η", sqrt(get_constrained_value(model, "sigma2_η")))
+    unconstrain_variance(model, "sigma2_ε")
+    unconstrain_variance(model, "sigma2_η")
+    return
 end
 function update!(model::LocalLevel{Fl}) where Fl
     model.system.H = get_constrained_value(model, "sigma2_ε")
