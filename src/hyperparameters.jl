@@ -1,3 +1,8 @@
+export get_constrained_value,
+    set_initial_hyperparameters!,
+    fix_hyperparameters!
+
+
 mutable struct HyperParameters{Fl <: AbstractFloat}
     num::Int
     names::Vector{String}
@@ -181,5 +186,19 @@ end
 """
 function unconstrain_box(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
     update_unconstrained_value!(model, str, -log((ub - lb)/(get_constrained_value(model, str) - lb - 1)))
+    return
+end
+
+"""
+"""
+function constrain_variance(model::StateSpaceModel, str::String)
+    update_constrained_value!(model, str, exp(get_unconstrained_value(model, str)))
+    return
+end
+
+"""
+"""
+function unconstrain_variance(model::StateSpaceModel, str::String)
+    update_unconstrained_value!(model, str, log(get_constrained_value(model, str)))
     return
 end
