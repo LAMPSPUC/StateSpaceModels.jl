@@ -1,4 +1,6 @@
 export get_constrained_value,
+    get_hyperparameters,
+    get_minimizer_hyperparameter_position,
     set_initial_hyperparameters!,
     fix_hyperparameters!
 
@@ -74,6 +76,8 @@ function handle_optim_initial_hyperparameters(model::StateSpaceModel)
     # Return the unconstrained values of the initial_parameters
     return get_free_unconstrained_values(model)
 end
+
+get_hyperparameters(model::StateSpaceModel) = model.hyperparameters
 
 number_hyperparameters(model::StateSpaceModel) = number_hyperparameters(model.hyperparameters)
 number_hyperparameters(hyperparameters::HyperParameters) = hyperparameters.num
