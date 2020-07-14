@@ -1,60 +1,29 @@
 module StateSpaceModels
 
-using Optim, Distributions, LinearAlgebra, StaticArrays, Dates, Printf, StatsBase
+abstract type StateSpaceModel end
 
-import Base: size, show
+using LinearAlgebra
+using Statistics
+using Optim
 
-export statespace, kfas, diagnostics
+include("hyperparameters.jl")
+include("systems.jl")
 
-include("prints.jl")
-include("structures.jl")
-include("utils.jl")
-include("model_unknowns.jl")
-include("models.jl")
-include("estimation.jl")
-include("opt_methods.jl")
-include("kalman_utils.jl")
-include("univariate_kalman.jl")
-include("kalman.jl")
-include("sqrt_kalman.jl")
-include("forecast.jl")
-include("diagnostics.jl")
+include("kalman_filter_and_smoother.jl")
 
-"""
-    statespace(model; filter_type = KalmanFilter, opt_method = LBFGS(), verbose = 1)
+include("filters/univariate_kalman_filter.jl")
+include("filters/scalar_kalman_filter.jl")
+include("filters/regression_kalman_filter.jl")
 
-Estimate the pre-specified state-space model. The function will only estimate the entries that are declared `NaN`. If there are no NaNs in the `model` it will
-only perform the filter and smoother computations.
-"""
-function statespace(model::StateSpaceModel{T}; filter_type::DataType = KalmanFilter{T}, 
-                    opt_method::AbstractOptimizationMethod = LBFGS(model, 3), verbose::Int = 1) where T
+include("models/common.jl")
+include("models/locallevel.jl")
+include("models/lineartrend.jl")
+include("models/damped_lineartrend.jl")
+include("models/basicstructural.jl")
+include("models/arima.jl")
+include("models/linear_regression.jl")
 
-    if !(verbose in [0, 1, 2, 3])
-        @warn("Incorrect verbose value input (should be 0, 1, 2 or 3): switching to default value 1")
-        verbose = 1
-    end
+include("optimizers.jl")
+include("fit.jl")
 
-    print_header(verbose)
-
-    # Maximum likelihood estimation
-    estimate_statespace!(model, filter_type, opt_method; verbose = verbose)
-
-    # Kalman filter and smoothing
-    filter_output, smoothed_state = kfas(model, filter_type)
-
-    print_bottom(verbose)
-
-    return StateSpace{T}(model, filter_output, smoothed_state, filter_type, opt_method)
 end
-
-"""
-    kfas(model::StateSpaceModel{T}, filter_type::DataType) where T
-
-Perform Kalman filter and smoother according to the chosen `filter_type`.
-"""
-function kfas(model::StateSpaceModel{T}, filter_type::DataType) where T
-    error(filter_type , " not implemented") # Returns an error if it cannot
-                                            # find a specialized kfas
-end
-
-end # end module
