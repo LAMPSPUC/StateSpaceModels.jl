@@ -58,7 +58,7 @@ mutable struct UnivariateKalmanFilter{Fl <: Real} <: KalmanFilter
 
     function UnivariateKalmanFilter(a1::Vector{Fl},
                                     P1::Matrix{Fl},
-                                    skip_llk_instants::Int = 0,
+                                    skip_llk_instants::Int = length(a1),
                                     steadystate_tol::Fl = Fl(1e-5)) where Fl
         kalman_state = UnivariateKalmanState(copy(a1), copy(P1))
         return new{Fl}(steadystate_tol, a1, P1, 

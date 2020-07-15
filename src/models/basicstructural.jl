@@ -1,3 +1,5 @@
+export BasicStructural
+
 """
 """
 mutable struct BasicStructural{Fl} <: StateSpaceModel
@@ -47,18 +49,19 @@ function initial_hyperparameters!(model::BasicStructural{Fl}) where Fl
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
-function constraint_hyperparameters!(model::BasicStructural{Fl}) where {Fl}
-    update_constrained_value!(model, "sigma2_ε", get_unconstrained_value(model, "sigma2_ε")^2)
-    update_constrained_value!(model, "sigma2_μ", get_unconstrained_value(model, "sigma2_μ")^2)
-    update_constrained_value!(model, "sigma2_β", get_unconstrained_value(model, "sigma2_β")^2)
-    update_constrained_value!(model, "sigma2_γ", get_unconstrained_value(model, "sigma2_γ")^2)
+function constraint_hyperparameters!(model::BasicStructural{Fl}) where Fl
+    constrain_variance(model, "sigma2_ε")
+    constrain_variance(model, "sigma2_μ")
+    constrain_variance(model, "sigma2_β")
+    constrain_variance(model, "sigma2_γ")
     return
 end
 function unconstraint_hyperparameters!(model::BasicStructural{Fl}) where Fl
-    update_unconstrained_value!(model, "sigma2_ε", sqrt(get_constrained_value(model, "sigma2_ε")))
-    update_unconstrained_value!(model, "sigma2_μ", sqrt(get_constrained_value(model, "sigma2_μ")))
-    update_unconstrained_value!(model, "sigma2_β", sqrt(get_constrained_value(model, "sigma2_β")))
-    update_unconstrained_value!(model, "sigma2_γ", sqrt(get_constrained_value(model, "sigma2_γ")))
+    unconstrain_variance(model, "sigma2_ε")
+    unconstrain_variance(model, "sigma2_μ")
+    unconstrain_variance(model, "sigma2_β")
+    unconstrain_variance(model, "sigma2_γ")
+    return
 end
 function update!(model::BasicStructural{Fl}) where Fl
     model.system.H = get_constrained_value(model, "sigma2_ε")

@@ -1,3 +1,5 @@
+export LinearRegression
+
 struct RegressionHyperParametersAuxiliary
     beta_names::Vector{String}
     function RegressionHyperParametersAuxiliary(num_states::Int)
@@ -10,7 +12,7 @@ struct LinearRegression{Fl <: Real} <: StateSpaceModel
     hyperparameters_auxiliary::RegressionHyperParametersAuxiliary
     system::LinearUnivariateTimeVariant{Fl}
 
-    function LinearRegression(y::Vector{Fl}, X::Matrix{Fl}) where Fl
+    function LinearRegression(X::Matrix{Fl}, y::Vector{Fl}) where Fl
 
         # Treat possible input errors
         @assert length(y) == size(X, 1)
@@ -66,16 +68,16 @@ function initial_hyperparameters!(model::LinearRegression{Fl}) where Fl
 end
 function constraint_hyperparameters!(model::LinearRegression{Fl}) where {Fl}
     for i in 1:get_num_states(model)
-        update_constrained_value!(model, get_beta_name(model, i), get_unconstrained_value(model, get_beta_name(model, i)))
+        constrain_identity(model, get_beta_name(model, i))
     end
-    update_constrained_value!(model, "sigma2_ε", get_unconstrained_value(model, "sigma2_ε")^2)
+    constrain_variance(model, "sigma2_ε")
     return
 end
 function unconstraint_hyperparameters!(model::LinearRegression{Fl}) where Fl
     for i in 1:get_num_states(model)
-        update_unconstrained_value!(model, get_beta_name(model, i), get_constrained_value(model, get_beta_name(model, i)))
+        unconstrain_identity(model, get_beta_name(model, i))
     end
-    update_unconstrained_value!(model, "sigma2_ε", sqrt(get_constrained_value(model, "sigma2_ε")))
+    unconstrain_variance(model, "sigma2_ε")
     return
 end
 function update!(model::LinearRegression{Fl}) where Fl

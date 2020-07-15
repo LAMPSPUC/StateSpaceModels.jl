@@ -196,13 +196,27 @@ end
 """
 """
 function constrain_variance(model::StateSpaceModel, str::String)
-    update_constrained_value!(model, str, exp(get_unconstrained_value(model, str)))
+    update_constrained_value!(model, str, (get_unconstrained_value(model, str))^2)
     return
 end
 
 """
 """
 function unconstrain_variance(model::StateSpaceModel, str::String)
-    update_unconstrained_value!(model, str, log(get_constrained_value(model, str)))
+    update_unconstrained_value!(model, str, sqrt(get_constrained_value(model, str)))
+    return
+end
+
+"""
+"""
+function constrain_identity(model::StateSpaceModel, str::String)
+    update_constrained_value!(model, str, get_unconstrained_value(model, str))
+    return
+end
+
+"""
+"""
+function unconstrain_identity(model::StateSpaceModel, str::String)
+    update_unconstrained_value!(model, str, get_constrained_value(model, str))
     return
 end
