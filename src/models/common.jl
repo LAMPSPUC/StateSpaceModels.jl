@@ -5,7 +5,6 @@ that you can name components, each component has a proper meaning
 abstract type UnobservedComponentModel <: StateSpaceModel end
 
 typeof_model_elements(model::StateSpaceModel) = eltype(model.system.y)
-get_num_hyperparameter(model::StateSpaceModel) = model.hyperparameters.num
 
 """
 """
