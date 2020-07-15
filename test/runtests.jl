@@ -2,4 +2,8 @@ using Test
 using DelimitedFiles
 using StateSpaceModels
 
-include("models/locallevel.jl")
+@testset "Models" begin
+    include("models/locallevel.jl")
+    include("models/basicstructural.jl")
+    include("models/linear_regression.jl")
+end
