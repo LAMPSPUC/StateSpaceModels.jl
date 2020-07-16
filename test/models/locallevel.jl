@@ -1,6 +1,5 @@
 @testset "LocalLevel" begin 
-    Nile_dataset = readdlm(joinpath(dirname(@__DIR__()), "datasets/Nile.csv"), ',')
-    y = float.(Nile_dataset[2:end, 2])
+    y = StateSpaceModels.NILE
     model = LocalLevel(y)
     fit(model)
     @test loglike(model) ≈ -632.5376 atol = 1e-5 rtol = 1e-5
@@ -27,7 +26,7 @@
     @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 atol = 1
 
     # Estimate with Float32
-    y = Float32.(Nile_dataset[2:end, 2])
+    y = Float32.(StateSpaceModels.NILE)
     model = LocalLevel(y)
     fit(model)
     @test loglike(model) ≈ -632.53766f0 atol = 1e-5 rtol = 1e-5

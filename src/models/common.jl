@@ -29,3 +29,9 @@ function validate_statespacemodel(model::StateSpaceModel)
     hasmethod(update!, tuple_with_model_type)
     return 
 end
+
+# standard print 
+function Base.show(io::IO, model::StateSpaceModel)
+    print(io, "A $(typeof(model)) model")
+    return
+end

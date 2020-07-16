@@ -78,6 +78,7 @@ function handle_optim_initial_hyperparameters(model::StateSpaceModel)
 end
 
 get_hyperparameters(model::StateSpaceModel) = model.hyperparameters
+get_names(model::StateSpaceModel) = get_names(model.hyperparameters)
 
 number_hyperparameters(model::StateSpaceModel) = number_hyperparameters(model.hyperparameters)
 number_hyperparameters(hyperparameters::HyperParameters) = hyperparameters.num
