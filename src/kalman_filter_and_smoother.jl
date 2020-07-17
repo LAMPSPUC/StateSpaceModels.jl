@@ -1,7 +1,18 @@
 # This file define interfaces with the filters defined in the filters folder
 abstract type KalmanFilter end
 
-export loglike
+export loglike,
+    kalman_filter,
+    kalman_smoother
+
+export filtered_estimates,
+    covariance_filtered_estimates,
+    one_step_ahead_predictions,
+    covariance_one_step_ahead_predictions
+
+export smoothed_estimates,
+    covariance_smoothed_estimates
+
 
 const HALF_LOG_2_PI = 0.5 * log(2 * pi)
 
@@ -63,9 +74,40 @@ mutable struct FilterOutput{Fl <: Real}
 end
 
 """
+TODO
+"""
+innovations(filter_output::FilterOutput) = permutedims(cat(filter_output.v...; dims = 2))
+
+"""
+TODO
+"""
+covariance_innovations(filter_output::FilterOutput) = cat(filter_output.F...; dims = 3)
+
+"""
+TODO
+"""
+filtered_estimates(filter_output::FilterOutput) = permutedims(cat(filter_output.att...; dims = 2))
+
+"""
+TODO
+"""
+covariance_filtered_estimates(filter_output::FilterOutput) = cat(filter_output.Ptt...; dims = 3)
+
+"""
+TODO
+"""
+one_step_ahead_predictions(filter_output::FilterOutput) = permutedims(cat(filter_output.a...; dims = 2))
+
+"""
+TODO
+"""
+covariance_one_step_ahead_predictions(filter_output::FilterOutput) = cat(filter_output.P...; dims = 3)
+
+"""
+TODO
 """
 function kalman_filter(model::StateSpaceModel;
-                       filter::KalmanFilter = default_filter(model)) where Fl
+                       filter::KalmanFilter = default_filter(model))
     filter_output = FilterOutput(model)
     reset_filter!(filter)
     free_unconstrained_values = get_free_unconstrained_values(model)
@@ -75,6 +117,7 @@ function kalman_filter(model::StateSpaceModel;
 end
 
 """
+TODO
 """
 mutable struct SmootherOutput{Fl <: Real}
     alpha::Vector{Vector{Fl}}
@@ -91,11 +134,22 @@ mutable struct SmootherOutput{Fl <: Real}
 end
 
 """
+TODO
 """
 function kalman_smoother(model::StateSpaceModel;
-                         filter::KalmanFilter = default_filter(model)) where Fl
+                         filter::KalmanFilter = default_filter(model))
     filter_output = FilterOutput(model)
     kalman_filter!(filter_output, model.system, filter)
     smoother_output = SmootherOutput(model)
     return kalman_smoother!(smoother_output, model.system, filter_output)
 end
+
+"""
+TODO
+"""
+smoothed_estimates(smoother_output::SmootherOutput) = permutedims(cat(smoother_output.alpha...; dims = 2))
+
+"""
+TODO
+"""
+covariance_smoothed_estimates(smoother_output::SmootherOutput) = cat(smoother_output.V...; dims = 3)

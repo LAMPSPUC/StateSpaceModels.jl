@@ -2,9 +2,13 @@ module StateSpaceModels
 
 abstract type StateSpaceModel end
 
+import Base.show
+
 using LinearAlgebra
 using Statistics
 using Optim
+
+include("datasets/datasets.jl")
 
 include("hyperparameters.jl")
 include("systems.jl")
@@ -14,6 +18,8 @@ include("kalman_filter_and_smoother.jl")
 include("filters/univariate_kalman_filter.jl")
 include("filters/scalar_kalman_filter.jl")
 include("filters/regression_kalman_filter.jl")
+
+include("smoothers/kalman_smoother.jl")
 
 include("models/common.jl")
 include("models/locallevel.jl")
