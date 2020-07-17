@@ -13,7 +13,7 @@ The local level model is defined by:
 
 # Example
 ```jldoctest
-julia> model = LocalLevel(StateSpaceModels.NILE)
+julia> model = LocalLevel(rand(100))
 A LocalLevel{Float64} model
 ```
 

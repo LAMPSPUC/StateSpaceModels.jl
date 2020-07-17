@@ -1,9 +1,12 @@
 # Datasets are not exported to avoid colliding with names in the Main scope
 
 """
+    NILE
+
+The absolute path for the Nile River dataset stored inside StateSpaceModels.jl
 """
-const NILE = Float64.(readdlm(joinpath(@__DIR__(), "Nile.csv"), ',')[2:end, 2])
+const NILE = joinpath(@__DIR__(), "Nile.csv")
 
 """
 """
-const AIRPASSENGERS = Float64.(readdlm(joinpath(@__DIR__(), "AirPassengers.csv"), ',')[2:end, 2])
+const AIRPASSENGERS = joinpath(@__DIR__(), "AirPassengers.csv")

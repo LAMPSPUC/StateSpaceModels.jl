@@ -1,6 +1,9 @@
 using Test
-using DelimitedFiles
+using CSV
+using DataFrames
 using StateSpaceModels
+
+read_csv(file::String) = DataFrame!(CSV.File(file))
 
 @testset "Models" begin
     include("models/locallevel.jl")

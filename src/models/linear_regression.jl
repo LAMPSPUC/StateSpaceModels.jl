@@ -33,7 +33,7 @@ struct LinearRegression{Fl <: Real} <: StateSpaceModel
         names = [["β_$i" for i in 1:num_exogenous]; "sigma2_ε"]
         hyperparameters = HyperParameters{Fl}(names)
 
-        hyperparameters_auxiliary = RegressionHyperParametersAuxiliary(get_num_states(system))
+        hyperparameters_auxiliary = RegressionHyperParametersAuxiliary(num_states(system))
 
         return new{Fl}(hyperparameters, hyperparameters_auxiliary, system)
     end
@@ -51,7 +51,7 @@ fill_H_in_time(model::LinearRegression, H::Fl) where Fl = fill_system_matrice_wi
 
 # Obligatory functions
 function default_filter(model::LinearRegression{Fl}) where Fl
-    a1 = zeros(Fl, get_num_states(model))
+    a1 = zeros(Fl, num_states(model))
     return RegressionKalmanFilter(a1)
 end
 function initial_hyperparameters!(model::LinearRegression{Fl}) where Fl
@@ -60,21 +60,21 @@ function initial_hyperparameters!(model::LinearRegression{Fl}) where Fl
     )
     # The optimal regressors are the result of X \ y
     betas = hcat(model.system.Z...)' \ model.system.y
-    for i in 1:get_num_states(model)
+    for i in 1:num_states(model)
         initial_hyperparameters[get_beta_name(model, i)] = betas[i]
     end
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
 function constraint_hyperparameters!(model::LinearRegression{Fl}) where {Fl}
-    for i in 1:get_num_states(model)
+    for i in 1:num_states(model)
         constrain_identity(model, get_beta_name(model, i))
     end
     constrain_variance(model, "sigma2_ε")
     return
 end
 function unconstraint_hyperparameters!(model::LinearRegression{Fl}) where Fl
-    for i in 1:get_num_states(model)
+    for i in 1:num_states(model)
         unconstrain_identity(model, get_beta_name(model, i))
     end
     unconstrain_variance(model, "sigma2_ε")

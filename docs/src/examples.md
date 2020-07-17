@@ -12,5 +12,22 @@ using Plots
 ```
 
 ```@example nile
-plot(StateSpaceModels.NILE, label = "Annual nile river flow")
+using CSV, DataFrames
+nile = DataFrame!(CSV.File(StateSpaceModels.NILE))
+plt = plot(nile.year, nile.flow, label = "Annual nile river flow")
+```
+We can fit the model
+```@example nile
+model = LocalLevel(nile.flow)
+fit(model)
+```
+Analyse the filtered estimates for the level of the annual flow volume from the Kalman filter algorithm.
+```@example nile
+filter_output = kalman_filter(model)
+plot!(plt, nile.year, filtered_estimates(filter_output), label = "Filtered level")
+```
+And analyse the smoothed estimates for the level of the annual flow volume from the Kalman smoother algorithm.
+```@example nile
+smoother_output = kalman_smoother(model)
+plot!(plt, nile.year, smoothed_estimates(smoother_output), label = "Smoothed level")
 ```
