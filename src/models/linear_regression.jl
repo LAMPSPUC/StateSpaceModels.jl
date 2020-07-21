@@ -7,7 +7,7 @@ struct RegressionHyperParametersAuxiliary
     end
 end
 
-struct LinearRegression{Fl <: Real} <: StateSpaceModel
+mutable struct LinearRegression{Fl <: Real} <: StateSpaceModel
     hyperparameters::HyperParameters{Fl}
     hyperparameters_auxiliary::RegressionHyperParametersAuxiliary
     system::LinearUnivariateTimeVariant{Fl}
@@ -66,21 +66,21 @@ function initial_hyperparameters!(model::LinearRegression{Fl}) where Fl
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
-function constraint_hyperparameters!(model::LinearRegression{Fl}) where {Fl}
+function constrain_hyperparameters!(model::LinearRegression{Fl}) where {Fl}
     for i in 1:num_states(model)
         constrain_identity(model, get_beta_name(model, i))
     end
     constrain_variance(model, "sigma2_ε")
     return
 end
-function unconstraint_hyperparameters!(model::LinearRegression{Fl}) where Fl
+function unconstrain_hyperparameters!(model::LinearRegression{Fl}) where Fl
     for i in 1:num_states(model)
         unconstrain_identity(model, get_beta_name(model, i))
     end
     unconstrain_variance(model, "sigma2_ε")
     return
 end
-function update!(model::LinearRegression{Fl}) where Fl
+function fill_model_system!(model::LinearRegression{Fl}) where Fl
     # Fill the same H for every timestamp
     H = get_constrained_value(model, "sigma2_ε")
     fill_H_in_time(model, H)

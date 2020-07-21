@@ -28,9 +28,9 @@ function kalman_smoother!(smoother_output::SmootherOutput,
     r[end] = zeros(Fl, m)
 
     @inbounds for t = n:-1:2
-        if false # Decide how to deal with missing observations
-            # r[t-1, :]     = T' * r[t, :]
-            # N[:, :, t-1]  = T' * N[:, :, t] * T
+        if any(isnan.(system.y[t, :])) #TODO check this
+            r[t-1]  = system.T'[t] * r[t]
+            N[t-1]  = system.T'[t] * N[t] * system.T[t]
         else
             Z_transp_invF = system.Z[t]' * inv(F[t])
             K             = system.T[t] * P[t] * Z_transp_invF
@@ -43,9 +43,9 @@ function kalman_smoother!(smoother_output::SmootherOutput,
     end
 
     # Last iteration
-    if false # Decide how to deal with missing observations
-        # r0  = T' * r[1, :]
-        # N0  = T' * N[:, :, 1] * T
+    if any(isnan.(system.y[1, :])) #TODO check this
+        r0  = system.T'[1] * r[1]
+        N0  = system.T'[1] * N[1] * system.T[1]
     else
         Z_transp_invF = system.Z[1]' * inv(F[1])
         K             = system.T[1] * P[1] * Z_transp_invF

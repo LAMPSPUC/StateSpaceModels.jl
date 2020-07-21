@@ -31,5 +31,6 @@ include("models/linear_regression.jl")
 
 include("optimizers.jl")
 include("fit.jl")
+include("forecast.jl")
 
 end

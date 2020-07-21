@@ -33,4 +33,22 @@
     model = LocalLevel(nile32)
     fit(model)
     @test loglike(model) ≈ -632.53766f0 atol = 1e-5 rtol = 1e-5
+
+    # Missing values 
+    nile.flow[[collect(21:40); collect(61:80)]] .= NaN
+    model = LocalLevel(nile.flow)
+    fit(model)
+    @test loglike(model) ≈ -379.9899 atol = 1e-5 rtol = 1e-5
+
+    filter = kalman_filter(model)
+    smoother = kalman_smoother(model)
+    @test filter.Ptt[end] == smoother.V[end] # by construction
+
+    for t in 2:length(model.system.y) - 1
+        @test filter.Ptt[t][1] > smoother.V[t][1] # by construction
+    end
+
+    # forecasting
+    forec = forecast(model, 10)
+    @test monotone_forecast_variance(forec)
 end

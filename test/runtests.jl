@@ -1,9 +1,10 @@
 using Test
 using CSV
 using DataFrames
+using LinearAlgebra
 using StateSpaceModels
 
-read_csv(file::String) = DataFrame!(CSV.File(file))
+include("utils.jl")
 
 @testset "Models" begin
     include("models/locallevel.jl")

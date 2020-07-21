@@ -143,20 +143,21 @@ end
 function update_kalman_state!(kalman_state::UnivariateKalmanState{Fl}, y::Fl, Z::Vector{Fl}, T::Matrix{Fl}, 
                               H::Fl, RQR::Matrix{Fl}, d::Fl, c::Vector{Fl}, skip_llk_instants::Int, 
                               tol::Fl, t::Int) where Fl
-    if kalman_state.steady_state
-        update_v!(kalman_state, y, Z, d)
-        update_att!(kalman_state, Z)
-        update_a!(kalman_state, T, c)
-        if t > skip_llk_instants
-            update_llk!(kalman_state)
-        end
-    elseif isnan(y)
+    if isnan(y)
         kalman_state.v = NaN
         update_F!(kalman_state, Z, H)
         kalman_state.att = kalman_state.a
         update_a!(kalman_state, T, c)
         kalman_state.Ptt = kalman_state.P
         update_P!(kalman_state, T, RQR)
+        kalman_state.steady_state = false # Not on steadystate anymore
+    elseif kalman_state.steady_state
+        update_v!(kalman_state, y, Z, d)
+        update_att!(kalman_state, Z)
+        update_a!(kalman_state, T, c)
+        if t > skip_llk_instants
+            update_llk!(kalman_state)
+        end
     else
         update_v!(kalman_state, y, Z, d)
         update_F!(kalman_state, Z, H)

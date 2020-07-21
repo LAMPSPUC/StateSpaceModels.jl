@@ -72,7 +72,7 @@ function handle_optim_initial_hyperparameters(model::StateSpaceModel)
     # optimizer vector with a hyperparameter
     fill_minimizer_hyperparameter_position!(model)
     # Register the unconstrained initial_parameters
-    unconstraint_hyperparameters!(model)
+    unconstrain_hyperparameters!(model)
     # Return the unconstrained values of the initial_parameters
     return get_free_unconstrained_values(model)
 end
