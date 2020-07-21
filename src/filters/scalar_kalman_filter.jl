@@ -122,25 +122,23 @@ function scalar_update_kalman_state!(kalman_state, y, Z, T, H, RQR,
         kalman_state.Ptt = kalman_state.P
         scalar_update_P!(kalman_state, T, RQR)
         kalman_state.steady_state = false # Not on steadystate anymore
+    elseif kalman_state.steady_state
+        scalar_update_v!(kalman_state, y, Z, d)
+        scalar_update_att!(kalman_state, Z)
+        scalar_update_a!(kalman_state, T, c)
+        if t > skip_llk_instants
+            update_llk!(kalman_state)
+        end
     else
-        if kalman_state.steady_state
-            scalar_update_v!(kalman_state, y, Z, d)
-            scalar_update_att!(kalman_state, Z)
-            scalar_update_a!(kalman_state, T, c)
-            if t > skip_llk_instants
-                update_llk!(kalman_state)
-            end
-        else
-            scalar_update_v!(kalman_state, y, Z, d)
-            scalar_update_F!(kalman_state, Z, H)
-            scalar_update_att!(kalman_state, Z)
-            scalar_update_a!(kalman_state, T, c)
-            scalar_update_Ptt!(kalman_state, Z)
-            scalar_update_P!(kalman_state, T, RQR)
-            scalar_check_steady_state(kalman_state, tol)
-            if t > skip_llk_instants
-                update_llk!(kalman_state)
-            end
+        scalar_update_v!(kalman_state, y, Z, d)
+        scalar_update_F!(kalman_state, Z, H)
+        scalar_update_att!(kalman_state, Z)
+        scalar_update_a!(kalman_state, T, c)
+        scalar_update_Ptt!(kalman_state, Z)
+        scalar_update_P!(kalman_state, T, RQR)
+        scalar_check_steady_state(kalman_state, tol)
+        if t > skip_llk_instants
+            update_llk!(kalman_state)
         end
     end
     return

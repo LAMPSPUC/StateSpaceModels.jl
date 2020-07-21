@@ -52,14 +52,14 @@ function initial_hyperparameters!(model::BasicStructural)
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
-function constraint_hyperparameters!(model::BasicStructural)
+function constrain_hyperparameters!(model::BasicStructural)
     constrain_variance(model, "sigma2_ε")
     constrain_variance(model, "sigma2_μ")
     constrain_variance(model, "sigma2_β")
     constrain_variance(model, "sigma2_γ")
     return
 end
-function unconstraint_hyperparameters!(model::BasicStructural)
+function unconstrain_hyperparameters!(model::BasicStructural)
     unconstrain_variance(model, "sigma2_ε")
     unconstrain_variance(model, "sigma2_μ")
     unconstrain_variance(model, "sigma2_β")

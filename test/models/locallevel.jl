@@ -40,8 +40,8 @@
     fit(model)
     @test loglike(model) ≈ -379.9899 atol = 1e-5 rtol = 1e-5
 
-    @time filter = kalman_filter(model)
-    @time smoother = kalman_smoother(model)
+    filter = kalman_filter(model)
+    smoother = kalman_smoother(model)
     @test filter.Ptt[end] == smoother.V[end] # by construction
 
     for t in 2:length(model.system.y) - 1
@@ -50,4 +50,5 @@
 
     # forecasting
     forec = forecast(model, 10)
+    @test monotone_forecast_variance(forec)
 end

@@ -43,7 +43,7 @@ function kalman_smoother!(smoother_output::SmootherOutput,
     end
 
     # Last iteration
-    if any(isnan.(system.y[1, :])) # Decide how to deal with missing observations
+    if any(isnan.(system.y[1, :])) #TODO check this
         r0  = system.T'[1] * r[1]
         N0  = system.T'[1] * N[1] * system.T[1]
     else

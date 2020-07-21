@@ -40,14 +40,14 @@ function initial_hyperparameters!(model::DampedLinearTrend{Fl}) where Fl
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
-function constraint_hyperparameters!(model::DampedLinearTrend{Fl}) where {Fl}
+function constrain_hyperparameters!(model::DampedLinearTrend{Fl}) where {Fl}
     constrain_box(model, "ϕ", Fl(0.8), Fl(1.0))
     update_constrained_value!(model, "sigma2_ε", get_unconstrained_value(model, "sigma2_ε")^2)
     update_constrained_value!(model, "sigma2_η", get_unconstrained_value(model, "sigma2_η")^2)
     update_constrained_value!(model, "sigma2_β", get_unconstrained_value(model, "sigma2_β")^2)
     return
 end
-function unconstraint_hyperparameters!(model::DampedLinearTrend{Fl}) where Fl
+function unconstrain_hyperparameters!(model::DampedLinearTrend{Fl}) where Fl
     unconstrain_box(model, "ϕ", Fl(0.8), Fl(1.0))
     update_unconstrained_value!(model, "sigma2_ε", sqrt(get_constrained_value(model, "sigma2_ε")))
     update_unconstrained_value!(model, "sigma2_η", sqrt(get_constrained_value(model, "sigma2_η")))

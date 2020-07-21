@@ -10,4 +10,5 @@
 
     # forecasting
     forec = forecast(model, 10)
+    @test monotone_forecast_variance(forec)
 end

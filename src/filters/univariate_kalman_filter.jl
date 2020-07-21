@@ -151,25 +151,23 @@ function update_kalman_state!(kalman_state::UnivariateKalmanState{Fl}, y::Fl, Z:
         kalman_state.Ptt = kalman_state.P
         update_P!(kalman_state, T, RQR)
         kalman_state.steady_state = false # Not on steadystate anymore
+    elseif kalman_state.steady_state
+        update_v!(kalman_state, y, Z, d)
+        update_att!(kalman_state, Z)
+        update_a!(kalman_state, T, c)
+        if t > skip_llk_instants
+            update_llk!(kalman_state)
+        end
     else
-        if kalman_state.steady_state
-            update_v!(kalman_state, y, Z, d)
-            update_att!(kalman_state, Z)
-            update_a!(kalman_state, T, c)
-            if t > skip_llk_instants
-                update_llk!(kalman_state)
-            end
-        else
-            update_v!(kalman_state, y, Z, d)
-            update_F!(kalman_state, Z, H)
-            update_att!(kalman_state, Z)
-            update_a!(kalman_state, T, c)
-            update_Ptt!(kalman_state)
-            update_P!(kalman_state, T, RQR)
-            check_steady_state(kalman_state, tol)
-            if t > skip_llk_instants
-                update_llk!(kalman_state)
-            end
+        update_v!(kalman_state, y, Z, d)
+        update_F!(kalman_state, Z, H)
+        update_att!(kalman_state, Z)
+        update_a!(kalman_state, T, c)
+        update_Ptt!(kalman_state)
+        update_P!(kalman_state, T, RQR)
+        check_steady_state(kalman_state, tol)
+        if t > skip_llk_instants
+            update_llk!(kalman_state)
         end
     end
     return

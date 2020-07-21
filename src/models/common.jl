@@ -22,8 +22,8 @@ function is_valid_statespacemodel(model_type::Type{<:StateSpaceModel})
     tuple_with_model_type = Tuple{model_type}
     hasmethod(default_filter, tuple_with_model_type)
     hasmethod(initial_hyperparameters!, tuple_with_model_type)
-    hasmethod(constraint_hyperparameters!, tuple_with_model_type)
-    hasmethod(unconstraint_hyperparameters!, tuple_with_model_type)
+    hasmethod(constrain_hyperparameters!, tuple_with_model_type)
+    hasmethod(unconstrain_hyperparameters!, tuple_with_model_type)
     hasmethod(update!, tuple_with_model_type)
     return true
 end

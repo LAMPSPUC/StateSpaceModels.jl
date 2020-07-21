@@ -229,7 +229,7 @@ function initial_hyperparameters!(model::ARIMA{Fl}) where Fl
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
-function constraint_hyperparameters!(model::ARIMA{Fl}) where Fl
+function constrain_hyperparameters!(model::ARIMA{Fl}) where Fl
     # Constraint AR terms
     unconstrained_ar = Vector{Fl}(undef, model.order.p)
     for i in 1:model.order.p
@@ -254,7 +254,7 @@ function constraint_hyperparameters!(model::ARIMA{Fl}) where Fl
     update_constrained_value!(model, "sigma2_η", get_unconstrained_value(model, "sigma2_η")^2)
     return
 end
-function unconstraint_hyperparameters!(model::ARIMA{Fl}) where Fl
+function unconstrain_hyperparameters!(model::ARIMA{Fl}) where Fl
     # Unconstraint AR terms
     constrained_ar = Vector{Fl}(undef, model.order.p)
     for i in 1:model.order.p
