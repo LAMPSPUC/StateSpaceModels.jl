@@ -30,7 +30,6 @@ function save_kalman_state_in_filter_output!(filter_output::FilterOutput{Fl},
     return
 end
 
-
 mutable struct RegressionKalmanFilter{Fl <: AbstractFloat} <: KalmanFilter
     a1::Vector{Fl}
     kalman_state::RegressionKalmanState

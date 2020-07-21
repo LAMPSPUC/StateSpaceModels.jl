@@ -30,7 +30,7 @@ function update_model_hyperparameters!(model::StateSpaceModel,
                                        unconstrained_hyperparameters::Vector{Fl}) where Fl
     register_unconstrained_values!(model, unconstrained_hyperparameters)
     constraint_hyperparameters!(model)
-    update!(model)
+    fill_model_system!(model)
     return nothing
 end
 # @time StateSpaceModels2.

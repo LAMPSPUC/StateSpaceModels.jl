@@ -1,12 +1,5 @@
 export is_valid_statespacemodel
 
-
-"""
-Unobserved component models are state space models 
-that you can name components, each component has a proper meaning
-"""
-abstract type UnobservedComponentModel <: StateSpaceModel end
-
 typeof_model_elements(model::StateSpaceModel) = eltype(model.system.y)
 
 """

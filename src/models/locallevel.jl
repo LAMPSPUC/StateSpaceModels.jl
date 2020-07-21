@@ -14,7 +14,7 @@ The local level model is defined by:
 # Example
 ```jldoctest
 julia> model = LocalLevel(rand(100))
-A LocalLevel{Float64} model
+A LocalLevel model
 ```
 
 See more on [Nile river annual flow](@ref)
@@ -23,9 +23,9 @@ See more on [Nile river annual flow](@ref)
  * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. pp. 9
 
 """
-struct LocalLevel{Fl <: Real} <: StateSpaceModel
-    hyperparameters::HyperParameters{Fl}
-    system::LinearUnivariateTimeInvariant{Fl}
+mutable struct LocalLevel <: StateSpaceModel
+    hyperparameters::HyperParameters
+    system::LinearUnivariateTimeInvariant
 
     function LocalLevel(y::Vector{Fl}) where Fl
                            
@@ -44,37 +44,43 @@ struct LocalLevel{Fl <: Real} <: StateSpaceModel
         names = ["sigma2_ε", "sigma2_η"]
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new{Fl}(hyperparameters, system)
+        return new(hyperparameters, system)
     end
 end
 
 # Obligatory methods
-function default_filter(::LocalLevel{Fl}) where Fl
+function default_filter(model::LocalLevel)
+    Fl = typeof_model_elements(model)
     a1 = zero(Fl)
     P1 = Fl(1e6)
     steadystate_tol = Fl(1e-5)
     return ScalarKalmanFilter(a1, P1, 1, steadystate_tol)
 end
-function initial_hyperparameters!(model::LocalLevel{Fl}) where Fl
+function initial_hyperparameters!(model::LocalLevel)
+    Fl = typeof_model_elements(model)
+    observed_variance = var(model.system.y[findall(!isnan, model.system.y)])
     initial_hyperparameters = Dict{String, Fl}(
-        "sigma2_ε" => var(model.system.y),
-        "sigma2_η" => var(model.system.y)
+        "sigma2_ε" => observed_variance,
+        "sigma2_η" => observed_variance
     )
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
-function constraint_hyperparameters!(model::LocalLevel{Fl}) where Fl
+function constraint_hyperparameters!(model::LocalLevel)
     constrain_variance(model, "sigma2_ε")
     constrain_variance(model, "sigma2_η")
     return
 end
-function unconstraint_hyperparameters!(model::LocalLevel{Fl}) where Fl
+function unconstraint_hyperparameters!(model::LocalLevel)
     unconstrain_variance(model, "sigma2_ε")
     unconstrain_variance(model, "sigma2_η")
     return
 end
-function update!(model::LocalLevel{Fl}) where Fl
+function fill_model_system!(model::LocalLevel)
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
     return 
+end
+function reinstantiate(::LocalLevel, y::Vector{Fl}) where Fl
+    return LocalLevel(y)
 end
