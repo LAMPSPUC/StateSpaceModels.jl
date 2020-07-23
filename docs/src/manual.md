@@ -14,6 +14,30 @@ The package provides a variaty of pre-defined models, fell free to contribute if
 
 ```@docs
 LocalLevel
+BasicStructural
 ```
 
 ## Optim interface
+
+```@docs
+Optimizer
+```
+
+## Datasets
+
+The package provides some datasets to illustrate the funtionalities and models. The datasets 
+are strings with the absolute path of the file inside your computer, they are all stored as 
+csv files and you may read them the way that fits you better. In the examples we illustrate the
+datasets using [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) and [CSV.jl](https://github.com/JuliaData/CSV.jl)
+
+```@setup datasets
+using StateSpaceModels
+using CSV
+using DataFrames
+using Dates
+```
+
+```@docs
+StateSpaceModels.NILE
+StateSpaceModels.AIRPASSENGERS
+```

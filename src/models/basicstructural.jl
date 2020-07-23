@@ -1,6 +1,29 @@
 export BasicStructural
 
-"""
+@doc raw"""
+The basic structural model is defined by:
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_{t} &=  \mu_{t} + \gamma_{t} + \varepsilon_{t} \quad &\varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &= \mu_{t} + \nu_{t} + \xi_{t} \quad &\xi_{t} \sim \mathcal{N}(0, \sigma^2_{\xi})\\
+        \nu_{t+1} &= \nu_{t} + \zeta_{t} \quad &\zeta_{t} \sim \mathcal{N}(0, \sigma^2_{\zeta})\\
+        \gamma_{t+1} &= -\sum_{j=1}^{s-1} \gamma_{t+1-j} + \omega_{t} \quad & \omega_{t} \sim \mathcal{N}(0, \sigma^2_{\omega})\\
+    \end{aligned}
+\end{gather*}
+```
+
+# Example
+Here we define a basic structural model with seasonal pattern `s = 12`
+```jldoctest
+julia> model = BasicStructural(rand(100), 12)
+A BasicStructural model
+```
+
+See more on [Log of airline passengers](@ref)
+
+# References
+ * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. pp. 46
 """
 mutable struct BasicStructural <: StateSpaceModel
     hyperparameters::HyperParameters
@@ -27,7 +50,7 @@ mutable struct BasicStructural <: StateSpaceModel
 
         system = LinearUnivariateTimeInvariant{Fl}(y, Z, T, R, d, c, H, Q)
 
-        names = ["sigma2_ε", "sigma2_μ", "sigma2_β", "sigma2_γ"]
+        names = ["sigma2_ε", "sigma2_ξ", "sigma2_ζ", "sigma2_ω"]
         hyperparameters = HyperParameters{Fl}(names)
 
         return new(hyperparameters, system, s)
@@ -45,32 +68,32 @@ function initial_hyperparameters!(model::BasicStructural)
     Fl = typeof_model_elements(model)
     initial_hyperparameters = Dict{String, Fl}(
         "sigma2_ε" => var(model.system.y),
-        "sigma2_μ" => var(model.system.y),
-        "sigma2_β" => one(Fl),
-        "sigma2_γ" => one(Fl)
+        "sigma2_ξ" => var(model.system.y),
+        "sigma2_ζ" => one(Fl),
+        "sigma2_ω" => one(Fl)
     )
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
 function constrain_hyperparameters!(model::BasicStructural)
     constrain_variance(model, "sigma2_ε")
-    constrain_variance(model, "sigma2_μ")
-    constrain_variance(model, "sigma2_β")
-    constrain_variance(model, "sigma2_γ")
+    constrain_variance(model, "sigma2_ξ")
+    constrain_variance(model, "sigma2_ζ")
+    constrain_variance(model, "sigma2_ω")
     return
 end
 function unconstrain_hyperparameters!(model::BasicStructural)
     unconstrain_variance(model, "sigma2_ε")
-    unconstrain_variance(model, "sigma2_μ")
-    unconstrain_variance(model, "sigma2_β")
-    unconstrain_variance(model, "sigma2_γ")
+    unconstrain_variance(model, "sigma2_ξ")
+    unconstrain_variance(model, "sigma2_ζ")
+    unconstrain_variance(model, "sigma2_ω")
     return
 end
 function fill_model_system!(model::BasicStructural)
     model.system.H = get_constrained_value(model, "sigma2_ε")
-    model.system.Q[1] = get_constrained_value(model, "sigma2_μ")
-    model.system.Q[5] = get_constrained_value(model, "sigma2_β")
-    model.system.Q[end] = get_constrained_value(model, "sigma2_γ")
+    model.system.Q[1] = get_constrained_value(model, "sigma2_ξ")
+    model.system.Q[5] = get_constrained_value(model, "sigma2_ζ")
+    model.system.Q[end] = get_constrained_value(model, "sigma2_ω")
     return 
 end
 function reinstantiate(model::BasicStructural, y::Vector{Fl}) where Fl

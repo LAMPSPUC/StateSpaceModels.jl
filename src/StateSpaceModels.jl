@@ -8,7 +8,7 @@ using LinearAlgebra
 using Statistics
 using Optim
 
-include("datasets/datasets.jl")
+include("datasets.jl")
 
 include("hyperparameters.jl")
 include("systems.jl")

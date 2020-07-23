@@ -15,7 +15,7 @@ using Dates
 ```@example nile
 using CSV, DataFrames
 nile = DataFrame!(CSV.File(StateSpaceModels.NILE))
-plt = plot(nile.year, nile.flow, label = "Annual nile river flow")
+plt = plot(nile.year, nile.flow, label = "Nile river annual flow")
 ```
 
 We can fit the model
@@ -73,3 +73,7 @@ smoother_output = kalman_smoother(model)
 plot!(plt, nile.year, filtered_estimates(filter_output), label = "Filtered level")
 plot!(plt, nile.year, smoothed_estimates(smoother_output), label = "Smoothed level")
 ```
+
+## Log of airline passengers
+
+The airline passengers
