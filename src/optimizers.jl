@@ -3,7 +3,7 @@ export Optimizer
 """
     Optimizer
 
-An Optim.jl wrapper to make the choice of the optimizer straight-forward in StateSpaceModels.jl
+An Optim.jl wrapper to make the choice of the optimizer straightforward in StateSpaceModels.jl
 Users can choose between all suitable Optimizers in Optim.jl using very similar syntax. 
 
 # Example
