@@ -3,7 +3,6 @@ using CSV
 using DataFrames
 using LinearAlgebra
 using Documenter
-using Plots
 using StateSpaceModels
 
 # Set up to run docstrings with jldoctest
