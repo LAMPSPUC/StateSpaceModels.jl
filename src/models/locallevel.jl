@@ -21,7 +21,6 @@ See more on [Nile river annual flow](@ref)
 
 # References
  * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. pp. 9
-
 """
 mutable struct LocalLevel <: StateSpaceModel
     hyperparameters::HyperParameters
