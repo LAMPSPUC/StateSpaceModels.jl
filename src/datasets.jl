@@ -12,7 +12,7 @@ See more on [Nile river annual flow](@ref)
 # References
  * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. (Chapter 2)
 """
-const NILE = joinpath(@__DIR__(), "nile.csv")
+const NILE = joinpath(dirname(@__DIR__()), "datasets", "nile.csv")
 
 @doc raw"""
 The absolute path for the so called `AIRPASSENGERS` dataset stored inside StateSpaceModels.jl.
@@ -23,4 +23,4 @@ See more on [Log of airline passengers](@ref)
 # References 
  * https://www.stata-press.com/data/r12/ts.html
 """
-const AIRPASSENGERS = joinpath(@__DIR__(), "airpassengers.csv")
+const AIRPASSENGERS = joinpath(dirname(@__DIR__()), "datasets", "airpassengers.csv")
