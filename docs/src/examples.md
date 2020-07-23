@@ -15,7 +15,7 @@ using Dates
 ```@example nile
 using CSV, DataFrames
 nile = DataFrame!(CSV.File(StateSpaceModels.NILE))
-plt = plot(nile.year, nile.flow, label = "Annual flow Nile river")
+plt = plot(nile.year, nile.flow, label = "Nile river annual flow")
 ```
 
 We can fit the model
