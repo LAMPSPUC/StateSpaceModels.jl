@@ -1,4 +1,7 @@
 @testset "Regression" begin
+
+    @test has_fit_methods(LinearRegression)
+
     # Test for 10 random points
     for _ in 1:10
         X = rand(100, 5)

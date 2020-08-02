@@ -17,7 +17,7 @@ The basic structural model is defined by:
 Here we define a basic structural model with seasonal pattern `s = 12`
 ```jldoctest
 julia> model = BasicStructural(rand(100), 12)
-A BasicStructural model
+BasicStructural model
 ```
 
 See more on [Log of airline passengers](@ref)

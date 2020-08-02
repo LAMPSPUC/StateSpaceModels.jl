@@ -86,7 +86,7 @@ function fill_model_system!(model::LinearRegression{Fl}) where Fl
     fill_H_in_time(model, H)
     return 
 end
-function update!(filter::KalmanFilter, model::LinearRegression{Fl}) where Fl
+function fill_model_filter!(filter::KalmanFilter, model::LinearRegression{Fl}) where Fl
     for i in axes(filter.kalman_state.a, 1)
         filter.kalman_state.a[i] = get_constrained_value(model, get_beta_name(model, i))
     end

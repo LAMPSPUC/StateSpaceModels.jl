@@ -1,8 +1,8 @@
 @testset "Basic Structural Model" begin
-    air_passengers = read_csv(StateSpaceModels.AIRPASSENGERS)
+    air_passengers = read_csv(StateSpaceModels.AIR_PASSENGERS)
     log_air_passengers = log.(air_passengers.passengers)
 
-    @assert is_valid_statespacemodel(BasicStructural)
+    @test has_fit_methods(BasicStructural)
   
     model = BasicStructural(log_air_passengers, 12)
     fit(model)

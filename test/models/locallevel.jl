@@ -1,7 +1,7 @@
 @testset "LocalLevel" begin
     nile = read_csv(StateSpaceModels.NILE)
 
-    @assert is_valid_statespacemodel(LocalLevel)
+    @test has_fit_methods(LocalLevel)
 
     model = LocalLevel(nile.flow)
     fit(model)

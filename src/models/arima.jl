@@ -1,3 +1,5 @@
+export ARIMA
+
 struct ARIMAOrder
     p::Int
     d::Int
@@ -21,11 +23,11 @@ end
 
 """
 """
-struct ARIMA{Fl} <: StateSpaceModel
+struct ARIMA <: StateSpaceModel
     order::ARIMAOrder
     hyperparameters_auxiliary::ARIMAHyperParametersAuxiliary
-    hyperparameters::HyperParameters{Fl}
-    system::LinearUnivariateTimeInvariant{Fl}
+    hyperparameters::HyperParameters
+    system::LinearUnivariateTimeInvariant
 
     function ARIMA(y::Vector{Fl}; 
                    order::Tuple{Int, Int, Int}=(0, 1, 0)) where Fl
@@ -55,7 +57,7 @@ struct ARIMA{Fl} <: StateSpaceModel
 
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new{Fl}(or, hyperparameters_auxiliary, hyperparameters, system)
+        return new(or, hyperparameters_auxiliary, hyperparameters, system)
     end
 end
 
@@ -134,10 +136,10 @@ function create_ma_names(or)
     end
     return ma_names
 end
-get_ar_name(model::ARIMA{Fl}, i::Int) where Fl = model.hyperparameters_auxiliary.ar_names[i]
-get_ma_name(model::ARIMA{Fl}, i::Int) where Fl = model.hyperparameters_auxiliary.ma_names[i]
-get_ar_pos(model::ARIMA{Fl}, i::Int) where Fl = model.hyperparameters_auxiliary.ar_pos[i]
-get_ma_pos(model::ARIMA{Fl}, i::Int) where Fl = model.hyperparameters_auxiliary.ma_pos[i]
+get_ar_name(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ar_names[i]
+get_ma_name(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ma_names[i]
+get_ar_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ar_pos[i]
+get_ma_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ma_pos[i]
 
 # TODO improve performance possibly preallocating y
 function impose_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
@@ -176,7 +178,7 @@ function relax_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
 end
 
 function ARIMA_exact_initalization!(filter::KalmanFilter, 
-                                    model::ARIMA{Fl}) where Fl
+                                    model::ARIMA)
     num_arma_states = max(model.order.p, model.order.q + 1)
     ARIMA_exact_initialization!(filter.kalman_state, model.system, num_arma_states)
     return
@@ -192,13 +194,13 @@ function ARIMA_exact_initialization!(kalman_state, system, num_arma_states)
     return
 end
 
-function update_ar_terms!(model::ARIMA{Fl}) where Fl
+function update_ar_terms!(model::ARIMA)
     for i in 1:model.order.p
         model.system.T[get_ar_pos(model, i)] = get_constrained_value(model, get_ar_name(model, i))
     end
     return 
 end
-function update_ma_terms!(model::ARIMA{Fl}) where Fl
+function update_ma_terms!(model::ARIMA)
     for j in 1:model.order.q
         model.system.R[get_ma_pos(model, j)] = get_constrained_value(model, get_ma_name(model, j))
     end
@@ -206,7 +208,8 @@ function update_ma_terms!(model::ARIMA{Fl}) where Fl
 end
 
 # Obligatory functions
-function default_filter(model::ARIMA{Fl}) where Fl
+function default_filter(model::ARIMA)
+    Fl = typeof_model_elements(model)
     num_arma_states = max(model.order.p, model.order.q + 1)
     r = model.order.d + num_arma_states
     a1 = zeros(Fl, r)
@@ -215,10 +218,12 @@ function default_filter(model::ARIMA{Fl}) where Fl
     steadystate_tol = Fl(1e-5)
     return UnivariateKalmanFilter(a1, P1, skip_llk_instants, steadystate_tol)
 end
-function initial_hyperparameters!(model::ARIMA{Fl}) where Fl
+function initial_hyperparameters!(model::ARIMA)
+    Fl = typeof_model_elements(model)
     # TODO find out how to better estimate initial parameters
+    y = filter(!isnan, model.system.y)
     initial_hyperparameters = Dict{String, Fl}(
-        "sigma2_η" => dot(model.system.y, model.system.y)/length(model.system.y)
+        "sigma2_η" => dot(y, y)/length(y)
     )
     for i in 1:model.order.p
         initial_hyperparameters[get_ar_name(model, i)] = zero(Fl)
@@ -229,7 +234,8 @@ function initial_hyperparameters!(model::ARIMA{Fl}) where Fl
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return
 end
-function constrain_hyperparameters!(model::ARIMA{Fl}) where Fl
+function constrain_hyperparameters!(model::ARIMA)
+    Fl = typeof_model_elements(model)
     # Constraint AR terms
     unconstrained_ar = Vector{Fl}(undef, model.order.p)
     for i in 1:model.order.p
@@ -250,11 +256,12 @@ function constrain_hyperparameters!(model::ARIMA{Fl}) where Fl
         update_constrained_value!(model, get_ma_name(model, j), constrained_ma[j])
     end
 
-    # Constraint variance
-    update_constrained_value!(model, "sigma2_η", get_unconstrained_value(model, "sigma2_η")^2)
+    # Constrain variance
+    constrain_variance(model, "sigma2_η")
     return
 end
-function unconstrain_hyperparameters!(model::ARIMA{Fl}) where Fl
+function unconstrain_hyperparameters!(model::ARIMA)
+    Fl = typeof_model_elements(model)
     # Unconstraint AR terms
     constrained_ar = Vector{Fl}(undef, model.order.p)
     for i in 1:model.order.p
@@ -275,17 +282,17 @@ function unconstrain_hyperparameters!(model::ARIMA{Fl}) where Fl
         update_unconstrained_value!(model, get_ma_name(model, j), unconstrained_ma[j])
     end
 
-    # Unconstraint variance
-    update_unconstrained_value!(model, "sigma2_η", sqrt(get_constrained_value(model, "sigma2_η")))
+    # Unconstrain variance
+    unconstrain_variance(model, "sigma2_η")
     return
 end
-function update!(model::ARIMA{Fl}) where Fl
+function fill_model_system!(model::ARIMA)
     update_ar_terms!(model)
     update_ma_terms!(model)
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
     return nothing
 end
-function update!(filter::KalmanFilter, model::ARIMA{Fl}) where Fl
+function fill_model_filter!(filter::KalmanFilter, model::ARIMA)
     ARIMA_exact_initalization!(filter, model)
     return nothing
 end

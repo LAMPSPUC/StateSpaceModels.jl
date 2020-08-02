@@ -14,7 +14,7 @@ The local level model is defined by:
 # Example
 ```jldoctest
 julia> model = LocalLevel(rand(100))
-A LocalLevel model
+LocalLevel model
 ```
 
 See more on [Nile river annual flow](@ref)
