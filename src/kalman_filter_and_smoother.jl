@@ -35,10 +35,10 @@ function update_model_hyperparameters!(model::StateSpaceModel,
 end
 
 function update_filter_hyperparameters!(filter::KalmanFilter, model::StateSpaceModel)
-    update!(filter, model)
+    fill_model_filter!(filter, model)
     return nothing
 end
-function update!(::KalmanFilter, ::StateSpaceModel)
+function fill_model_filter!(::KalmanFilter, ::StateSpaceModel)
     return nothing
 end
 

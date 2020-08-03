@@ -1,24 +1,16 @@
-export is_valid_statespacemodel
+export has_fit_methods
 
 typeof_model_elements(model::StateSpaceModel) = eltype(model.system.y)
 
-"""
-TODO
-"""
 num_states(model::StateSpaceModel) = num_states(system(model))
-
-"""
-TODO
-"""
 system(model::StateSpaceModel) = model.system
 
 """
-TODO
+    has_fit_methods(model_type::Type{<:StateSpaceModel})
 
-Verifica se o model tem todas as funções implementadas
+Verify if a certain `StateSpaceModel` has the necessary methods to perform the fit.
 """
-function is_valid_statespacemodel(model_type::Type{<:StateSpaceModel})
-    # TODO error message to indicate which method is missing
+function has_fit_methods(model_type::Type{<:StateSpaceModel})
     tuple_with_model_type = Tuple{model_type}
     hasmethod(default_filter, tuple_with_model_type)
     hasmethod(initial_hyperparameters!, tuple_with_model_type)
@@ -28,8 +20,7 @@ function is_valid_statespacemodel(model_type::Type{<:StateSpaceModel})
     return true
 end
 
-# standard print 
 function Base.show(io::IO, model::StateSpaceModel)
-    print(io, "A $(typeof(model)) model")
+    print(io, typeof(model), " model")
     return
 end

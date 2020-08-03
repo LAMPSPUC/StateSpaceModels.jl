@@ -1,6 +1,40 @@
+@doc raw"""
+    StateSpaceSystem
+
+Abstract type that unifies the definition of state space models matrices such as ``y, Z, d, T, c, R, H, Q`` for 
+linear models.
+"""
 abstract type StateSpaceSystem end
 
-"""
+export LinearUnivariateTimeInvariant,
+    LinearUnivariateTimeVariant,
+    LinearMultivariateTimeInvariant,
+    LinearMultivariateTimeVariant
+
+@doc raw"""
+    LinearUnivariateTimeInvariant
+
+Definition of the system matrices ``y, Z, d, T, c, R, H, Q`` for linear univariate time invariant state space models.
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_{t} &=  Z\alpha_{t} + d + \varepsilon_{t} \quad \varepsilon_{t} \sim \mathcal{N}(0, H)\\
+        \alpha_{t+1} &= T\alpha_{t} + c + R\eta_{t} \quad \eta_{t} \sim \mathcal{N}(0, Q)\\
+    \end{aligned}
+\end{gather*}
+```
+
+where:
+
+* ``y_{t}`` is a scalar
+* ``Z`` is a ``m \times 1`` vector
+* ``d`` is a scalar
+* ``T`` is a ``m \times m`` matrix
+* ``c`` is a ``m \times 1`` vector
+* ``R`` is a ``m \times r`` matrix
+* ``H`` is a scalar
+* ``Q`` is a ``r \times r`` matrix
 """
 mutable struct LinearUnivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
     y::Vector{Fl}
@@ -23,8 +57,8 @@ mutable struct LinearUnivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
         mc       = length(c)
         rq1, rq2 = size(Q)
 
-        dim_str = "Z is 1x$(mz), T is $(mt1)x$(mt2), R is $(mr)x$(rr), " *
-                  "d is a number, c is $(mc)x1, H is a number. "
+        dim_str = "Z is $(mz)x1, T is $(mt1)x$(mt2), R is $(mr)x$(rr), " *
+                  "d is a scalar, c is $(mc)x1, H is a scalar."
         
         !(mz == mt1 == mt2 == mr == mc) && throw(DimensionMismatch(dim_str))
         !(rr == rq1 == rq2) && throw(DimensionMismatch(dim_str))
@@ -35,7 +69,30 @@ end
 
 num_states(system::LinearUnivariateTimeInvariant) = size(system.T, 1)
 
-"""
+@doc raw"""
+    LinearUnivariateTimeVariant
+
+Definition of the system matrices ``y, Z, d, T, c, R, H, Q`` for linear univariate time variant state space models.
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_{t} &=  Z_{t}\alpha_{t} + d_{t} + \varepsilon_{t} \quad \varepsilon_{t} \sim \mathcal{N}(0, H_{t})\\
+        \alpha_{t+1} &= T_{t}\alpha_{t} + c_{t} + R_{t}\eta_{t} \quad \eta_{t} \sim \mathcal{N}(0, Q_{t})\\
+    \end{aligned}
+\end{gather*}
+```
+
+where:
+
+* ``y_{t}`` is a scalar
+* ``Z_{t}`` is a ``m \times 1`` vector
+* ``d_{t}`` is a scalar
+* ``T_{t}`` is a ``m \times m`` matrix
+* ``c_{t}`` is a ``m \times 1`` vector
+* ``R_{t}`` is a ``m \times r`` matrix
+* ``H_{t}`` is a scalar
+* ``Q_{t}`` is a ``r \times r`` matrix
 """
 mutable struct LinearUnivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
     y::Vector{Fl}
