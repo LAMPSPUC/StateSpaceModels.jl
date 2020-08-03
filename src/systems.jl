@@ -1,7 +1,7 @@
 @doc raw"""
     StateSpaceSystem
 
-abtract type that unifies the definition of state space models matrices such as ``y, Z, d, T, c, R, H, Q`` for 
+Abstract type that unifies the definition of state space models matrices such as ``y, Z, d, T, c, R, H, Q`` for 
 linear models.
 """
 abstract type StateSpaceSystem end
