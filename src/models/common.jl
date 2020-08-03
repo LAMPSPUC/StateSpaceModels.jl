@@ -8,7 +8,7 @@ system(model::StateSpaceModel) = model.system
 """
     has_fit_methods(model_type::Type{<:StateSpaceModel})
 
-Verify if a certain `StateSpaceModel` has all the methods perform the fit method.
+Verify if a certain `StateSpaceModel` has the necessary methods to perform the fit.
 """
 function has_fit_methods(model_type::Type{<:StateSpaceModel})
     tuple_with_model_type = Tuple{model_type}
