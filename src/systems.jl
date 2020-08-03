@@ -85,7 +85,7 @@ Definition of the system matrices ``y, Z, d, T, c, R, H, Q`` for linear univaria
 
 where:
 
-* ``y_{t}`` is a scala
+* ``y_{t}`` is a scalar
 * ``Z_{t}`` is a ``m \times 1`` vector
 * ``d_{t}`` is a scalar
 * ``T_{t}`` is a ``m \times m`` matrix
