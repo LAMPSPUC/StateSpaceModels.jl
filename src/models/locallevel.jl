@@ -66,13 +66,13 @@ function initial_hyperparameters!(model::LocalLevel)
     return
 end
 function constrain_hyperparameters!(model::LocalLevel)
-    constrain_variance(model, "sigma2_ε")
-    constrain_variance(model, "sigma2_η")
+    constrain_variance!(model, "sigma2_ε")
+    constrain_variance!(model, "sigma2_η")
     return
 end
 function unconstrain_hyperparameters!(model::LocalLevel)
-    unconstrain_variance(model, "sigma2_ε")
-    unconstrain_variance(model, "sigma2_η")
+    unconstrain_variance!(model, "sigma2_ε")
+    unconstrain_variance!(model, "sigma2_η")
     return
 end
 function fill_model_system!(model::LocalLevel)

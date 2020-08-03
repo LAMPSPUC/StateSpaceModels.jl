@@ -76,17 +76,17 @@ function initial_hyperparameters!(model::BasicStructural)
     return
 end
 function constrain_hyperparameters!(model::BasicStructural)
-    constrain_variance(model, "sigma2_ε")
-    constrain_variance(model, "sigma2_ξ")
-    constrain_variance(model, "sigma2_ζ")
-    constrain_variance(model, "sigma2_ω")
+    constrain_variance!(model, "sigma2_ε")
+    constrain_variance!(model, "sigma2_ξ")
+    constrain_variance!(model, "sigma2_ζ")
+    constrain_variance!(model, "sigma2_ω")
     return
 end
 function unconstrain_hyperparameters!(model::BasicStructural)
-    unconstrain_variance(model, "sigma2_ε")
-    unconstrain_variance(model, "sigma2_ξ")
-    unconstrain_variance(model, "sigma2_ζ")
-    unconstrain_variance(model, "sigma2_ω")
+    unconstrain_variance!(model, "sigma2_ε")
+    unconstrain_variance!(model, "sigma2_ξ")
+    unconstrain_variance!(model, "sigma2_ζ")
+    unconstrain_variance!(model, "sigma2_ω")
     return
 end
 function fill_model_system!(model::BasicStructural)

@@ -257,7 +257,7 @@ function constrain_hyperparameters!(model::ARIMA)
     end
 
     # Constrain variance
-    constrain_variance(model, "sigma2_η")
+    constrain_variance!(model, "sigma2_η")
     return
 end
 function unconstrain_hyperparameters!(model::ARIMA)
@@ -283,7 +283,7 @@ function unconstrain_hyperparameters!(model::ARIMA)
     end
 
     # Unconstrain variance
-    unconstrain_variance(model, "sigma2_η")
+    unconstrain_variance!(model, "sigma2_η")
     return
 end
 function fill_model_system!(model::ARIMA)

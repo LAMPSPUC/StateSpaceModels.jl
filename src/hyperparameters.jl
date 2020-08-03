@@ -183,7 +183,7 @@ end
 """
 TODO
 """
-function constrain_box(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
+function constrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
     update_constrained_value!(model, str, lb + ((ub - lb)/(1 + exp(-get_unconstrained_value(model, str)))))
     return
 end
@@ -191,7 +191,7 @@ end
 """
 TODO
 """
-function unconstrain_box(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
+function unconstrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
     update_unconstrained_value!(model, str, -log((ub - lb)/(get_constrained_value(model, str) - lb - 1)))
     return
 end
@@ -199,7 +199,7 @@ end
 """
 TODO
 """
-function constrain_variance(model::StateSpaceModel, str::String)
+function constrain_variance!(model::StateSpaceModel, str::String)
     update_constrained_value!(model, str, (get_unconstrained_value(model, str))^2)
     return
 end
@@ -207,7 +207,7 @@ end
 """
 TODO
 """
-function unconstrain_variance(model::StateSpaceModel, str::String)
+function unconstrain_variance!(model::StateSpaceModel, str::String)
     update_unconstrained_value!(model, str, sqrt(get_constrained_value(model, str)))
     return
 end
@@ -215,7 +215,7 @@ end
 """
 TODO
 """
-function constrain_identity(model::StateSpaceModel, str::String)
+function constrain_identity!(model::StateSpaceModel, str::String)
     update_constrained_value!(model, str, get_unconstrained_value(model, str))
     return
 end
@@ -223,7 +223,7 @@ end
 """
 TODO
 """
-function unconstrain_identity(model::StateSpaceModel, str::String)
+function unconstrain_identity!(model::StateSpaceModel, str::String)
     update_unconstrained_value!(model, str, get_constrained_value(model, str))
     return
 end
