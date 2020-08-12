@@ -255,7 +255,7 @@ function simulate(sys::LinearUnivariateTimeInvariant{Fl},
                   n::Int;
                   return_simulated_states::Bool = false) where Fl
 
-    m, m = size(sys.T)
+    m = size(sys.T, 1)
 
     y = Vector{Fl}(undef, n)
     alpha = Matrix{Fl}(undef, n + 1, m)
