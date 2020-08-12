@@ -50,7 +50,7 @@ expected_value = forecast_expected_value(forec)
 plot!(plt, dates, expected_value, label = "Forecast")
 ```
 
-StateSpaceModels.jl also enables generating scenarios for the forecasting horizon
+StateSpaceModels.jl also enables simulating multiple scenarios for the forecasting horizon based on the estimated distributions.
 
 ```@example nile
 scenarios = simulate_scenarios(model, 10, 100)
