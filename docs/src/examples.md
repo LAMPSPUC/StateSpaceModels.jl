@@ -50,8 +50,14 @@ expected_value = forecast_expected_value(forec)
 plot!(plt, dates, expected_value, label = "Forecast")
 ```
 
-StateSpaceModels.jl handles missing values automatically, the package consider that observations with `NaN` are missing
-values.
+StateSpaceModels.jl also enables generating scenarios for the forecasting horizon
+
+```@example nile
+scenarios = simulate_scenarios(model, 10, 100)
+plot!(plt, dates, scenarios[:, 1, :], label = "", color = "grey", width = 0.2)
+```
+
+StateSpaceModels.jl handles missing values automatically, the package consider that observations with `NaN` are missing values.
 
 ```@example nile
 nile.flow[[collect(21:40); collect(61:80)]] .= NaN
@@ -73,7 +79,3 @@ smoother_output = kalman_smoother(model)
 plot!(plt, nile.year, filtered_estimates(filter_output), label = "Filtered level")
 plot!(plt, nile.year, smoothed_estimates(smoother_output), label = "Smoothed level")
 ```
-
-## Log of airline passengers
-
-The airline passengers

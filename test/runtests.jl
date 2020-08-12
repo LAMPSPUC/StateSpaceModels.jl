@@ -1,9 +1,11 @@
-using Test
 using CSV
 using DataFrames
-using LinearAlgebra
+using Distributions
 using Documenter
+using LinearAlgebra
 using StateSpaceModels
+using Statistics
+using Test
 
 # Set up to run docstrings with jldoctest
 DocMeta.setdocmeta!(StateSpaceModels, :DocTestSetup, :(using StateSpaceModels); recursive=true)

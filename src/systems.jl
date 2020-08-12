@@ -1,3 +1,10 @@
+export LinearUnivariateTimeInvariant,
+    LinearUnivariateTimeVariant,
+    LinearMultivariateTimeInvariant,
+    LinearMultivariateTimeVariant
+
+export simulate
+
 @doc raw"""
     StateSpaceSystem
 
@@ -5,11 +12,6 @@ Abstract type that unifies the definition of state space models matrices such as
 linear models.
 """
 abstract type StateSpaceSystem end
-
-export LinearUnivariateTimeInvariant,
-    LinearUnivariateTimeVariant,
-    LinearMultivariateTimeInvariant,
-    LinearMultivariateTimeVariant
 
 @doc raw"""
     LinearUnivariateTimeInvariant
@@ -130,9 +132,9 @@ mutable struct LinearMultivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
     Q::Matrix{Fl}
 
     function LinearMultivariateTimeInvariant{Fl}(y::Matrix{Fl}, Z::Matrix{Fl}, 
-                                                   T::Matrix{Fl}, R::Matrix{Fl}, 
-                                                   d::Vector{Fl}, c::Vector{Fl}, H::Matrix{Fl},
-                                                   Q::Matrix{Fl}) where Fl
+                                                 T::Matrix{Fl}, R::Matrix{Fl}, 
+                                                 d::Vector{Fl}, c::Vector{Fl}, H::Matrix{Fl},
+                                                 Q::Matrix{Fl}) where Fl
 
         # TODO assert dimensions
 
@@ -243,4 +245,36 @@ function to_multivariate_time_variant(system::LinearUnivariateTimeVariant{Fl}) w
     H = to_multivariate_H(system.H)
     Q = system.Q
     return LinearMultivariateTimeVariant{Fl}(y, Z, T, R, d, c, H, Q)
+end
+
+to_multivariate_time_variant(system::LinearMultivariateTimeVariant) = system
+
+# Functions for simulations
+function simulate(sys::LinearUnivariateTimeInvariant{Fl}, 
+                  initial_state::Vector{Fl}, 
+                  n::Int;
+                  return_simulated_states::Bool = false) where Fl
+
+    m, m = size(sys.T)
+
+    y = Vector{Fl}(undef, n)
+    alpha = Matrix{Fl}(undef, n + 1, m)
+    alpha[1, :] = initial_state
+
+    # Sampling errors
+    chol_H     = sqrt(sys.H)
+    chol_Q     = cholesky(sys.Q)
+    standard_ε = randn(n)
+    standard_η = randn(n, size(sys.Q, 1))
+
+    # Simulate scenries
+    for t = 1:n
+        y[t]            = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
+        alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
+    end
+
+    if return_simulated_states
+        return y, alpha[1:n, :]
+    end
+    return y
 end

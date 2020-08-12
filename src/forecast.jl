@@ -1,5 +1,6 @@
 export forecast,
-    forecast_expected_value
+    forecast_expected_value,
+    simulate_scenarios
 
 mutable struct Forecast{Fl}
     expected_value::Vector{Vector{Fl}}
@@ -39,4 +40,22 @@ function forecast(model::SSM, steps_ahead::Int;
     end
 
     return Forecast{Fl}(expected_value, covariance)
+end
+
+"""
+TODO
+"""
+function simulate_scenarios(model::SSM, steps_ahead::Int, number_of_scenarios::Int;
+                            filter::KalmanFilter = default_filter(model)) where SSM
+    # Query the type of model elements
+    Fl = typeof_model_elements(model)
+    fo = kalman_filter(model)
+    last_state = fo.a[end]
+    num_series = size(model.system.y, 2)
+    
+    scenarios = Array{Fl, 3}(undef, steps_ahead, num_series, number_of_scenarios)
+    for s in 1:number_of_scenarios
+        scenarios[:, :, s] = simulate(model.system, last_state, steps_ahead)
+    end
+    return scenarios
 end
