@@ -267,7 +267,7 @@ function simulate(sys::LinearUnivariateTimeInvariant{Fl},
     standard_ε = randn(n)
     standard_η = randn(n, size(sys.Q, 1))
 
-    # Simulate scenries
+    # Simulate scenarios
     for t = 1:n
         y[t]            = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
         alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
