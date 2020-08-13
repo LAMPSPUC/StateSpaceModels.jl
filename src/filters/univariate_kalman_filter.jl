@@ -29,8 +29,8 @@ end
 
 function save_a1_P1_in_filter_output!(filter_output::FilterOutput{Fl}, 
                                       kalman_state::UnivariateKalmanState{Fl}) where Fl
-    filter_output.a[1] = copy(kalman_state.a)
-    filter_output.P[1] = copy(kalman_state.P)
+    filter_output.a[1] = deepcopy(kalman_state.a)
+    filter_output.P[1] = deepcopy(kalman_state.P)
     return
 end
 function save_kalman_state_in_filter_output!(filter_output::FilterOutput{Fl}, 
@@ -110,6 +110,12 @@ function update_att!(kalman_state::UnivariateKalmanState{Fl}, Z::Vector{Fl}) whe
     end
     return
 end
+function repeat_a_in_att!(kalman_state::UnivariateKalmanState{Fl}) where Fl
+    for i in eachindex(kalman_state.att)
+        kalman_state.att[i] = kalman_state.a[i]
+    end
+    return
+end
 function update_a!(kalman_state::UnivariateKalmanState{Fl}, T::Matrix{Fl}, c::Vector{Fl}) where Fl
     LinearAlgebra.BLAS.gemv!('N', one(Fl), T, kalman_state.att, zero(Fl), kalman_state.a)
     kalman_state.a .+= c
@@ -118,6 +124,12 @@ end
 function update_Ptt!(kalman_state::UnivariateKalmanState{Fl}) where Fl
     LinearAlgebra.BLAS.gemm!('N', 'T', Fl(1.0), kalman_state.ZP, kalman_state.ZP, Fl(0.0), kalman_state.Ptt)
     @. kalman_state.Ptt = kalman_state.P - (kalman_state.Ptt / kalman_state.F)
+    return
+end
+function repeat_P_in_Ptt!(kalman_state::UnivariateKalmanState{Fl}) where Fl
+    for i in axes(kalman_state.P, 1), j in axes(kalman_state.P, 2)
+        kalman_state.Ptt[i, j] = kalman_state.P[i, j]
+    end
     return
 end
 function update_P!(kalman_state::UnivariateKalmanState{Fl}, T::Matrix{Fl},
@@ -146,9 +158,9 @@ function update_kalman_state!(kalman_state::UnivariateKalmanState{Fl}, y::Fl, Z:
     if isnan(y)
         kalman_state.v = NaN
         update_F!(kalman_state, Z, H)
-        kalman_state.att = kalman_state.a
+        repeat_a_in_att!(kalman_state)
         update_a!(kalman_state, T, c)
-        kalman_state.Ptt = kalman_state.P
+        repeat_P_in_Ptt!(kalman_state)
         update_P!(kalman_state, T, RQR)
         kalman_state.steady_state = false # Not on steadystate anymore
     elseif kalman_state.steady_state
@@ -183,9 +195,9 @@ function update_kalman_state!(kalman_state::UnivariateKalmanState{Fl}, y::Fl, Z:
     elseif isnan(y)
         kalman_state.v = NaN
         update_F!(kalman_state, Z, H)
-        kalman_state.att = kalman_state.a
+        repeat_a_in_att!(kalman_state)
         update_a!(kalman_state, T, c)
-        kalman_state.Ptt = kalman_state.P
+        repeat_P_in_Ptt!(kalman_state)
         update_P!(kalman_state, T, R, Q)
     else
         update_v!(kalman_state, y, Z, d)

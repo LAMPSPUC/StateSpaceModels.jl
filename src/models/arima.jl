@@ -23,14 +23,14 @@ end
 
 """
 """
-struct ARIMA <: StateSpaceModel
+mutable struct ARIMA <: StateSpaceModel
     order::ARIMAOrder
     hyperparameters_auxiliary::ARIMAHyperParametersAuxiliary
     hyperparameters::HyperParameters
     system::LinearUnivariateTimeInvariant
 
-    function ARIMA(y::Vector{Fl}; 
-                   order::Tuple{Int, Int, Int}=(0, 1, 0)) where Fl
+    function ARIMA(y::Vector{Fl},
+                   order::Tuple{Int, Int, Int}) where Fl
         
         or = ARIMAOrder(order[1], order[2], order[3])
         hyperparameters_auxiliary = ARIMAHyperParametersAuxiliary(or)
@@ -295,4 +295,8 @@ end
 function fill_model_filter!(filter::KalmanFilter, model::ARIMA)
     ARIMA_exact_initalization!(filter, model)
     return nothing
+end
+function reinstantiate(model::ARIMA, y::Vector{Fl}) where Fl
+    order = (model.order.p, model.order.d, model.order.q)
+    return ARIMA(y, order)
 end
