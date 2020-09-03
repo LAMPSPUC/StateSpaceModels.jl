@@ -16,10 +16,9 @@ julia = "1"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-
 
 [targets]
 test = ["Test", "CSV", "DataFrames", "Distributions", "Documenter", "Random"]
