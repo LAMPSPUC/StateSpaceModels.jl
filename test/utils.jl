@@ -1,5 +1,3 @@
-read_csv(file::String) = DataFrame!(CSV.File(file))
-
 function monotone_forecast_variance(forec::StateSpaceModels.Forecast)
     for i in 2:length(forec.covariance)
         if all(diag(forec.covariance[i]) .<= diag(forec.covariance[i-1]))
@@ -17,8 +15,8 @@ function expected_value_of_scenarios(scenarios::Array{T, 3}) where T
     return expected_values
 end
 
-function test_scenarios_adequacy_with_forecast(forec::StateSpaceModels.Forecast, 
-                                               scenarios::Array{T, 3}, 
+function test_scenarios_adequacy_with_forecast(forec::StateSpaceModels.Forecast,
+                                               scenarios::Array{T, 3},
                                                expected_value_atol::T,
                                                quantiles_atol::T) where T
     # Test expected values

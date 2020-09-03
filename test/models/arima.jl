@@ -1,5 +1,5 @@
 @testset "ARIMA" begin
-    internet = read_csv(StateSpaceModels.INTERNET)
+    internet = CSV.read(StateSpaceModels.INTERNET, DataFrame)
     dinternet = internet.dinternet[2:end]
     @test has_fit_methods(ARIMA)
 
@@ -22,7 +22,7 @@
     StateSpaceModels.fit(model)
     @test_broken loglike(model) ≈ -225.770 atol = 1e-5 rtol = 1e-5
 
-    wpi = read_csv(StateSpaceModels.WHOLESALE_PRICE_INDEX).wpi
+    wpi = CSV.read(StateSpaceModels.WHOLESALE_PRICE_INDEX, DataFrame).wpi
     model = ARIMA(wpi, (1, 1, 1))
     StateSpaceModels.fit(model)
     @test loglike(model) ≈ -137.246818 atol = 1e-5 rtol = 1e-5
