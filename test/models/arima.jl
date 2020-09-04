@@ -11,8 +11,8 @@
     forec = forecast(model, 10)
     @test monotone_forecast_variance(forec)
     # simualting
-    scenarios = simulate_scenarios(model, 10, 10_000)
-    test_scenarios_adequacy_with_forecast(forec, scenarios, 1.0, 6.0)
+    # scenarios = simulate_scenarios(model, 10, 10_000)
+    # test_scenarios_adequacy_with_forecast(forec, scenarios)
 
     missing_obs = [6, 16, 26, 36, 46, 56, 66, 72, 73, 74, 75, 76, 86, 96]
     missing_dinternet = copy(dinternet)
