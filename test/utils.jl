@@ -27,11 +27,11 @@ function test_scenarios_adequacy_with_forecast(forec::StateSpaceModels.Forecast,
     end
     # Test quantiles
     # Default quantiles to test
-    # quantiles = collect(0.05:0.05:0.95)
-    # for q in quantiles, t in 1:length(forec.expected_value)
-    #     # Distributions parametrize Normal with μ and σ
-    #     dist = Normal(forec.expected_value[t][1], sqrt(forec.covariance[t][1]))
-    #     @test quantile(dist, q) ≈ quantile(scenarios[t, 1, :], q) rtol = quantiles_rtol
-    # end
+    quantiles = collect(0.05:0.05:0.95)
+    for q in quantiles, t in 1:length(forec.expected_value)
+        # Distributions parametrize Normal with μ and σ
+        dist = Normal(forec.expected_value[t][1], sqrt(forec.covariance[t][1]))
+        @test quantile(dist, q) ≈ quantile(scenarios[t, 1, :], q) rtol = quantiles_rtol
+    end
     return
 end
