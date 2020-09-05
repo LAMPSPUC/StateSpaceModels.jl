@@ -1,5 +1,5 @@
 @testset "LocalLevel" begin
-    nile = read_csv(StateSpaceModels.NILE)
+    nile = CSV.read(StateSpaceModels.NILE, DataFrame)
 
     @test has_fit_methods(LocalLevel)
 
@@ -52,7 +52,7 @@
     forec = forecast(model, 10)
     @test monotone_forecast_variance(forec)
     # simulating
-    scenarios = simulate_scenarios(model, 10, 10_000)
+    scenarios = simulate_scenarios(model, 10, 100_000)
     test_scenarios_adequacy_with_forecast(forec, scenarios)
 
 end

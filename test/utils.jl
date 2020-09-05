@@ -1,5 +1,3 @@
-read_csv(file::String) = DataFrame!(CSV.File(file))
-
 function monotone_forecast_variance(forec::StateSpaceModels.Forecast)
     for i in 2:length(forec.covariance)
         if all(diag(forec.covariance[i]) .<= diag(forec.covariance[i - 1]))
@@ -19,19 +17,17 @@ end
 
 function test_scenarios_adequacy_with_forecast(forec::StateSpaceModels.Forecast, 
                                                scenarios::Array{T,3}; 
-                                               expected_value_rtol::T=1e-2,
-                                               quantiles_rtol::T=5e-2) where T
+                                               expected_value_rtol::T=5e-3,
+                                               expected_value_atol::T=NaN) where T
     # Test expected values
-    for t in 1:length(forec.expected_value)
-        @test forec.expected_value[t] ≈ expected_value_of_scenarios(scenarios)[t] rtol = expected_value_rtol
-    end
-    # Test quantiles
-    # Default quantiles to test
-    quantiles = collect(0.05:0.05:0.95)
-    for q in quantiles, t in 1:length(forec.expected_value)
-        # Distributions parametrize Normal with μ and σ
-        dist = Normal(forec.expected_value[t][1], sqrt(forec.covariance[t][1]))
-        @test quantile(dist, q) ≈ quantile(scenarios[t, 1, :], q) rtol = quantiles_rtol
+    if isnan(expected_value_atol)
+        for t in 1:length(forec.expected_value)
+            @test forec.expected_value[t] ≈ expected_value_of_scenarios(scenarios)[t] rtol = expected_value_rtol
+        end
+    else
+        for t in 1:length(forec.expected_value)
+            @test forec.expected_value[t] ≈ expected_value_of_scenarios(scenarios)[t] atol = expected_value_atol
+        end
     end
     return
 end

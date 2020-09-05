@@ -1,6 +1,5 @@
 using CSV
 using DataFrames
-using Distributions
 using Documenter
 using LinearAlgebra
 using StateSpaceModels
