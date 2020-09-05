@@ -4,7 +4,10 @@ In this section we show examples of applications and different use cases of the 
 
 ## Nile river annual flow
 
-In this example we will follow some examples illustrated on Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. The data set consists of a series of readings of the annual flow volume at Aswan from 1871 to 1970.
+In this example we will follow what is illustrated on Durbin, James, & Siem Jan Koopman. (2012). 
+"Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. We will 
+study the [`LocalLevel`](@ref) model with a series of readings of the annual flow volume at 
+Aswan from 1871 to 1970.
 
 ```@setup nile
 using StateSpaceModels
@@ -14,11 +17,11 @@ using Dates
 
 ```@example nile
 using CSV, DataFrames
-nile = DataFrame!(CSV.File(StateSpaceModels.NILE))
+nile = CSV.read(StateSpaceModels.NILE, DataFrame)
 plt = plot(nile.year, nile.flow, label = "Nile river annual flow")
 ```
 
-We can fit the model
+We can fit a [`LocalLevel`](@ref) model
 
 ```@example nile
 model = LocalLevel(nile.flow)
@@ -79,3 +82,45 @@ smoother_output = kalman_smoother(model)
 plot!(plt, nile.year, filtered_estimates(filter_output), label = "Filtered level")
 plot!(plt, nile.year, smoothed_estimates(smoother_output), label = "Smoothed level")
 ```
+
+# Log of airline passengers
+
+# Finland road traffic fatalities
+
+In this example we will follow what is illustrated on Commandeur, Jacques J.F. & Koopman, 
+Siem Jan, 2007. "An Introduction to State Space Time Series Analysis," OUP Catalogue, 
+Oxford University Press (Chapter 3). We will study the [`LocalLinearTrend`](@ref) model with 
+a series of the log of road traffic fatalities in Finalnd and analyse its slope to tell if
+the trend of fatalities was increasing or decrasing during different periods of time.
+
+```@setup fatalities
+using StateSpaceModels
+using Plots
+```
+
+```@example fatalities
+using CSV, DataFrames
+df = CSV.read(StateSpaceModels.VEHICLE_FATALITIES, DataFrame)
+log_ff = log.(df.ff)
+plt = plot(df.date, log_ff, label = "Log of Finland road traffic fatalities")
+```
+
+We fit a [`LocalLinearTrend`](@ref)
+
+```@example fatalities
+model = LocalLinearTrend(log_ff)
+StateSpaceModels.fit(model)
+```
+
+By extracting the smoothed slope we conclude that according to our model the trend of fatalities 
+in Finland was increasing in the years 1970, 1982, 1984 through to 1988, and in 1998
+
+```@example fatalities
+smoother_output = kalman_smoother(model)
+plot(df.date, smoothed_estimates(smoother_output)[:, 2], label = "slope")
+hline!([0.0], label = "", color="black")
+```
+
+
+
+

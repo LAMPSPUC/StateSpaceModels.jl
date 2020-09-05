@@ -36,7 +36,8 @@ This dataset provides the number of users logged on to an Internet server each m
 See more on ARIMA... under contruction
 
 # References
- * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. (Chapter 9)
+ * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: 
+    Second Edition." Oxford University Press. (Chapter 9)
 """
 const INTERNET = joinpath(dirname(@__DIR__()), "datasets", "internet.csv")
 
@@ -52,3 +53,18 @@ See more on ARIMA... under contruction
  * https://www.stata.com/manuals13/tsarima.pdf
 """
 const WHOLESALE_PRICE_INDEX = joinpath(dirname(@__DIR__()), "datasets", "wholesalepriceindex.csv")
+
+@doc raw"""
+    VEHICLE_FATALITIES
+
+The absolute path for the so called `VEHICLE_FATALITIES` dataset stored inside StateSpaceModels.jl.
+This dataset provides the number of annual road traffic fatalities in Norway and Finland.
+
+See more on [Finland road traffic fatalities](@ref)
+
+# References
+ * Commandeur, Jacques J.F. & Koopman, Siem Jan, 2007. "An Introduction to State Space Time 
+    Series Analysis," OUP Catalogue, Oxford University Press (Chapter 3)
+ * http://staff.feweb.vu.nl/koopman/projects/ckbook/OxCodeAll.zip
+"""
+const VEHICLE_FATALITIES = joinpath(dirname(@__DIR__()), "datasets", "vehicle_fatalities.csv")

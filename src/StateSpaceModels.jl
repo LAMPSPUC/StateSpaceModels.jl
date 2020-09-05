@@ -23,7 +23,7 @@ include("smoothers/kalman_smoother.jl")
 
 include("models/common.jl")
 include("models/locallevel.jl")
-include("models/lineartrend.jl")
+include("models/locallineartrend.jl")
 include("models/damped_lineartrend.jl")
 include("models/basicstructural.jl")
 include("models/arima.jl")
