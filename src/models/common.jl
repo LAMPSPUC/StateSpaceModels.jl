@@ -6,7 +6,7 @@ num_states(model::StateSpaceModel) = num_states(system(model))
 system(model::StateSpaceModel) = model.system
 
 """
-    has_fit_methods(model_type::Type{<:StateSpaceModel})
+    has_fit_methods(model_type::Type{<:StateSpaceModel}) -> Bool
 
 Verify if a certain `StateSpaceModel` has the necessary methods to perform the fit.
 """
