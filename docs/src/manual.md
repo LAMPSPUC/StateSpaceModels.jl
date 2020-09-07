@@ -4,7 +4,6 @@
 
 The package provides a variaty of pre-defined models, fell free to contribute if you want to add one to the list.
 
-### Local Level
 ```@docs
 LocalLevel
 LocalLinearTrend

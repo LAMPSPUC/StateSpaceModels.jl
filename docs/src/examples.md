@@ -83,9 +83,9 @@ plot!(plt, nile.year, filtered_estimates(filter_output), label = "Filtered level
 plot!(plt, nile.year, smoothed_estimates(smoother_output), label = "Smoothed level")
 ```
 
-# Log of airline passengers
+## Log of airline passengers
 
-# Finland road traffic fatalities
+## Finland road traffic fatalities
 
 In this example we will follow what is illustrated on Commandeur, Jacques J.F. & Koopman, 
 Siem Jan, 2007. "An Introduction to State Space Time Series Analysis," OUP Catalogue, 
