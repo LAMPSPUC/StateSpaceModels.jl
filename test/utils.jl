@@ -17,16 +17,16 @@ end
 
 function test_scenarios_adequacy_with_forecast(forec::StateSpaceModels.Forecast, 
                                                scenarios::Array{T,3}; 
-                                               expected_value_rtol::T=5e-3,
-                                               expected_value_atol::T=NaN) where T
+                                               rtol::T=5e-3,
+                                               atol::T=NaN) where T
     # Test expected values
-    if isnan(expected_value_atol)
+    if isnan(atol)
         for t in 1:length(forec.expected_value)
-            @test forec.expected_value[t] ≈ expected_value_of_scenarios(scenarios)[t] rtol = expected_value_rtol
+            @test forec.expected_value[t] ≈ expected_value_of_scenarios(scenarios)[t] rtol = rtol
         end
     else
         for t in 1:length(forec.expected_value)
-            @test forec.expected_value[t] ≈ expected_value_of_scenarios(scenarios)[t] atol = expected_value_atol
+            @test forec.expected_value[t] ≈ expected_value_of_scenarios(scenarios)[t] atol = atol
         end
     end
     return
