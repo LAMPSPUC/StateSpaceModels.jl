@@ -1,5 +1,5 @@
 @testset "Basic Structural Model" begin
-    air_passengers = read_csv(StateSpaceModels.AIR_PASSENGERS)
+    air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
     log_air_passengers = log.(air_passengers.passengers)
 
     @test has_fit_methods(BasicStructural)
@@ -13,5 +13,5 @@
     @test monotone_forecast_variance(forec)
     # simualting
     scenarios = simulate_scenarios(model, 10, 10_000)
-    test_scenarios_adequacy_with_forecast(forec, scenarios, 0.2, 0.2)
+    test_scenarios_adequacy_with_forecast(forec, scenarios)
 end

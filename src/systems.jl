@@ -108,8 +108,8 @@ mutable struct LinearUnivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
 
     function LinearUnivariateTimeVariant{Fl}(y::Vector{Fl}, Z::Vector{Vector{Fl}}, 
                                              T::Vector{Matrix{Fl}}, R::Vector{Matrix{Fl}}, 
-                                             d::Vector{Fl}, c::Vector{Vector{Fl}}, H::Vector{Fl},
-                                             Q::Vector{Matrix{Fl}}) where Fl
+                                             d::Vector{Fl}, c::Vector{Vector{Fl}}, 
+                                             H::Vector{Fl}, Q::Vector{Matrix{Fl}}) where Fl
 
         # TODO assert dimensions
 
@@ -157,8 +157,8 @@ mutable struct LinearMultivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
 
     function LinearMultivariateTimeVariant{Fl}(y::Matrix{Fl}, Z::Vector{Matrix{Fl}}, 
                                                    T::Vector{Matrix{Fl}}, R::Vector{Matrix{Fl}}, 
-                                                   d::Vector{Vector{Fl}}, c::Vector{Vector{Fl}}, H::Vector{Matrix{Fl}},
-                                                   Q::Vector{Matrix{Fl}}) where Fl
+                                                   d::Vector{Vector{Fl}}, c::Vector{Vector{Fl}}, 
+                                                   H::Vector{Matrix{Fl}}, Q::Vector{Matrix{Fl}}) where Fl
 
         # TODO assert dimensions
 
@@ -253,20 +253,19 @@ to_multivariate_time_variant(system::LinearMultivariateTimeVariant) = system
 function simulate(sys::LinearUnivariateTimeInvariant{Fl}, 
                   initial_state::Vector{Fl}, 
                   n::Int;
-                  return_simulated_states::Bool = false) where Fl
+                  return_simulated_states::Bool=false) where Fl
 
     m = size(sys.T, 1)
-
     y = Vector{Fl}(undef, n)
     alpha = Matrix{Fl}(undef, n + 1, m)
-    alpha[1, :] = initial_state
-
     # Sampling errors
     chol_H     = sqrt(sys.H)
     chol_Q     = cholesky(sys.Q)
     standard_ε = randn(n)
-    standard_η = randn(n, size(sys.Q, 1))
+    standard_η = randn(n + 1, size(sys.Q, 1))
 
+    # The first state of the simulation is the update of a_0
+    alpha[1, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[1, :]
     # Simulate scenarios
     for t = 1:n
         y[t]            = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
