@@ -5,7 +5,7 @@ mutable struct LinearTrend{Fl} <: StateSpaceModel
     system::LinearUnivariateTimeInvariant{Fl}
 
     function LinearTrend(y::Vector{Fl}) where Fl
-        
+
         Z = Fl.([1.0; 0.0])
         T = Fl.([1 1; 0 1])
         R = Fl.([1 0; 0 1])
@@ -50,9 +50,9 @@ function unconstrain_hyperparameters!(model::LinearTrend{Fl}) where Fl
     update_unconstrained_value!(model, "sigma2_η", sqrt(get_constrained_value(model, "sigma2_η")))
     update_unconstrained_value!(model, "sigma2_β", sqrt(get_constrained_value(model, "sigma2_β")))
 end
-function update!(model::LinearTrend{Fl}) where Fl
+function fill_model_system!(model::LinearTrend{Fl}) where Fl
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
     model.system.Q[end] = get_constrained_value(model, "sigma2_β")
-    return 
+    return
 end

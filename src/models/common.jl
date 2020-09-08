@@ -16,7 +16,7 @@ function has_fit_methods(model_type::Type{<:StateSpaceModel})
     m2 = hasmethod(initial_hyperparameters!, tuple_with_model_type)
     m3 = hasmethod(constrain_hyperparameters!, tuple_with_model_type)
     m4 = hasmethod(unconstrain_hyperparameters!, tuple_with_model_type)
-    m5 = hasmethod(update!, tuple_with_model_type)
+    m5 = hasmethod(fill_model_system!, tuple_with_model_type)
     return m1 && m2 && m3 && m4 && m5
 end
 

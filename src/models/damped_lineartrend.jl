@@ -53,10 +53,10 @@ function unconstrain_hyperparameters!(model::DampedLinearTrend{Fl}) where Fl
     update_unconstrained_value!(model, "sigma2_η", sqrt(get_constrained_value(model, "sigma2_η")))
     update_unconstrained_value!(model, "sigma2_β", sqrt(get_constrained_value(model, "sigma2_β")))
 end
-function update!(model::DampedLinearTrend{Fl}) where Fl
+function fill_model_system!(model::DampedLinearTrend{Fl}) where Fl
     model.system.T[end] = get_constrained_value(model, "ϕ")
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
     model.system.Q[end] = get_constrained_value(model, "sigma2_β")
-    return 
+    return
 end
