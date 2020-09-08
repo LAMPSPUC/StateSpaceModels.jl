@@ -5,7 +5,7 @@ The local level model is defined by:
 ```math
 \begin{gather*}
     \begin{aligned}
-        y_{t} &=  \mu_{t}  + \varepsilon_{t} \quad \varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        y_{t} &=  \mu_{t} + \varepsilon_{t} \quad \varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
         \mu_{t+1} &= \mu_{t} + \eta_{t} \quad \eta_{t} \sim \mathcal{N}(0, \sigma^2_{\eta})\\
     \end{aligned}
 \end{gather*}

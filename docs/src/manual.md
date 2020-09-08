@@ -4,13 +4,9 @@
 
 The package provides a variaty of pre-defined models, fell free to contribute if you want to add one to the list.
 
-### Local Level
 ```@docs
 LocalLevel
-```
-
-### BasicStructural
-```@docs
+LocalLinearTrend
 BasicStructural
 ```
 
@@ -44,4 +40,6 @@ datasets using [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) and [
 StateSpaceModels.NILE
 StateSpaceModels.AIR_PASSENGERS
 StateSpaceModels.INTERNET
+StateSpaceModels.WHOLESALE_PRICE_INDEX
+StateSpaceModels.VEHICLE_FATALITIES
 ```
