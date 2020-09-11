@@ -7,7 +7,7 @@
     # https://www.statsmodels.org/stable/examples/notebooks/generated/statespace_local_linear_trend.html?highlight=linear%20trend
     # Fitting the model with mod = sm.tsa.UnobservedComponents(df['lff'], 'local linear trend') gives 26.740
     model = LocalLinearTrend(log_finland_fatalities)
-    StateSpaceModels.fit!(model)
+    fit!(model)
     @test loglike(model) ≈ 26.740 atol = 1e-5 rtol = 1e-5
 
     # forecasting

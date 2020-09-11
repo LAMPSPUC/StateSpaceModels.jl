@@ -4,8 +4,18 @@
     @test has_fit_methods(LocalLevel)
 
     model = LocalLevel(nile.flow)
-    StateSpaceModels.fit!(model)
-    show(stdout, results(model))
+    @test_throws ErrorException show(stdout, results(model))
+    fit!(model)
+    result_print = 
+    """                         Results                        
+    ========================================================
+    Number of observations:       100
+    Number of unknown parameters: 2
+    Log-likelihood:               -632.54
+    AIC:                          1269.08
+    BIC:                          1274.29
+    """
+    @test sprint(show, results(model)) == result_print
     @test loglike(model) ≈ -632.5376 atol = 1e-5 rtol = 1e-5
 
     # Durbin Koopman 2012 section 2.2.5
@@ -13,7 +23,7 @@
     P1 = 1e7
     scalar_filter = ScalarKalmanFilter(a1, P1, 1)
     model = LocalLevel(nile.flow)
-    StateSpaceModels.fit!(model; filter=scalar_filter)
+    fit!(model; filter=scalar_filter)
 
     # Without the concentrated filter and score calculation this is close enough
     @test get_constrained_value(model, "sigma2_ε") ≈ 15099 atol = 2
@@ -21,7 +31,7 @@
 
     # Fix some parameters
     fix_hyperparameters!(model, Dict("sigma2_ε" => 15099.0))
-    StateSpaceModels.fit!(model; filter=scalar_filter)
+    fit!(model; filter=scalar_filter)
 
     hyperparameters = get_hyperparameters(model)
     @test !isempty(get_minimizer_hyperparameter_position(hyperparameters))
@@ -32,13 +42,13 @@
     # Estimate with Float32
     nile32 = Float32.(nile.flow)
     model = LocalLevel(nile32)
-    StateSpaceModels.fit!(model)
+    fit!(model)
     @test loglike(model) ≈ -632.53766f0 atol = 1e-5 rtol = 1e-5
 
     # Missing values 
     nile.flow[[collect(21:40); collect(61:80)]] .= NaN
     model = LocalLevel(nile.flow)
-    StateSpaceModels.fit!(model)
+    fit!(model)
     @test loglike(model) ≈ -379.9899 atol = 1e-5 rtol = 1e-5
 
     filter = kalman_filter(model)
