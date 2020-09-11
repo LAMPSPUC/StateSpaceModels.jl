@@ -3,8 +3,9 @@
 
     @test has_fit_methods(LocalLevel)
 
-    model = LocalLevel(nile.flow)
-    StateSpaceModels.fit(model)
+    model = StateSpaceModels.LocalLevel(nile.flow)
+    StateSpaceModels.fit!(model)
+    model.results
     @test loglike(model) ≈ -632.5376 atol = 1e-5 rtol = 1e-5
 
     # Durbin Koopman 2012 section 2.2.5

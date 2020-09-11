@@ -2,11 +2,13 @@ module StateSpaceModels
 
 abstract type StateSpaceModel end
 
-import Base.show
+import Base: show, length
 
 using LinearAlgebra
 using Statistics
+using Printf
 using Optim
+using NLSolversBase
 
 include("datasets.jl")
 
