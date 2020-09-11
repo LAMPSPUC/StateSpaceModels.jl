@@ -5,7 +5,6 @@ version = "0.4.0-DEV"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-NLSolversBase = "d41bc354-129a-5804-8e4c-c37616107c6c"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"

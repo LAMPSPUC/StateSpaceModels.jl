@@ -1,16 +1,8 @@
-export has_fit_methods
+export has_fit_methods, results
 
 typeof_model_elements(model::StateSpaceModel) = eltype(model.system.y)
 num_states(model::StateSpaceModel) = num_states(system(model))
 system(model::StateSpaceModel) = model.system
-
-struct InformationCriterion{Fl <: AbstractFloat}
-    aic::Fl
-    bic::Fl
-end
-function InformationCriterion{Fl}() where Fl
-    return InformationCriterion{Fl}(Fl(NaN), Fl(NaN))
-end
 
 struct CoefficientTable{Fl <: AbstractFloat}
     names::Vector{String}
@@ -40,8 +32,9 @@ Base.length(coef_table::CoefficientTable) = length(coef_table.names)
 
 mutable struct Results{Fl <: AbstractFloat}
     coef_table::CoefficientTable{Fl}
-    info_criterion::InformationCriterion{Fl}
     llk::Fl
+    aic::Fl
+    bic::Fl
     num_observations::Int
     num_hyperparameters::Int
     fitted::Bool
@@ -49,7 +42,8 @@ end
 function Results{Fl}() where Fl
     return Results{Fl}(
         CoefficientTable{Fl}(),
-        InformationCriterion{Fl}(),
+        Fl(NaN),
+        Fl(NaN),
         Fl(NaN),
         0,
         0,
@@ -57,11 +51,6 @@ function Results{Fl}() where Fl
     )
 end
 results(model::StateSpaceModel) = model.results
-
-function print_information_criterion(io::IO, results::Results{Fl}) where Fl
-    println(io, "AIC:                          ", @sprintf("%.2f", results.info_criterion.aic))
-    println(io, "BIC:                          ", @sprintf("%.2f", results.info_criterion.bic))
-end
 
 function print_coef_table(io::IO, coef_table::CoefficientTable{Fl}) where Fl
     println(io, "--------------------------------------------------------")
@@ -104,7 +93,8 @@ function Base.show(io::IO, results::Results{Fl}) where Fl
         println(io, "Number of observations:       ", results.num_observations)
         println(io, "Number of unknown parameters: ", results.num_hyperparameters)
         println(io, "Log-likelihood:               ", @sprintf("%.2f", results.llk))
-        print_information_criterion(io, results)
+        println(io, "AIC:                          ", @sprintf("%.2f", results.aic))
+        println(io, "BIC:                          ", @sprintf("%.2f", results.bic))
         print_coef_table(io, results.coef_table)
     else
         # Up to discussion of what should be the behaviour
@@ -116,7 +106,7 @@ end
 """
     has_fit_methods(model_type::Type{<:StateSpaceModel}) -> Bool
 
-Verify if a certain `StateSpaceModel` has the necessary methods to perform the fit.
+Verify if a certain `StateSpaceModel` has the necessary methods to perform the fit!.
 """
 function has_fit_methods(model_type::Type{<:StateSpaceModel})
     tuple_with_model_type = Tuple{model_type}

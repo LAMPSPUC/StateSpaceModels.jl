@@ -7,7 +7,7 @@
         X = rand(100, 5)
         y = rand(100)
         model = LinearRegression(X, y)
-        StateSpaceModels.fit(model)
+        StateSpaceModels.fit!(model)
         β = X\y
         for i in 1:size(X, 2)
             @test get_constrained_value(model, "β_$i") .≈ β[i] atol = 1e-5

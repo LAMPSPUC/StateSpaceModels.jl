@@ -8,7 +8,6 @@ using LinearAlgebra
 using Statistics
 using Printf
 using Optim
-using NLSolversBase
 
 include("datasets.jl")
 
