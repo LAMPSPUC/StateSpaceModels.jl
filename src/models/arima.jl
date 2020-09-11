@@ -28,6 +28,7 @@ mutable struct ARIMA <: StateSpaceModel
     hyperparameters_auxiliary::ARIMAHyperParametersAuxiliary
     hyperparameters::HyperParameters
     system::LinearUnivariateTimeInvariant
+    results::Results
 
     function ARIMA(y::Vector{Fl},
                    order::Tuple{Int, Int, Int}) where Fl
@@ -57,7 +58,7 @@ mutable struct ARIMA <: StateSpaceModel
 
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new(or, hyperparameters_auxiliary, hyperparameters, system)
+        return new(or, hyperparameters_auxiliary, hyperparameters, system, Results{Fl}())
     end
 end
 

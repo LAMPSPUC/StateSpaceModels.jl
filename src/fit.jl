@@ -1,25 +1,37 @@
-export fit
+export fit!
 
-function fit(model::StateSpaceModel;
+"""
+TODO
+"""
+function fit!(model::StateSpaceModel; 
              filter::KalmanFilter = default_filter(model),
              optimizer::Optimizer = Optimizer(Optim.LBFGS()))
-    return fit(model, filter, optimizer)
-end
-
-function fit(model::StateSpaceModel, 
-             filter::KalmanFilter,
-             optimizer::Optimizer)
     
     initial_unconstrained_hyperparameter = handle_optim_initial_hyperparameters(model)
-    # Optimization a try catch is missing
+    # Should there be a try catch?
     func = TwiceDifferentiable(x -> -optim_loglike(model, filter, x), 
                                     initial_unconstrained_hyperparameter)
     opt = optimize(func, initial_unconstrained_hyperparameter, 
                     optimizer.method, optimizer.options)
-    opt_loglikelihood = -opt.minimum
+    opt_loglikelihood   = -opt.minimum
     opt_hyperparameters = opt.minimizer
-
-    log_lik = opt_loglikelihood
     update_model_hyperparameters!(model, opt_hyperparameters)
-    return log_lik
+    fill_results!(model, opt_loglikelihood)
+    return nothing
 end
+
+function fill_results!(model::StateSpaceModel, 
+                       llk::Fl) where Fl
+    n_obs = length(model.system.y)
+    num_hyperparameters = number_free_hyperparameters(model)
+    # Fill results
+    model.results.llk                 = llk
+    model.results.aic                 = AIC(num_hyperparameters, llk)
+    model.results.bic                 = BIC(n_obs, num_hyperparameters, llk)
+    model.results.num_observations    = n_obs
+    model.results.num_hyperparameters = num_hyperparameters
+    return
+end
+
+AIC(n_free_hyperparameters::Int, llk::Fl) where Fl = Fl(2 * n_free_hyperparameters - 2 * llk)
+BIC(n::Int, n_free_hyperparameters::Int, llk::Fl) where Fl = Fl(log(n) * n_free_hyperparameters - 2 * llk)

@@ -4,7 +4,7 @@
     @test has_fit_methods(ARIMA)
 
     model = ARIMA(dinternet, (1, 0, 1))
-    StateSpaceModels.fit(model)
+    fit!(model)
     @test loglike(model) ≈ -254.149 atol = 1e-5 rtol = 1e-5
 
     # forecasting
@@ -27,11 +27,11 @@
     missing_dinternet[missing_obs] .= NaN
 
     model = ARIMA(missing_dinternet, (1, 0, 1))
-    StateSpaceModels.fit(model)
+    fit!(model)
     @test_broken loglike(model) ≈ -225.770 atol = 1e-5 rtol = 1e-5
 
     wpi = CSV.read(StateSpaceModels.WHOLESALE_PRICE_INDEX, DataFrame).wpi
     model = ARIMA(wpi, (1, 1, 1))
-    StateSpaceModels.fit(model)
+    fit!(model)
     @test loglike(model) ≈ -137.246818 atol = 1e-5 rtol = 1e-5
 end

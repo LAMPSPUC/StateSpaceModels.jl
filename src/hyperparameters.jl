@@ -87,7 +87,9 @@ position(str::String, hyperparameters::HyperParameters) = hyperparameters.positi
 get_position(hyperparameters::HyperParameters) = hyperparameters.position
 get_minimizer_hyperparameter_position(hyperparameters::HyperParameters) = hyperparameters.minimizer_hyperparameter_position
 get_names(hyperparameters::HyperParameters) = hyperparameters.names
+get_constrained_values(model::StateSpaceModel) = get_constrained_values(model.hyperparameters)
 get_constrained_values(hyperparameters::HyperParameters) = hyperparameters.constrained_values
+get_unconstrained_values(model::StateSpaceModel) = get_unconstrained_values(model.hyperparameters)
 get_unconstrained_values(hyperparameters::HyperParameters) = hyperparameters.unconstrained_values
 get_fixed_constrained_values(hyperparameters::HyperParameters) = hyperparameters.fixed_constrained_values
 
@@ -98,7 +100,6 @@ function update_constrained_value!(hyperparameters::HyperParameters, str::String
     hyperparameters.constrained_values[position(str, hyperparameters)] = value
 end
 
-get_unconstrained_values(model::StateSpaceModel) = get_unconstrained_values(model.hyperparameter)
 get_unconstrained_value(model::StateSpaceModel, str::String) = get_unconstrained_value(model.hyperparameters, str)
 get_unconstrained_value(hyperparameters::HyperParameters, str::String) = hyperparameters.unconstrained_values[position(str, hyperparameters)]
 update_unconstrained_value!(model::StateSpaceModel, str::String, value) = update_unconstrained_value!(model.hyperparameters, str, value)

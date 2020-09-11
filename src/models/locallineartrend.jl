@@ -27,6 +27,7 @@ See more on [Finland road traffic fatalities](@ref)
 mutable struct LocalLinearTrend <: StateSpaceModel
     hyperparameters::HyperParameters
     system::LinearUnivariateTimeInvariant
+    results::Results
 
     function LocalLinearTrend(y::Vector{Fl}) where Fl
         
@@ -43,7 +44,7 @@ mutable struct LocalLinearTrend <: StateSpaceModel
         names = ["sigma2_ε", "sigma2_ξ", "sigma2_ζ"]
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new(hyperparameters, system)
+        return new(hyperparameters, system, Results{Fl}())
     end
 end
 

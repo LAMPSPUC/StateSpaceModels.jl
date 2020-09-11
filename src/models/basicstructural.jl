@@ -29,6 +29,7 @@ mutable struct BasicStructural <: StateSpaceModel
     hyperparameters::HyperParameters
     system::LinearUnivariateTimeInvariant
     seasonality::Int
+    results::Results
 
     function BasicStructural(y::Vector{Fl}, s::Int) where Fl
 
@@ -53,7 +54,7 @@ mutable struct BasicStructural <: StateSpaceModel
         names = ["sigma2_ε", "sigma2_ξ", "sigma2_ζ", "sigma2_ω"]
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new(hyperparameters, system, s)
+        return new(hyperparameters, system, s, Results{Fl}())
     end
 end
 

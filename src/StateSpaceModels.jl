@@ -2,10 +2,11 @@ module StateSpaceModels
 
 abstract type StateSpaceModel end
 
-import Base.show
+import Base: show, length, isempty
 
 using LinearAlgebra
 using Statistics
+using Printf
 using Optim
 
 include("datasets.jl")
@@ -28,6 +29,7 @@ include("models/damped_lineartrend.jl")
 include("models/basicstructural.jl")
 include("models/arima.jl")
 include("models/linear_regression.jl")
+include("prints.jl")
 
 include("optimizers.jl")
 include("fit.jl")

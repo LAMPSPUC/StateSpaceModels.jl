@@ -25,6 +25,7 @@ See more on [Nile river annual flow](@ref)
 mutable struct LocalLevel <: StateSpaceModel
     hyperparameters::HyperParameters
     system::LinearUnivariateTimeInvariant
+    results::Results
 
     function LocalLevel(y::Vector{Fl}) where Fl
                            
@@ -43,7 +44,7 @@ mutable struct LocalLevel <: StateSpaceModel
         names = ["sigma2_ε", "sigma2_η"]
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new(hyperparameters, system)
+        return new(hyperparameters, system, Results{Fl}())
     end
 end
 

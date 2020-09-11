@@ -109,7 +109,7 @@ We fit a [`LocalLinearTrend`](@ref)
 
 ```@example fatalities
 model = LocalLinearTrend(log_ff)
-StateSpaceModels.fit(model)
+fit!(model)
 ```
 
 By extracting the smoothed slope we conclude that according to our model the trend of fatalities 

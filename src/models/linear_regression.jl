@@ -11,6 +11,7 @@ mutable struct LinearRegression{Fl <: Real} <: StateSpaceModel
     hyperparameters::HyperParameters{Fl}
     hyperparameters_auxiliary::RegressionHyperParametersAuxiliary
     system::LinearUnivariateTimeVariant{Fl}
+    results::Results
 
     function LinearRegression(X::Matrix{Fl}, y::Vector{Fl}) where Fl
 
@@ -35,7 +36,7 @@ mutable struct LinearRegression{Fl <: Real} <: StateSpaceModel
 
         hyperparameters_auxiliary = RegressionHyperParametersAuxiliary(num_states(system))
 
-        return new{Fl}(hyperparameters, hyperparameters_auxiliary, system)
+        return new{Fl}(hyperparameters, hyperparameters_auxiliary, system, Results{Fl}())
     end
 end
 
