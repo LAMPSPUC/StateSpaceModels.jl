@@ -5,7 +5,6 @@ os:
   - osx
 
 julia:
-  - 1.0 # Latest LTS release
   - 1.4
   - 1   # Latest stable release
   - nightly
