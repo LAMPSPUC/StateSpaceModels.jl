@@ -67,7 +67,7 @@ function handle_std_err(model::StateSpaceModel,
         position_on_list_of_hyperparameters = position(hyperparamter_on_minimizer, model.hyperparameters)
         all_std_err[position_on_list_of_hyperparameters] = std_err[i]
     end
-    return all_std_err
+    return Fl.(all_std_err)
 end
 
 function handle_z_stat(all_coef::Vector{Fl},
@@ -78,7 +78,7 @@ function handle_z_stat(all_coef::Vector{Fl},
             all_z_stat[i] = all_coef[i] / all_std_err[i]
         end
     end
-    return all_z_stat
+    return Fl.(all_z_stat)
 end
 
 function handle_p_value(all_coef::Vector{Fl},
@@ -86,10 +86,10 @@ function handle_p_value(all_coef::Vector{Fl},
                         all_z_stat::Vector{Fl}) where Fl
     all_p_value = fill(NaN, length(all_std_err))
     for i in 1:length(all_std_err)
-        if !isnan(all_std_err[i])
+        if !isnan(all_std_err[i]) && all_std_err[i] > 0
             dist = Normal(all_coef[i], all_std_err[i])
             all_p_value[i] = 1 - 2*abs(cdf(dist, all_z_stat[i]) - 0.5)
         end
     end
-    return all_p_value
+    return Fl.(all_p_value)
 end

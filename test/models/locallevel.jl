@@ -30,8 +30,8 @@
     fit!(model; filter=scalar_filter)
 
     # Without the concentrated filter and score calculation this is close enough
-    @test get_constrained_value(model, "sigma2_ε") ≈ 15099 atol = 2
-    @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 atol = 1
+    @test get_constrained_value(model, "sigma2_ε") ≈ 15099 rtol = 1e-3
+    @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 rtol = 1e-3
 
     # Fix some parameters
     fix_hyperparameters!(model, Dict("sigma2_ε" => 15099.0))
