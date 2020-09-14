@@ -1,7 +1,10 @@
-# This method is similar to the univariate kalman filter but
-# exploits the structure of the regression system matrices
-# in particular the fact that the variance of the state (P) is always zero
-# as well as R and Q.
+"""
+    RegressionKalmanState{Fl <: AbstractFloat}
+
+Similar to the univariate Kalman filter, but exploits the structure of the regression system
+matrices - in particular, the fact that the variance of the state (`P`) is always zero, as
+well as `R` and `Q`.
+"""
 mutable struct RegressionKalmanState{Fl <: AbstractFloat}
     v::Fl
     F::Fl
@@ -13,7 +16,7 @@ mutable struct RegressionKalmanState{Fl <: AbstractFloat}
     end
 end
 
-function save_kalman_state_in_filter_output!(filter_output::FilterOutput{Fl}, 
+function save_kalman_state_in_filter_output!(filter_output::FilterOutput{Fl},
                                              kalman_state::RegressionKalmanState{Fl}) where Fl
     filter_output.a[1] = copy(kalman_state.a)
     filter_output.P[1] = copy(fill(zero(Fl), 1, 1))
@@ -73,12 +76,12 @@ function kalman_filter!(filter_output::FilterOutput,
                         sys::StateSpaceSystem,
                         filter::RegressionKalmanFilter{Fl}) where Fl
     filter_recursions!(filter_output,
-                       filter.kalman_state, 
+                       filter.kalman_state,
                        sys)
     return filter_output
 end
 
-function filter_recursions!(kalman_state::RegressionKalmanState{Fl}, 
+function filter_recursions!(kalman_state::RegressionKalmanState{Fl},
                             sys::LinearUnivariateTimeVariant{Fl}) where Fl
     kalman_state.F = sys.H[1]
     @inbounds for t in eachindex(sys.y)
@@ -87,7 +90,7 @@ function filter_recursions!(kalman_state::RegressionKalmanState{Fl},
     return kalman_state.llk
 end
 function filter_recursions!(filter_output::FilterOutput,
-                            kalman_state::RegressionKalmanState{Fl}, 
+                            kalman_state::RegressionKalmanState{Fl},
                             sys::LinearUnivariateTimeVariant) where Fl
     kalman_state.F = sys.H[1]
     @inbounds for t in eachindex(sys.y)

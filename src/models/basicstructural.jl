@@ -1,7 +1,8 @@
 export BasicStructural
 
 @doc raw"""
-The basic structural model is defined by:
+The basic structural state-space model consists of a trend, a slope, and a seasonal
+components. It is defined by:
 ```math
 \begin{gather*}
     \begin{aligned}
@@ -12,18 +13,6 @@ The basic structural model is defined by:
     \end{aligned}
 \end{gather*}
 ```
-
-# Example
-Here we define a basic structural model with seasonal pattern `s = 12`
-```jldoctest
-julia> model = BasicStructural(rand(100), 12)
-BasicStructural model
-```
-
-See more on [Log of airline passengers](@ref)
-
-# References
- * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. pp. 46
 """
 mutable struct BasicStructural <: StateSpaceModel
     hyperparameters::HyperParameters
@@ -35,13 +24,13 @@ mutable struct BasicStructural <: StateSpaceModel
 
         Z = [1; 0; 1; zeros(Fl, s - 2)]
         T = [
-            1 1 zeros(Fl, 1, s - 1); 
+            1 1 zeros(Fl, 1, s - 1);
             0 1 zeros(Fl, 1, s - 1);
             0 0 -ones(Fl, 1, s - 1);
             zeros(Fl, s - 2, 2) Matrix{Fl}(I, s - 2, s - 2) zeros(Fl, s - 2)
         ]
         R = [
-            Matrix{Fl}(I, 3, 3); 
+            Matrix{Fl}(I, 3, 3);
             zeros(Fl, s - 2, 3)
         ]
         d = zero(Fl)
@@ -95,7 +84,7 @@ function fill_model_system!(model::BasicStructural)
     model.system.Q[1] = get_constrained_value(model, "sigma2_ξ")
     model.system.Q[5] = get_constrained_value(model, "sigma2_ζ")
     model.system.Q[end] = get_constrained_value(model, "sigma2_ω")
-    return 
+    return
 end
 function reinstantiate(model::BasicStructural, y::Vector{Fl}) where Fl
     return BasicStructural(y, model.seasonality)
