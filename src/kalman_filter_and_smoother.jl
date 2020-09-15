@@ -35,8 +35,18 @@ function loglike(model::StateSpaceModel;
 end
 
 """
+    FilterOutput{Fl<:Real}
+
+Structure with the results of the Kalman filter:
+* `v`: innovations
+* `F`: variance of innovations
+* `a`: predictive state
+* `att`: filtered state
+* `P`: variance of predictive state
+* `Ptt`: variance of filtered state
+* `Pinf`: diffuse part of the covariance
 """
-mutable struct FilterOutput{Fl <: Real}
+mutable struct FilterOutput{Fl<:Real}
     v::Vector{Vector{Fl}}
     F::Vector{Matrix{Fl}}
     a::Vector{Vector{Fl}}
@@ -61,21 +71,35 @@ mutable struct FilterOutput{Fl <: Real}
 end
 
 """
-TODO
+Returns the innovations `v` obtained with the Kalman filter.
 """
-innovations(filter_output::FilterOutput) = permutedims(cat(filter_output.v...; dims = 2))
+function get_innovations end
+
+get_innovations(filter::FilterOutput) = permutedims(cat(filter.v...; dims=2))
+
+function get_innovations(model::StateSpaceModel)
+    isempty(model.results) && error("Model has not been estimated yet, please use `fit!`.")
+    return get_innovations(kalman_filter(model))
+end
 
 """
-TODO
+Returns the variance `F` of innovations obtained with the Kalman filter.
 """
-covariance_innovations(filter_output::FilterOutput) = cat(filter_output.F...; dims = 3)
+function get_innovation_variance end
+
+get_innovation_variance(filter_output::FilterOutput) = cat(filter_output.F...; dims=3)
+
+function get_innovation_variance(model::StateSpaceModel)
+    isempty(model.results) && error("Model has not been estimated yet, please use `fit!`.")
+    return get_innovation_variance(kalman_filter(model))
+end
 
 """
-Returns the filtered state `att`.
+Returns the filtered state `att` obtained with the Kalman filter.
 """
 function get_filtered_state end
 
-get_filtered_state(filter::FilterOutput) = permutedims(cat(filter.att...; dims = 2))
+get_filtered_state(filter::FilterOutput) = permutedims(cat(filter.att...; dims=2))
 
 function get_filtered_state(model::StateSpaceModel)
     isempty(model.results) && error("Model has not been estimated yet, please use `fit!`.")
@@ -83,11 +107,11 @@ function get_filtered_state(model::StateSpaceModel)
 end
 
 """
-Returns the filtered covariance `Ptt` of the states.
+Returns the filtered covariance `Ptt` of the states obtained with the Kalman filter.
 """
 function get_filtered_covariance end
 
-get_filtered_covariance(filter::FilterOutput) = cat(filter.Ptt...; dims = 3)
+get_filtered_covariance(filter::FilterOutput) = cat(filter.Ptt...; dims=3)
 
 function get_filtered_covariance(model::StateSpaceModel)
     isempty(model.results) && error("Model has not been estimated yet, please use `fit!`.")
