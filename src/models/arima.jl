@@ -147,11 +147,11 @@ get_ar_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ar_pos[i]
 get_ma_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ma_pos[i]
 
 # TODO improve performance possibly preallocating y
+#     Monahan, John F. 1984.
+#    "A Note on Enforcing Stationarity in
+#    Autoregressive-moving Average Models."
+#    Biometrika 71 (2) (August 1): 403-404.
 function impose_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
-    #     Monahan, John F. 1984.
-    #    "A Note on Enforcing Stationarity in
-    #    Autoregressive-moving Average Models."
-    #    Biometrika 71 (2) (August 1): 403-404.
     n = length(hyperparameter_values)
     y = fill(zero(Fl), n, n)
     r = @. hyperparameter_values / sqrt((1 + hyperparameter_values^2))
