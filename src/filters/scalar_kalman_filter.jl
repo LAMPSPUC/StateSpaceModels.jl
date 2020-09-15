@@ -2,8 +2,8 @@ export ScalarKalmanFilter
 
 """
     ScalarKalmanState{Fl <: AbstractFloat}
-Similar to the univariate Kalman filter but exploits the fact that the dimension of the
-state is equal to 1.
+
+The state of a `ScalarKalmanFilter`.
 """
 mutable struct ScalarKalmanState{Fl <: AbstractFloat}
     v::Fl
@@ -44,8 +44,12 @@ function save_kalman_state_in_filter_output!(filter_output::FilterOutput{Fl},
     return
 end
 
-# Univariate Kalman filter with the recursions as described
-# in Koopman's book TODO
+"""
+    ScalarKalmanFilter{Fl <: Real} <: KalmanFilter
+
+Similar to the univariate Kalman filter but exploits the fact that the dimension of the
+state is equal to 1.
+"""
 mutable struct ScalarKalmanFilter{Fl <: Real} <: KalmanFilter
     steadystate_tol::Fl
     a1::Fl

@@ -8,7 +8,7 @@ export simulate
 @doc raw"""
     StateSpaceSystem
 
-Abstract type that unifies the definition of state space models matrices such as ``y, Z, d, T, c, R, H, Q`` for 
+Abstract type that unifies the definition of state space models matrices such as ``y, Z, d, T, c, R, H, Q`` for
 linear models.
 """
 abstract type StateSpaceSystem end
@@ -48,8 +48,8 @@ mutable struct LinearUnivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
     H::Fl
     Q::Matrix{Fl}
 
-    function LinearUnivariateTimeInvariant{Fl}(y::Vector{Fl}, Z::Vector{Fl}, 
-                                               T::Matrix{Fl}, R::Matrix{Fl}, 
+    function LinearUnivariateTimeInvariant{Fl}(y::Vector{Fl}, Z::Vector{Fl},
+                                               T::Matrix{Fl}, R::Matrix{Fl},
                                                d::Fl, c::Vector{Fl}, H::Fl,
                                                Q::Matrix{Fl}) where Fl
 
@@ -61,7 +61,7 @@ mutable struct LinearUnivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
 
         dim_str = "Z is $(mz)x1, T is $(mt1)x$(mt2), R is $(mr)x$(rr), " *
                   "d is a scalar, c is $(mc)x1, H is a scalar."
-        
+
         !(mz == mt1 == mt2 == mr == mc) && throw(DimensionMismatch(dim_str))
         !(rr == rq1 == rq2) && throw(DimensionMismatch(dim_str))
 
@@ -106,9 +106,9 @@ mutable struct LinearUnivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
     H::Vector{Fl}
     Q::Vector{Matrix{Fl}}
 
-    function LinearUnivariateTimeVariant{Fl}(y::Vector{Fl}, Z::Vector{Vector{Fl}}, 
-                                             T::Vector{Matrix{Fl}}, R::Vector{Matrix{Fl}}, 
-                                             d::Vector{Fl}, c::Vector{Vector{Fl}}, 
+    function LinearUnivariateTimeVariant{Fl}(y::Vector{Fl}, Z::Vector{Vector{Fl}},
+                                             T::Vector{Matrix{Fl}}, R::Vector{Matrix{Fl}},
+                                             d::Vector{Fl}, c::Vector{Vector{Fl}},
                                              H::Vector{Fl}, Q::Vector{Matrix{Fl}}) where Fl
 
         # TODO assert dimensions
@@ -120,6 +120,7 @@ end
 num_states(system::LinearUnivariateTimeVariant) = size(system.T[1], 1)
 
 """
+TODO
 """
 mutable struct LinearMultivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
     y::Matrix{Fl}
@@ -131,8 +132,8 @@ mutable struct LinearMultivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
     H::Matrix{Fl}
     Q::Matrix{Fl}
 
-    function LinearMultivariateTimeInvariant{Fl}(y::Matrix{Fl}, Z::Matrix{Fl}, 
-                                                 T::Matrix{Fl}, R::Matrix{Fl}, 
+    function LinearMultivariateTimeInvariant{Fl}(y::Matrix{Fl}, Z::Matrix{Fl},
+                                                 T::Matrix{Fl}, R::Matrix{Fl},
                                                  d::Vector{Fl}, c::Vector{Fl}, H::Matrix{Fl},
                                                  Q::Matrix{Fl}) where Fl
 
@@ -155,9 +156,9 @@ mutable struct LinearMultivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
     H::Vector{Matrix{Fl}}
     Q::Vector{Matrix{Fl}}
 
-    function LinearMultivariateTimeVariant{Fl}(y::Matrix{Fl}, Z::Vector{Matrix{Fl}}, 
-                                                   T::Vector{Matrix{Fl}}, R::Vector{Matrix{Fl}}, 
-                                                   d::Vector{Vector{Fl}}, c::Vector{Vector{Fl}}, 
+    function LinearMultivariateTimeVariant{Fl}(y::Matrix{Fl}, Z::Vector{Matrix{Fl}},
+                                                   T::Vector{Matrix{Fl}}, R::Vector{Matrix{Fl}},
+                                                   d::Vector{Vector{Fl}}, c::Vector{Vector{Fl}},
                                                    H::Vector{Matrix{Fl}}, Q::Vector{Matrix{Fl}}) where Fl
 
         # TODO assert dimensions
@@ -214,7 +215,7 @@ end
 
 # Bridges between Linear systems
 
-# LinearUnivariateTimeInvariant to (LinearUnivariateTimeVariant, 
+# LinearUnivariateTimeInvariant to (LinearUnivariateTimeVariant,
 #                                   LinearMultivariateTimeInvariant, TODO
 #                                   LinearMultivariateTimeVariant)
 function to_univariate_time_variant(system::LinearUnivariateTimeInvariant{Fl}) where Fl
@@ -250,8 +251,8 @@ end
 to_multivariate_time_variant(system::LinearMultivariateTimeVariant) = system
 
 # Functions for simulations
-function simulate(sys::LinearUnivariateTimeInvariant{Fl}, 
-                  initial_state::Vector{Fl}, 
+function simulate(sys::LinearUnivariateTimeInvariant{Fl},
+                  initial_state::Vector{Fl},
                   n::Int;
                   return_simulated_states::Bool=false) where Fl
 
