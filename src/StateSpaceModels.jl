@@ -37,14 +37,14 @@ include("forecast.jl")
 
 export ARIMA
 export BasicStructural
-export covariance_filtered_estimates
 export covariance_one_step_ahead_predictions
 export covariance_smoothed_estimates
-export filtered_estimates
 export fit!
 export forecast
 export forecast_expected_value
 export get_constrained_value
+export get_filtered_covariance
+export get_filtered_state
 export get_hyperparameters
 export has_fit_methods
 export fix_hyperparameters!

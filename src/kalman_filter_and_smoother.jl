@@ -71,14 +71,28 @@ TODO
 covariance_innovations(filter_output::FilterOutput) = cat(filter_output.F...; dims = 3)
 
 """
-TODO
+Returns the filtered state `att`.
 """
-filtered_estimates(filter_output::FilterOutput) = permutedims(cat(filter_output.att...; dims = 2))
+function get_filtered_state end
+
+get_filtered_state(filter::FilterOutput) = permutedims(cat(filter.att...; dims = 2))
+
+function get_filtered_state(model::StateSpaceModel)
+    isempty(model.results) && error("Model has not been estimated yet, please use `fit!`.")
+    return get_filtered_state(kalman_filter(model))
+end
 
 """
-TODO
+Returns the filtered covariance `Ptt` of the states.
 """
-covariance_filtered_estimates(filter_output::FilterOutput) = cat(filter_output.Ptt...; dims = 3)
+function get_filtered_covariance end
+
+get_filtered_covariance(filter::FilterOutput) = cat(filter.Ptt...; dims = 3)
+
+function get_filtered_covariance(model::StateSpaceModel)
+    isempty(model.results) && error("Model has not been estimated yet, please use `fit!`.")
+    return get_filtered_covariance(kalman_filter(model))
+end
 
 """
 TODO
