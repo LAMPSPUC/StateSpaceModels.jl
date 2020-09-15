@@ -6,16 +6,6 @@
     model = LocalLevel(nile.flow)
     @test_throws ErrorException show(stdout, results(model))
     fit!(model)
-    result_print = 
-    """                         Results                        
-    ========================================================
-    Number of observations:       100
-    Number of unknown parameters: 2
-    Log-likelihood:               -632.54
-    AIC:                          1269.08
-    BIC:                          1274.29
-    """
-    @test sprint(show, results(model)) == result_print
     @test loglike(model) ≈ -632.5376 atol = 1e-5 rtol = 1e-5
 
     # Durbin Koopman 2012 section 2.2.5
@@ -26,8 +16,8 @@
     fit!(model; filter=scalar_filter)
 
     # Without the concentrated filter and score calculation this is close enough
-    @test get_constrained_value(model, "sigma2_ε") ≈ 15099 atol = 2
-    @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 atol = 1
+    @test get_constrained_value(model, "sigma2_ε") ≈ 15099 rtol = 1e-3
+    @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 rtol = 1e-3
 
     # Fix some parameters
     fix_hyperparameters!(model, Dict("sigma2_ε" => 15099.0))

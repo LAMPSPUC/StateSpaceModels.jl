@@ -4,6 +4,7 @@ abstract type StateSpaceModel end
 
 import Base: show, length, isempty
 
+using Distributions
 using LinearAlgebra
 using Statistics
 using Printf
