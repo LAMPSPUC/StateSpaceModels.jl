@@ -24,8 +24,8 @@
     fit!(model; filter=scalar_filter)
 
     hyperparameters = get_hyperparameters(model)
-    @test !isempty(get_minimizer_hyperparameter_position(hyperparameters))
-    
+    @test !isempty(hyperparameters.minimizer_hyperparameter_position)
+
     @test loglike(model; filter=scalar_filter) ≈  -632.54421 atol = 1e-5 rtol = 1e-5
     @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 atol = 1
 
@@ -35,7 +35,7 @@
     fit!(model)
     @test loglike(model) ≈ -632.53766f0 atol = 1e-5 rtol = 1e-5
 
-    # Missing values 
+    # Missing values
     nile.flow[[collect(21:40); collect(61:80)]] .= NaN
     model = LocalLevel(nile.flow)
     fit!(model)

@@ -46,7 +46,6 @@ export forecast
 export forecast_expected_value
 export get_constrained_value
 export get_hyperparameters
-export get_minimizer_hyperparameter_position
 export has_fit_methods
 export fix_hyperparameters!
 export kalman_filter

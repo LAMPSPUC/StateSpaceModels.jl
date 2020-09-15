@@ -1,11 +1,9 @@
 mutable struct HyperParameters{Fl <: AbstractFloat}
     num::Int
     names::Vector{String}
-    # Poistion of the hyperparameter on the
-    # constrained and uncontrained values
+    # Poistion of the hyperparameter on the constrained and uncontrained values
     position::Dict{String, Int}
-    # Minimizer vector corresponds to which
-    # hyperparameter
+    # Minimizer vector corresponds to which hyperparameter
     minimizer_hyperparameter_position::Dict{Int, String}
     constrained_values::Vector{Fl}
     unconstrained_values::Vector{Fl}
@@ -61,8 +59,7 @@ function handle_optim_initial_hyperparameters(model::StateSpaceModel)
     initial_hyperparameters!(model)
     # Possibly fix some user specified initial hyperparameters
     fix_hyperparameters!(model)
-    # Associate the position of each index of the
-    # optimizer vector with a hyperparameter
+    # Associate the position of each index of the optimizer vector with a hyperparameter
     fill_minimizer_hyperparameter_position!(model)
     # Register the unconstrained initial_parameters
     unconstrain_hyperparameters!(model)
@@ -78,7 +75,6 @@ number_hyperparameters(hyperparameters::HyperParameters) = hyperparameters.num
 
 position(str::String, hyperparameters::HyperParameters) = hyperparameters.position[str]
 get_position(hyperparameters::HyperParameters) = hyperparameters.position
-get_minimizer_hyperparameter_position(hyperparameters::HyperParameters) = hyperparameters.minimizer_hyperparameter_position
 get_names(hyperparameters::HyperParameters) = hyperparameters.names
 get_constrained_values(model::StateSpaceModel) = get_constrained_values(model.hyperparameters)
 get_constrained_values(hyperparameters::HyperParameters) = hyperparameters.constrained_values
@@ -103,7 +99,7 @@ end
 get_free_unconstrained_values(model::StateSpaceModel) = get_free_unconstrained_values(model.hyperparameters)
 function get_free_unconstrained_values(hyperparameters::HyperParameters{Fl}) where Fl
     free_unconstrained_values = Vector{Fl}(undef, number_free_hyperparameters(hyperparameters))
-    for (k, v) in get_minimizer_hyperparameter_position(hyperparameters)
+    for (k, v) in hyperparameters.minimizer_hyperparameter_position
         free_unconstrained_values[k] = get_unconstrained_value(hyperparameters, v)
     end
     return free_unconstrained_values
