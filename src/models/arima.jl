@@ -6,8 +6,8 @@ struct ARIMAOrder
     q::Int
 end
 
-# This is used to some optimizations such as 
-# defining the position of each parameter before hand 
+# This is used to some optimizations such as
+# defining the position of each parameter before hand
 # and avoiding string interpolations such as "ar_L$i"
 # for "ar_L1"
 struct ARIMAHyperParametersAuxiliary
@@ -22,6 +22,10 @@ struct ARIMAHyperParametersAuxiliary
 end
 
 """
+    ARIMA
+
+An ARIMA model (autoregressive integrated moving average) implemented within the state-space
+framework.
 """
 mutable struct ARIMA <: StateSpaceModel
     order::ARIMAOrder
@@ -32,10 +36,10 @@ mutable struct ARIMA <: StateSpaceModel
 
     function ARIMA(y::Vector{Fl},
                    order::Tuple{Int, Int, Int}) where Fl
-        
+
         or = ARIMAOrder(order[1], order[2], order[3])
         hyperparameters_auxiliary = ARIMAHyperParametersAuxiliary(or)
-        
+
         Z = build_Z(or, Fl)
         T = build_T(or, Fl)
         R = build_R(or, Fl)
@@ -143,11 +147,11 @@ get_ar_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ar_pos[i]
 get_ma_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ma_pos[i]
 
 # TODO improve performance possibly preallocating y
+#     Monahan, John F. 1984.
+#    "A Note on Enforcing Stationarity in
+#    Autoregressive-moving Average Models."
+#    Biometrika 71 (2) (August 1): 403-404.
 function impose_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
-    #     Monahan, John F. 1984.
-    #    "A Note on Enforcing Stationarity in
-    #    Autoregressive-moving Average Models."
-    #    Biometrika 71 (2) (August 1): 403-404.
     n = length(hyperparameter_values)
     y = fill(zero(Fl), n, n)
     r = @. hyperparameter_values / sqrt((1 + hyperparameter_values^2))
@@ -178,7 +182,7 @@ function relax_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
     return x
 end
 
-function ARIMA_exact_initalization!(filter::KalmanFilter, 
+function ARIMA_exact_initalization!(filter::KalmanFilter,
                                     model::ARIMA)
     num_arma_states = max(model.order.p, model.order.q + 1)
     ARIMA_exact_initialization!(filter.kalman_state, model.system, num_arma_states)
@@ -199,13 +203,13 @@ function update_ar_terms!(model::ARIMA)
     for i in 1:model.order.p
         model.system.T[get_ar_pos(model, i)] = get_constrained_value(model, get_ar_name(model, i))
     end
-    return 
+    return
 end
 function update_ma_terms!(model::ARIMA)
     for j in 1:model.order.q
         model.system.R[get_ma_pos(model, j)] = get_constrained_value(model, get_ma_name(model, j))
     end
-    return 
+    return
 end
 
 # Obligatory functions

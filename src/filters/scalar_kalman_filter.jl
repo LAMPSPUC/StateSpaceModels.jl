@@ -1,7 +1,10 @@
 export ScalarKalmanFilter
 
-# This method is similar to the univariate kalman filter but
-# exploits the fact that the dimension of the state is 1
+"""
+    ScalarKalmanState{Fl <: AbstractFloat}
+
+The state of a `ScalarKalmanFilter`.
+"""
 mutable struct ScalarKalmanState{Fl <: AbstractFloat}
     v::Fl
     F::Fl
@@ -15,19 +18,19 @@ mutable struct ScalarKalmanState{Fl <: AbstractFloat}
     P_to_check_steady_state::Fl
     function ScalarKalmanState(a1::Fl, P1::Fl) where Fl
         P_to_check_steady_state = zero(Fl)
-        return new{Fl}(zero(Fl), zero(Fl), zero(Fl), 
+        return new{Fl}(zero(Fl), zero(Fl), zero(Fl),
                        a1, zero(Fl), P1, zero(Fl), INITIAL_STEADY_STATE,
                        P_to_check_steady_state)
     end
 end
 
-function save_a1_P1_in_filter_output!(filter_output::FilterOutput{Fl}, 
+function save_a1_P1_in_filter_output!(filter_output::FilterOutput{Fl},
                                       kalman_state::ScalarKalmanState{Fl}) where Fl
     filter_output.a[1] = copy(fill(kalman_state.a, 1))
     filter_output.P[1] = copy(fill(kalman_state.P, 1, 1))
     return
 end
-function save_kalman_state_in_filter_output!(filter_output::FilterOutput{Fl}, 
+function save_kalman_state_in_filter_output!(filter_output::FilterOutput{Fl},
                                              kalman_state::ScalarKalmanState{Fl},
                                              t::Int) where Fl
     filter_output.v[t] = copy(fill(kalman_state.v, 1))
@@ -41,8 +44,12 @@ function save_kalman_state_in_filter_output!(filter_output::FilterOutput{Fl},
     return
 end
 
-# Univariate Kalman filter with the recursions as described 
-# in Koopman's book TODO
+"""
+    ScalarKalmanFilter{Fl <: Real} <: KalmanFilter
+
+Similar to the univariate Kalman filter but exploits the fact that the dimension of the
+state is equal to 1.
+"""
 mutable struct ScalarKalmanFilter{Fl <: Real} <: KalmanFilter
     steadystate_tol::Fl
     a1::Fl
@@ -55,14 +62,14 @@ mutable struct ScalarKalmanFilter{Fl <: Real} <: KalmanFilter
                                 skip_llk_instants::Int = 1,
                                 steadystate_tol::Fl = Fl(1e-5)) where Fl
         kalman_state = ScalarKalmanState(a1, P1)
-        return new{Fl}(steadystate_tol, a1, P1, 
+        return new{Fl}(steadystate_tol, a1, P1,
                        skip_llk_instants, kalman_state)
     end
 end
 
 function reset_filter!(kf::ScalarKalmanFilter{Fl}) where Fl
     reset_filter!(kf.kalman_state, kf.a1, kf.P1)
-    return 
+    return
 end
 function reset_filter!(kalman_state::ScalarKalmanState, a1::Fl, P1::Fl) where Fl
     kalman_state.a = a1
@@ -96,7 +103,7 @@ function scalar_update_att!(kalman_state::ScalarKalmanState{Fl}, Z::Fl) where Fl
 end
 function scalar_update_a!(kalman_state::ScalarKalmanState{Fl}, T::Fl, c::Fl) where Fl
     kalman_state.a = T * kalman_state.att + c
-    return 
+    return
 end
 function scalar_update_Ptt!(kalman_state::ScalarKalmanState{Fl}, Z::Fl) where Fl
     kalman_state.Ptt = kalman_state.P - kalman_state.P * Z * Z * kalman_state.P / kalman_state.F
@@ -104,14 +111,14 @@ function scalar_update_Ptt!(kalman_state::ScalarKalmanState{Fl}, Z::Fl) where Fl
 end
 function scalar_update_P!(kalman_state::ScalarKalmanState{Fl}, T::Fl, RQR::Fl) where Fl
     kalman_state.P = T * kalman_state.Ptt * T + RQR
-    return 
+    return
 end
 function update_llk!(kalman_state::ScalarKalmanState{Fl}) where Fl
     kalman_state.llk -= (HALF_LOG_2_PI + 0.5*(log(kalman_state.F) +  kalman_state.v^2 / kalman_state.F))
     return
 end
 
-function scalar_update_kalman_state!(kalman_state, y, Z, T, H, RQR, 
+function scalar_update_kalman_state!(kalman_state, y, Z, T, H, RQR,
                                      d, c, skip_llk_instants, tol, t)
 
     if isnan(y)
@@ -146,43 +153,43 @@ end
 
 function optim_kalman_filter(sys::LinearUnivariateTimeInvariant{Fl},
                              filter::ScalarKalmanFilter{Fl}) where Fl
-    return filter_recursions!(filter.kalman_state, 
-                              sys, 
-                              filter.steadystate_tol, 
+    return filter_recursions!(filter.kalman_state,
+                              sys,
+                              filter.steadystate_tol,
                               filter.skip_llk_instants)
 end
 function kalman_filter!(filter_output::FilterOutput,
                         sys::StateSpaceSystem,
                         filter::ScalarKalmanFilter{Fl}) where Fl
     filter_recursions!(filter_output,
-                       filter.kalman_state, 
-                       sys, 
-                       filter.steadystate_tol, 
+                       filter.kalman_state,
+                       sys,
+                       filter.steadystate_tol,
                        filter.skip_llk_instants)
     return filter_output
 end
 
-function filter_recursions!(kalman_state::ScalarKalmanState{Fl}, 
+function filter_recursions!(kalman_state::ScalarKalmanState{Fl},
                             sys::LinearUnivariateTimeInvariant{Fl},
-                            steadystate_tol::Fl, 
+                            steadystate_tol::Fl,
                             skip_llk_instants::Int) where Fl
     RQR = sys.R[1] * sys.Q[1] * sys.R[1]
     @inbounds for t in eachindex(sys.y)
-        scalar_update_kalman_state!(kalman_state, sys.y[t], sys.Z[1], 
+        scalar_update_kalman_state!(kalman_state, sys.y[t], sys.Z[1],
                             sys.T[1], sys.H, RQR,
                             sys.d, sys.c[1], skip_llk_instants, steadystate_tol, t)
     end
     return kalman_state.llk
 end
 function filter_recursions!(filter_output::FilterOutput,
-                            kalman_state::ScalarKalmanState{Fl}, 
+                            kalman_state::ScalarKalmanState{Fl},
                             sys::LinearUnivariateTimeInvariant,
-                            steadystate_tol::Fl, 
+                            steadystate_tol::Fl,
                             skip_llk_instants::Int) where Fl
     RQR = sys.R[1] * sys.Q[1] * sys.R[1]
     save_a1_P1_in_filter_output!(filter_output, kalman_state)
     @inbounds for t in eachindex(sys.y)
-        scalar_update_kalman_state!(kalman_state, sys.y[t], sys.Z[1], 
+        scalar_update_kalman_state!(kalman_state, sys.y[t], sys.Z[1],
                             sys.T[1], sys.H, RQR,
                             sys.d, sys.c[1], skip_llk_instants, steadystate_tol, t)
         save_kalman_state_in_filter_output!(filter_output, kalman_state, t)

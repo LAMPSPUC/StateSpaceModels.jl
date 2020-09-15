@@ -8,7 +8,7 @@ export get_constrained_value,
 mutable struct HyperParameters{Fl <: AbstractFloat}
     num::Int
     names::Vector{String}
-    # Poistion of the hyperparameter on the 
+    # Poistion of the hyperparameter on the
     # constrained and uncontrained values
     position::Dict{String, Int}
     # Minimizer vector corresponds to which
@@ -25,9 +25,9 @@ mutable struct HyperParameters{Fl <: AbstractFloat}
         constrained_values                = fill(Fl(NaN), num)
         unconstrained_values              = fill(Fl(NaN), num)
         fixed_constrained_values          = Dict{String, Fl}()
-        return new{Fl}(num, 
+        return new{Fl}(num,
                        names,
-                       positions, 
+                       positions,
                        minimizer_hyperparameter_position,
                        constrained_values,
                        unconstrained_values,
@@ -35,11 +35,11 @@ mutable struct HyperParameters{Fl <: AbstractFloat}
     end
 end
 
-function register_unconstrained_values!(model::StateSpaceModel, 
+function register_unconstrained_values!(model::StateSpaceModel,
                                         unconstrained_values::Vector{Fl}) where Fl
     return register_unconstrained_values!(model.hyperparameters, unconstrained_values)
 end
-function register_unconstrained_values!(hyperparameters::HyperParameters, 
+function register_unconstrained_values!(hyperparameters::HyperParameters,
                                         unconstrained_values::Vector{Fl}) where Fl
     for (i, val) in enumerate(unconstrained_values)
         update_unconstrained_value!(hyperparameters,
@@ -68,7 +68,7 @@ function handle_optim_initial_hyperparameters(model::StateSpaceModel)
     initial_hyperparameters!(model)
     # Possibly fix some user specified initial hyperparameters
     fix_hyperparameters!(model)
-    # Associate the position of each index of the 
+    # Associate the position of each index of the
     # optimizer vector with a hyperparameter
     fill_minimizer_hyperparameter_position!(model)
     # Register the unconstrained initial_parameters
@@ -131,7 +131,7 @@ end
 
 """
 """
-function set_initial_hyperparameters!(model::StateSpaceModel, 
+function set_initial_hyperparameters!(model::StateSpaceModel,
                                       initial_hyperparameters::Dict{String, <:Real})
     for (k, v) in initial_hyperparameters
         update_constrained_value!(model, k, v)
@@ -143,25 +143,30 @@ function is_fixed(str::String, hyperparameters::HyperParameters)
     return haskey(hyperparameters.fixed_constrained_values, str)
 end
 number_free_hyperparameters(model::StateSpaceModel) = number_free_hyperparameters(model.hyperparameters)
-function number_free_hyperparameters(hyperparameters::HyperParameters) 
+function number_free_hyperparameters(hyperparameters::HyperParameters)
     return number_hyperparameters(hyperparameters) - number_fixed_hyperparameters(hyperparameters)
 end
 function is_free(str::String, hyperparameters::HyperParameters)
     return !is_fixed(str, hyperparameters)
 end
 number_fixed_hyperparameters(model::StateSpaceModel) = number_fixed_hyperparameters(model.hyperparameters)
-function number_fixed_hyperparameters(hyperparameters::HyperParameters) 
+function number_fixed_hyperparameters(hyperparameters::HyperParameters)
     return length(hyperparameters.fixed_constrained_values)
 end
 
 """
-TODO
+    fix_hyperparameters!
+
+Fixes the desired hyperparameters so that they are not considered as decision variables in
+the model estimation.
 """
+function fix_hyperparameters! end
+
 function fix_hyperparameters!(model::StateSpaceModel, fixed_hyperparameters::Dict)
     return fix_hyperparameters!(model.hyperparameters, fixed_hyperparameters)
 end
 
-function fix_hyperparameters!(hyperparameters::HyperParameters{Fl}, 
+function fix_hyperparameters!(hyperparameters::HyperParameters{Fl},
                               fixed_hyperparameters::Dict{String, Fl}) where Fl
     # assert we have these hyperparameters
     #TODO falar qual está faltando como erro
