@@ -1,17 +1,26 @@
 export fit!
 
 """
-TODO
+    fit!(
+        model::StateSpaceModel;
+        filter::KalmanFilter=default_filter(model),
+        optimizer::Optimizer=Optimizer(Optim.LBFGS())
+    )
+
+Estimate the state-space model parameters via maximum likelihood. The resulting optimal
+hyperparameters and the corresponding log-likelihood are stored within the model.
 """
-function fit!(model::StateSpaceModel; 
-             filter::KalmanFilter = default_filter(model),
-             optimizer::Optimizer = Optimizer(Optim.LBFGS()))
-    
+function fit!(
+    model::StateSpaceModel;
+    filter::KalmanFilter=default_filter(model),
+    optimizer::Optimizer=Optimizer(Optim.LBFGS())
+)
+
     initial_unconstrained_hyperparameter = handle_optim_initial_hyperparameters(model)
     # Should there be a try catch?
-    func = TwiceDifferentiable(x -> -optim_loglike(model, filter, x), 
+    func = TwiceDifferentiable(x -> -optim_loglike(model, filter, x),
                                     initial_unconstrained_hyperparameter)
-    opt = optimize(func, initial_unconstrained_hyperparameter, 
+    opt = optimize(func, initial_unconstrained_hyperparameter,
                     optimizer.method, optimizer.options)
     opt_loglikelihood   = -opt.minimum
     opt_hyperparameters = opt.minimizer

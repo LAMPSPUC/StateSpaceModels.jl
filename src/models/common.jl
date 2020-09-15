@@ -61,14 +61,14 @@ function Base.isempty(results::Results)
            isnan(results.llk) && 
            isnan(results.aic) && 
            isnan(results.bic) &&
-           iszero(results.num_observations) && 
+           iszero(results.num_observations) &&
            iszero(results.num_hyperparameters)
 end
 
 """
     has_fit_methods(model_type::Type{<:StateSpaceModel}) -> Bool
 
-Verify if a certain `StateSpaceModel` has the necessary methods to perform the fit!.
+Verify if a certain `StateSpaceModel` has the necessary methods to perform `fit!``.
 """
 function has_fit_methods(model_type::Type{<:StateSpaceModel})
     tuple_with_model_type = Tuple{model_type}

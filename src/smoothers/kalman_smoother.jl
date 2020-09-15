@@ -1,12 +1,12 @@
-function kalman_smoother!(smoother_output::SmootherOutput, 
-                          system::LinearUnivariateTimeInvariant, 
+function kalman_smoother!(smoother_output::SmootherOutput,
+                          system::LinearUnivariateTimeInvariant,
                           filter_output::FilterOutput)
     multivariate_system = to_multivariate_time_variant(system)
     return kalman_smoother!(smoother_output, multivariate_system, filter_output)
 end
 
-function kalman_smoother!(smoother_output::SmootherOutput, 
-                          system::LinearMultivariateTimeVariant{Fl}, 
+function kalman_smoother!(smoother_output::SmootherOutput,
+                          system::LinearMultivariateTimeVariant{Fl},
                           filter_output::FilterOutput) where Fl
     # Load dimensions data
     n = size(system.y, 1)
@@ -28,7 +28,7 @@ function kalman_smoother!(smoother_output::SmootherOutput,
     r[end] = zeros(Fl, m)
 
     @inbounds for t = n:-1:2
-        if any(isnan.(system.y[t, :])) #TODO check this
+        if any(y_ -> isnan(y_), system.y[t, :])
             r[t-1]  = system.T'[t] * r[t]
             N[t-1]  = system.T'[t] * N[t] * system.T[t]
         else
@@ -43,7 +43,7 @@ function kalman_smoother!(smoother_output::SmootherOutput,
     end
 
     # Last iteration
-    if any(isnan.(system.y[1, :])) #TODO check this
+    if any(y_ -> isnan(y_), system.y[1, :])
         r0  = system.T'[1] * r[1]
         N0  = system.T'[1] * N[1] * system.T[1]
     else

@@ -28,7 +28,7 @@ function forecast(model::SSM, steps_ahead::Int;
     forecasting_model = reinstantiate(model, forecasting_y)
     # Associate with the model hyperparameters
     forecasting_model.hyperparameters = model_hyperparameters
-    # Perform the kalman filter 
+    # Perform the kalman filter
     fo = kalman_filter(forecasting_model)
 
     # fill forecast matrices
@@ -43,16 +43,23 @@ function forecast(model::SSM, steps_ahead::Int;
 end
 
 """
+    simulate_scenarios(
+        model::SSM, steps_ahead::Int, number_of_scenarios::Int;
+        filter::KalmanFilter=default_filter(model)
+    ) where SSM -> TODO
+
 TODO
 """
-function simulate_scenarios(model::SSM, steps_ahead::Int, number_of_scenarios::Int;
-                            filter::KalmanFilter = default_filter(model)) where SSM
+function simulate_scenarios(
+    model::SSM, steps_ahead::Int, number_of_scenarios::Int;
+    filter::KalmanFilter=default_filter(model)
+) where SSM
     # Query the type of model elements
     Fl = typeof_model_elements(model)
     fo = kalman_filter(model)
     last_state = fo.a[end]
     num_series = size(model.system.y, 2)
-    
+
     scenarios = Array{Fl, 3}(undef, steps_ahead, num_series, number_of_scenarios)
     for s in 1:number_of_scenarios
         scenarios[:, :, s] = simulate(model.system, last_state, steps_ahead)
