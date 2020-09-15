@@ -25,12 +25,11 @@ Current features include:
 * Kalman filter and smoother
 * Maximum likelihood estimation
 * Forecasting and Monte Carlo simulation
-* User-defined models (user is able to define the system)
+* User-defined models (user specifies the state-space system)
 * Several predefined models, including:
-  1. Basic structural model (trend, slope, seasonal)
-  2. Structural model with exogenous variables
-  3. Linear trend model
-  4. Local level model
+  * Basic structural model (trend, slope, seasonal)
+  * Linear trend model
+  * Local level model
 * Completion of missing values
 * Diagnostics for the residuals of fitted models
 
