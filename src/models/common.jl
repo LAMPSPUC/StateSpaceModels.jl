@@ -1,5 +1,3 @@
-export has_fit_methods, results
-
 typeof_model_elements(model::StateSpaceModel) = eltype(model.system.y)
 num_states(model::StateSpaceModel) = num_states(system(model))
 system(model::StateSpaceModel) = model.system
@@ -11,10 +9,10 @@ struct CoefficientTable{Fl <: AbstractFloat}
     z::Vector{Fl}
     p_value::Vector{Fl}
 
-    function CoefficientTable{Fl}(names::Vector{String}, 
-                                coef::Vector{Fl}, 
-                                std_err::Vector{Fl}, 
-                                z::Vector{Fl}, 
+    function CoefficientTable{Fl}(names::Vector{String},
+                                coef::Vector{Fl},
+                                std_err::Vector{Fl},
+                                z::Vector{Fl},
                                 p_value::Vector{Fl}) where Fl
         @assert length(names) == length(coef) == length(std_err) == length(z) == length(p_value)
         return new{Fl}(names, coef, std_err, z, p_value)
@@ -58,8 +56,8 @@ end
 results(model::StateSpaceModel) = model.results
 function Base.isempty(results::Results)
     return isempty(results.coef_table) &&
-           isnan(results.llk) && 
-           isnan(results.aic) && 
+           isnan(results.llk) &&
+           isnan(results.aic) &&
            isnan(results.bic) &&
            iszero(results.num_observations) &&
            iszero(results.num_hyperparameters)

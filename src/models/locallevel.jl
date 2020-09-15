@@ -1,5 +1,3 @@
-export LocalLevel
-
 @doc raw"""
 The local level model is defined by:
 ```math
@@ -28,7 +26,7 @@ mutable struct LocalLevel <: StateSpaceModel
     results::Results
 
     function LocalLevel(y::Vector{Fl}) where Fl
-                           
+
         # Define system matrices
         Z = ones(Fl, 1)
         T = ones(Fl, 1, 1)
@@ -79,7 +77,7 @@ end
 function fill_model_system!(model::LocalLevel)
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
-    return 
+    return
 end
 function reinstantiate(::LocalLevel, y::Vector{Fl}) where Fl
     return LocalLevel(y)

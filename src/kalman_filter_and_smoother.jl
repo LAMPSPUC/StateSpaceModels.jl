@@ -1,24 +1,11 @@
 # This file define interfaces with the filters defined in the filters folder
 abstract type KalmanFilter end
 
-export loglike,
-    kalman_filter,
-    kalman_smoother
-
-export filtered_estimates,
-    covariance_filtered_estimates,
-    one_step_ahead_predictions,
-    covariance_one_step_ahead_predictions
-
-export smoothed_estimates,
-    covariance_smoothed_estimates
-
-
 const HALF_LOG_2_PI = 0.5 * log(2 * pi)
 
 # Default loglikelihood function for optimization
-function optim_loglike(model::StateSpaceModel, 
-                       filter::KalmanFilter, 
+function optim_loglike(model::StateSpaceModel,
+                       filter::KalmanFilter,
                        unconstrained_hyperparameters::Vector{Fl}) where Fl
     reset_filter!(filter)
     update_model_hyperparameters!(model, unconstrained_hyperparameters)
@@ -26,7 +13,7 @@ function optim_loglike(model::StateSpaceModel,
     return optim_kalman_filter(model.system, filter)
 end
 
-function update_model_hyperparameters!(model::StateSpaceModel, 
+function update_model_hyperparameters!(model::StateSpaceModel,
                                        unconstrained_hyperparameters::Vector{Fl}) where Fl
     register_unconstrained_values!(model, unconstrained_hyperparameters)
     constrain_hyperparameters!(model)

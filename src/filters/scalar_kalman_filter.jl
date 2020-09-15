@@ -1,5 +1,3 @@
-export ScalarKalmanFilter
-
 """
     ScalarKalmanState{Fl <: AbstractFloat}
 

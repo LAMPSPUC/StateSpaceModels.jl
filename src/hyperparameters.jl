@@ -1,10 +1,3 @@
-export get_constrained_value,
-    get_hyperparameters,
-    get_minimizer_hyperparameter_position,
-    set_initial_hyperparameters!,
-    fix_hyperparameters!
-
-
 mutable struct HyperParameters{Fl <: AbstractFloat}
     num::Int
     names::Vector{String}

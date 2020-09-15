@@ -1,10 +1,8 @@
-export Optimizer
-
 """
     Optimizer
 
 An Optim.jl wrapper to make the choice of the optimizer straightforward in StateSpaceModels.jl
-Users can choose among all suitable Optimizers in Optim.jl using very similar syntax. 
+Users can choose among all suitable Optimizers in Optim.jl using very similar syntax.
 
 # Example
 ```@jldoctest
@@ -23,6 +21,6 @@ function Optimizer(method::Optim.AbstractOptimizer;
                                            g_tol = 1e-6,
                                            iterations = 10^5,
                                            show_trace = false))
-    
+
     return Optimizer(method, options)
 end

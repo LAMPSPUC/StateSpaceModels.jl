@@ -1,5 +1,3 @@
-export ARIMA
-
 struct ARIMAOrder
     p::Int
     d::Int
