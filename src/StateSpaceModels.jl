@@ -35,21 +35,9 @@ include("optimizers.jl")
 include("fit.jl")
 include("forecast.jl")
 
+# Exported types and structs
 export ARIMA
 export BasicStructural
-export covariance_one_step_ahead_predictions
-export covariance_smoothed_estimates
-export fit!
-export forecast
-export forecast_expected_value
-export get_constrained_value
-export get_filtered_covariance
-export get_filtered_state
-export get_hyperparameters
-export has_fit_methods
-export fix_hyperparameters!
-export kalman_filter
-export kalman_smoother
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant
 export LinearRegression
@@ -57,14 +45,32 @@ export LinearUnivariateTimeInvariant
 export LinearUnivariateTimeVariant
 export LocalLevel
 export LocalLinearTrend
-export loglike
-export one_step_ahead_predictions
 export Optimizer
-export results
 export ScalarKalmanFilter
+export UnivariateKalmanFilter
+
+# Exported functions
+export fit!
+export forecast
+export forecast_expected_value
+export get_constrained_value
+export get_filtered_state
+export get_filtered_variance
+export get_hyperparameters
+export get_innovations
+export get_innovation_variance
+export get_predictive_state
+export get_predictive_variance
+export get_smoothed_state
+export get_smoothed_variance
+export has_fit_methods
+export fix_hyperparameters!
+export kalman_filter
+export kalman_smoother
+export loglike
+export results
 export set_initial_hyperparameters!
 export simulate
 export simulate_scenarios
-export smoothed_estimates
 
 end
