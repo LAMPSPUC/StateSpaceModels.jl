@@ -1,10 +1,3 @@
-export LinearUnivariateTimeInvariant,
-    LinearUnivariateTimeVariant,
-    LinearMultivariateTimeInvariant,
-    LinearMultivariateTimeVariant
-
-export simulate
-
 @doc raw"""
     StateSpaceSystem
 

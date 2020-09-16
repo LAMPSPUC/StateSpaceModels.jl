@@ -1,7 +1,3 @@
-export forecast,
-    forecast_expected_value,
-    simulate_scenarios
-
 mutable struct Forecast{Fl}
     expected_value::Vector{Vector{Fl}}
     covariance::Vector{Matrix{Fl}}
@@ -44,25 +40,26 @@ end
 
 """
     simulate_scenarios(
-        model::SSM, steps_ahead::Int, number_of_scenarios::Int;
+        model::StateSpaceModel, n_periods::Int, n_scenarios::Int;
         filter::KalmanFilter=default_filter(model)
-    ) where SSM -> TODO
+    ) -> Array{<:AbstractFloat, 3}
 
-TODO
+Samples `n_scenarios` future scenarios via Monte Carlo simulation for `n_periods` steps
+ahead using the desired `filter`.
 """
 function simulate_scenarios(
-    model::SSM, steps_ahead::Int, number_of_scenarios::Int;
+    model::StateSpaceModel, n_periods::Int, n_scenarios::Int;
     filter::KalmanFilter=default_filter(model)
-) where SSM
+)
     # Query the type of model elements
     Fl = typeof_model_elements(model)
     fo = kalman_filter(model)
     last_state = fo.a[end]
     num_series = size(model.system.y, 2)
 
-    scenarios = Array{Fl, 3}(undef, steps_ahead, num_series, number_of_scenarios)
-    for s in 1:number_of_scenarios
-        scenarios[:, :, s] = simulate(model.system, last_state, steps_ahead)
+    scenarios = Array{Fl, 3}(undef, n_periods, num_series, n_scenarios)
+    for s in 1:n_scenarios
+        scenarios[:, :, s] = simulate(model.system, last_state, n_periods)
     end
     return scenarios
 end

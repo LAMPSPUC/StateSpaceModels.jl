@@ -1,5 +1,3 @@
-export LinearRegression
-
 struct RegressionHyperParametersAuxiliary
     beta_names::Vector{String}
     function RegressionHyperParametersAuxiliary(num_states::Int)
@@ -85,7 +83,7 @@ function fill_model_system!(model::LinearRegression{Fl}) where Fl
     # Fill the same H for every timestamp
     H = get_constrained_value(model, "sigma2_ε")
     fill_H_in_time(model, H)
-    return 
+    return
 end
 function fill_model_filter!(filter::KalmanFilter, model::LinearRegression{Fl}) where Fl
     for i in axes(filter.kalman_state.a, 1)

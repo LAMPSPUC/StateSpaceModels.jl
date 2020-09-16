@@ -1,5 +1,3 @@
-export fit!
-
 """
     fit!(
         model::StateSpaceModel;
@@ -31,7 +29,7 @@ function fit!(
     return nothing
 end
 
-function fill_results!(model::StateSpaceModel, 
+function fill_results!(model::StateSpaceModel,
                        llk::Fl,
                        std_err::Vector{Fl}) where Fl
     n_obs               = length(model.system.y)

@@ -1,24 +1,11 @@
 # This file define interfaces with the filters defined in the filters folder
 abstract type KalmanFilter end
 
-export loglike,
-    kalman_filter,
-    kalman_smoother
-
-export filtered_estimates,
-    covariance_filtered_estimates,
-    one_step_ahead_predictions,
-    covariance_one_step_ahead_predictions
-
-export smoothed_estimates,
-    covariance_smoothed_estimates
-
-
 const HALF_LOG_2_PI = 0.5 * log(2 * pi)
 
 # Default loglikelihood function for optimization
-function optim_loglike(model::StateSpaceModel, 
-                       filter::KalmanFilter, 
+function optim_loglike(model::StateSpaceModel,
+                       filter::KalmanFilter,
                        unconstrained_hyperparameters::Vector{Fl}) where Fl
     reset_filter!(filter)
     update_model_hyperparameters!(model, unconstrained_hyperparameters)
@@ -26,7 +13,7 @@ function optim_loglike(model::StateSpaceModel,
     return optim_kalman_filter(model.system, filter)
 end
 
-function update_model_hyperparameters!(model::StateSpaceModel, 
+function update_model_hyperparameters!(model::StateSpaceModel,
                                        unconstrained_hyperparameters::Vector{Fl}) where Fl
     register_unconstrained_values!(model, unconstrained_hyperparameters)
     constrain_hyperparameters!(model)
@@ -48,8 +35,18 @@ function loglike(model::StateSpaceModel;
 end
 
 """
+    FilterOutput{Fl<:Real}
+
+Structure with the results of the Kalman filter:
+* `v`: innovations
+* `F`: variance of innovations
+* `a`: predictive state
+* `att`: filtered state
+* `P`: variance of predictive state
+* `Ptt`: variance of filtered state
+* `Pinf`: diffuse part of the covariance
 """
-mutable struct FilterOutput{Fl <: Real}
+mutable struct FilterOutput{Fl<:Real}
     v::Vector{Vector{Fl}}
     F::Vector{Matrix{Fl}}
     a::Vector{Vector{Fl}}
@@ -74,40 +71,96 @@ mutable struct FilterOutput{Fl <: Real}
 end
 
 """
-TODO
+    get_innovations
+
+Returns the innovations `v` obtained with the Kalman filter.
 """
-innovations(filter_output::FilterOutput) = permutedims(cat(filter_output.v...; dims = 2))
+function get_innovations end
+
+get_innovations(filter::FilterOutput) = permutedims(cat(filter.v...; dims=2))
+
+function get_innovations(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
+    return get_innovations(kalman_filter(model; filter=filter))
+end
 
 """
-TODO
+    get_innovation_variance
+
+Returns the variance `F` of innovations obtained with the Kalman filter.
 """
-covariance_innovations(filter_output::FilterOutput) = cat(filter_output.F...; dims = 3)
+function get_innovation_variance end
+
+get_innovation_variance(filter_output::FilterOutput) = cat(filter_output.F...; dims=3)
+
+function get_innovation_variance(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
+    return get_innovation_variance(kalman_filter(model; filter=filter))
+end
 
 """
-TODO
+    get_filtered_state
+
+Returns the filtered state `att` obtained with the Kalman filter.
 """
-filtered_estimates(filter_output::FilterOutput) = permutedims(cat(filter_output.att...; dims = 2))
+function get_filtered_state end
+
+get_filtered_state(filter::FilterOutput) = permutedims(cat(filter.att...; dims=2))
+
+function get_filtered_state(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
+    return get_filtered_state(kalman_filter(model; filter=filter))
+end
 
 """
-TODO
+    get_filtered_variance
+
+Returns the variance `Ptt` of the filtered state obtained with the Kalman filter.
 """
-covariance_filtered_estimates(filter_output::FilterOutput) = cat(filter_output.Ptt...; dims = 3)
+function get_filtered_variance end
+
+get_filtered_variance(filter::FilterOutput) = cat(filter.Ptt...; dims=3)
+
+function get_filtered_variance(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
+    return get_filtered_variance(kalman_filter(model; filter=filter))
+end
 
 """
-TODO
+    get_predictive_state
+
+Returns the predictive state `a` obtained with the Kalman filter.
 """
-one_step_ahead_predictions(filter_output::FilterOutput) = permutedims(cat(filter_output.a...; dims = 2))
+function get_predictive_state end
+
+get_predictive_state(filter::FilterOutput) = permutedims(cat(filter.a...; dims=2))
+
+function get_predictive_state(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
+    return get_predictive_state(kalman_filter(model; filter=filter))
+end
 
 """
-TODO
+    get_predictive_variance
+
+Returns the variance `P` of the predictive state obtained with the Kalman filter.
 """
-covariance_one_step_ahead_predictions(filter_output::FilterOutput) = cat(filter_output.P...; dims = 3)
+function get_predictive_variance end
+
+get_predictive_variance(filter::FilterOutput) = cat(filter.P...; dims=3)
+
+function get_predictive_variance(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
+    return get_predictive_variance(kalman_filter(model; filter=filter))
+end
 
 """
-TODO
+    kalman_filter(model::StateSpaceModel; filter=default_filter(model)) -> FilterOutput
+
+Filter the data using the desired `filter` and the estimated hyperparameters in `model`.
 """
-function kalman_filter(model::StateSpaceModel;
-                       filter::KalmanFilter = default_filter(model))
+function kalman_filter(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
     filter_output = FilterOutput(model)
     reset_filter!(filter)
     free_unconstrained_values = get_free_unconstrained_values(model)
@@ -117,9 +170,13 @@ function kalman_filter(model::StateSpaceModel;
 end
 
 """
-TODO
+    SmootherOutput{Fl<:Real}
+
+Structure with the results of the smoother:
+* `alpha`: smoothed state
+* `V`: variance of smoothed state
 """
-mutable struct SmootherOutput{Fl <: Real}
+mutable struct SmootherOutput{Fl<:Real}
     alpha::Vector{Vector{Fl}}
     V::Vector{Matrix{Fl}}
 
@@ -134,10 +191,11 @@ mutable struct SmootherOutput{Fl <: Real}
 end
 
 """
-TODO
+    kalman_smoother(model::StateSpaceModel; filter=default_filter(model)) -> FilterOutput
+
+Apply smoother to data filtered by `filter` and the estimated hyperparameters in `model`.
 """
-function kalman_smoother(model::StateSpaceModel;
-                         filter::KalmanFilter = default_filter(model))
+function kalman_smoother(model::StateSpaceModel; filter=default_filter(model))
     filter_output = FilterOutput(model)
     kalman_filter!(filter_output, model.system, filter)
     smoother_output = SmootherOutput(model)
@@ -145,11 +203,29 @@ function kalman_smoother(model::StateSpaceModel;
 end
 
 """
-TODO
+    get_smoothed_state
+
+Returns the smoothed state `alpha` obtained with the smoother.
 """
-smoothed_estimates(smoother_output::SmootherOutput) = permutedims(cat(smoother_output.alpha...; dims = 2))
+function get_smoothed_state end
+
+get_smoothed_state(smoother::SmootherOutput) = permutedims(cat(smoother.alpha...; dims = 2))
+
+function get_smoothed_state(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
+    return get_smoothed_state(kalman_smoother(model; filter=filter))
+end
 
 """
-TODO
+    get_smoothed_variance
+
+Returns the variance `V` of the smoothed state obtained with the smoother.
 """
-covariance_smoothed_estimates(smoother_output::SmootherOutput) = cat(smoother_output.V...; dims = 3)
+function get_smoothed_variance end
+
+get_smoothed_variance(smoother::SmootherOutput) = cat(smoother.V...; dims = 3)
+
+function get_smoothed_variance(model::StateSpaceModel; filter=default_filter(model))
+    isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
+    return get_smoothed_variance(kalman_smoother(model; filter=filter))
+end

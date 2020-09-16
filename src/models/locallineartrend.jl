@@ -1,5 +1,3 @@
-export LocalLinearTrend
-
 @doc raw"""
 The linear trend model is defined by:
 ```math
@@ -21,7 +19,7 @@ LocalLinearTrend model
 See more on [Finland road traffic fatalities](@ref)
 
 # References
- * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: 
+ * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods:
     Second Edition." Oxford University Press. pp. 44
 """
 mutable struct LocalLinearTrend <: StateSpaceModel
@@ -30,7 +28,7 @@ mutable struct LocalLinearTrend <: StateSpaceModel
     results::Results
 
     function LocalLinearTrend(y::Vector{Fl}) where Fl
-        
+
         Z = Fl.([1.0; 0.0])
         T = Fl.([1 1; 0 1])
         R = Fl.([1 0; 0 1])
@@ -81,7 +79,7 @@ function fill_model_system!(model::LocalLinearTrend)
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_ξ")
     model.system.Q[end] = get_constrained_value(model, "sigma2_ζ")
-    return 
+    return
 end
 function reinstantiate(::LocalLinearTrend, y::Vector{Fl}) where Fl
     return LocalLinearTrend(y)
