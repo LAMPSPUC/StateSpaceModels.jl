@@ -4,9 +4,28 @@
     @test has_fit_methods(LocalLevel)
 
     model = LocalLevel(nile.flow)
+
+    # Test that getter functions throw error for model that hasn't been fitted yet
+    @test_throws ErrorException get_innovations(model)
+    @test_throws ErrorException get_innovation_variance(model)
+    @test_throws ErrorException get_filtered_state(model)
+    @test_throws ErrorException get_filtered_variance(model)
+    @test_throws ErrorException get_predictive_state(model)
+    @test_throws ErrorException get_predictive_variance(model)
     @test_throws ErrorException show(stdout, results(model))
+
     fit!(model)
     @test loglike(model) ≈ -632.5376 atol = 1e-5 rtol = 1e-5
+
+    filter = kalman_filter(model)
+
+    # Test that getter functions now work since model has been fitted
+    @test get_innovations(model) == get_innovations(filter)
+    @test get_innovation_variance(model) == get_innovation_variance(filter)
+    @test get_filtered_state(model) == get_filtered_state(filter)
+    @test get_filtered_variance(model) == get_filtered_variance(filter)
+    @test get_predictive_state(model) == get_predictive_state(filter)
+    @test get_predictive_variance(model) == get_predictive_variance(filter)
 
     # Durbin Koopman 2012 section 2.2.5
     a1 = 0.0

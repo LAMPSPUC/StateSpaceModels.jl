@@ -137,7 +137,7 @@ get_predictive_state(filter::FilterOutput) = permutedims(cat(filter.a...; dims=2
 
 function get_predictive_state(model::StateSpaceModel; filter=default_filter(model))
     isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
-    return get_predictive_state(kalman_filter(model); filter=filter)
+    return get_predictive_state(kalman_filter(model; filter=filter))
 end
 
 """

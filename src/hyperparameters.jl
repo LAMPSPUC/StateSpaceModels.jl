@@ -180,7 +180,7 @@ Verify if model is fitted, i.e., returns `true` if the `results` field is nonemp
 all the hyperparameters are fixed and `false` otherwise.
 """
 function isfitted(model::StateSpaceModel)
-    if isempty(model.results) && number_fixed_hyperparameters(model) == number_hyperparameters(model)
+    if isempty(model.results) && number_fixed_hyperparameters(model) != number_hyperparameters(model)
         return false
     else
         return true
