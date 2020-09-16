@@ -176,11 +176,13 @@ end
 """
     isfitted(model::StateSpaceModel) -> Bool
 
-Verify if model is fitted, i.e., returns `true` if the `results` field is nonempty or if
-all the hyperparameters are fixed and `false` otherwise.
+Verify if `model` is fitted, i.e., returns `false` if there is at least one `NaN` entry in
+the hyperparameters.
 """
 function isfitted(model::StateSpaceModel)
-    if isempty(model.results) && number_fixed_hyperparameters(model) != number_hyperparameters(model)
+    c1 = any(x -> isnan(x), model.hyperparameters.unconstrained_values)
+    c2 = any(x -> isnan(x), model.hyperparameters.constrained_values)
+    if c1 || c2
         return false
     else
         return true
