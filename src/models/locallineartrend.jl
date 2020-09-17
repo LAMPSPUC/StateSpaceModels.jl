@@ -84,3 +84,4 @@ end
 function reinstantiate(::LocalLinearTrend, y::Vector{Fl}) where Fl
     return LocalLinearTrend(y)
 end
+has_exogenous(::LocalLinearTrend) = false

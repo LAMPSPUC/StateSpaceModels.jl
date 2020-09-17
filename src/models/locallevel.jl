@@ -82,3 +82,4 @@ end
 function reinstantiate(::LocalLevel, y::Vector{Fl}) where Fl
     return LocalLevel(y)
 end
+has_exogenous(::LocalLevel) = false
