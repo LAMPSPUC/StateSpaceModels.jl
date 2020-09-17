@@ -15,8 +15,8 @@ Forecast the mean and covariance for future observations from a StateSpaceModel 
 """
 function forecast end
 
-function forecast(model::SSM, steps_ahead::Int;
-                  filter::KalmanFilter = default_filter(model)) where SSM
+function forecast(model::StateSpaceModel, steps_ahead::Int;
+                  filter::KalmanFilter = default_filter(model))
     if has_exogenous(model)
         error("The model has exogenous variables, you should use the" *
               "forecast(model::SSM, exogenous::Matrix{Fl}; kwargs...) method")
@@ -43,8 +43,8 @@ function forecast(model::SSM, steps_ahead::Int;
     return Forecast{Fl}(expected_value, covariance)
 end
 
-function forecast(model::SSM, new_exogenous::Matrix{Fl};
-                  filter::KalmanFilter = default_filter(model)) where {SSM, Fl}
+function forecast(model::StateSpaceModel, new_exogenous::Matrix{Fl};
+                  filter::KalmanFilter = default_filter(model)) where {Fl}
     if !has_exogenous(model)
         error("The model does not support exogenous variables, you should use the" *
               "forecast(model::SSM, steps_ahead::Int; kwargs...) where SSM")
