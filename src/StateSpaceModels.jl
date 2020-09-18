@@ -17,6 +17,7 @@ include("systems.jl")
 include("kalman_filter_and_smoother.jl")
 
 include("filters/univariate_kalman_filter.jl")
+include("filters/multivariate_kalman_filter.jl")
 include("filters/scalar_kalman_filter.jl")
 include("filters/regression_kalman_filter.jl")
 
@@ -27,6 +28,7 @@ include("models/locallevel.jl")
 include("models/locallineartrend.jl")
 include("models/damped_lineartrend.jl")
 include("models/basicstructural.jl")
+include("models/basicstructural_bivariate.jl")
 include("models/arima.jl")
 include("models/linear_regression.jl")
 
@@ -38,6 +40,7 @@ include("forecast.jl")
 # Exported types and structs
 export ARIMA
 export BasicStructural
+export BivariateBasicStructural
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant
 export LinearRegression
@@ -51,6 +54,7 @@ export UnivariateKalmanFilter
 
 # Exported functions
 export fit!
+export fix_hyperparameters!
 export forecast
 export forecast_expected_value
 export get_constrained_value
@@ -64,7 +68,8 @@ export get_predictive_variance
 export get_smoothed_state
 export get_smoothed_variance
 export has_fit_methods
-export fix_hyperparameters!
+export isfitted
+export isunivariate
 export kalman_filter
 export kalman_smoother
 export loglike

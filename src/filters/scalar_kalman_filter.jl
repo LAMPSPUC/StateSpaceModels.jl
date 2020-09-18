@@ -1,3 +1,5 @@
+const SCALAR_INITIAL_STEADY_STATE = false
+
 """
     ScalarKalmanState{Fl <: AbstractFloat}
 
@@ -17,7 +19,7 @@ mutable struct ScalarKalmanState{Fl <: AbstractFloat}
     function ScalarKalmanState(a1::Fl, P1::Fl) where Fl
         P_to_check_steady_state = zero(Fl)
         return new{Fl}(zero(Fl), zero(Fl), zero(Fl),
-                       a1, zero(Fl), P1, zero(Fl), INITIAL_STEADY_STATE,
+                       a1, zero(Fl), P1, zero(Fl), SCALAR_INITIAL_STEADY_STATE,
                        P_to_check_steady_state)
     end
 end
@@ -74,7 +76,7 @@ function reset_filter!(kalman_state::ScalarKalmanState, a1::Fl, P1::Fl) where Fl
     kalman_state.P = P1
     kalman_state.llk = zero(Fl)
     kalman_state.P_to_check_steady_state = zero(Fl)
-    kalman_state.steady_state = INITIAL_STEADY_STATE
+    kalman_state.steady_state = SCALAR_INITIAL_STEADY_STATE
     return
 end
 

@@ -1,6 +1,6 @@
 @doc raw"""
-The basic structural state-space model consists of a trend, a slope, and a seasonal
-components. It is defined by:
+The basic structural state-space model consists of a trend (level + slope) and a seasonal
+component. It is defined by:
 ```math
 \begin{gather*}
     \begin{aligned}

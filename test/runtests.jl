@@ -16,6 +16,7 @@ include("utils.jl")
     include("models/locallevel.jl")
     include("models/locallineartrend.jl")
     include("models/basicstructural.jl")
+    include("models/basicstructural_bivariate.jl")
     include("models/arima.jl")
     include("models/linear_regression.jl")
 end
