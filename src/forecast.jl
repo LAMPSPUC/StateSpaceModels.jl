@@ -8,8 +8,8 @@ function forecast_expected_value(forec::Forecast)
 end
 
 """
-    forecast(model::SSM, steps_ahead::Int; kwargs...) where SSM
-    forecast(model::SSM, exogenous::Matrix{Fl}; kwargs...) where {SSM, Fl}
+    forecast(model::StateSpaceModel, steps_ahead::Int; kwargs...)
+    forecast(model::StateSpaceModel, exogenous::Matrix{Fl}; kwargs...) where {Fl}
 
 Forecast the mean and covariance for future observations from a StateSpaceModel (SSM).
 """
