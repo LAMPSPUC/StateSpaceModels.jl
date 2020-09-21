@@ -104,19 +104,19 @@ y = [0.0     # Deterministic local level generated time series
 
     @test isa(unimodel1, StateSpaceModel)
     @test unimodel1.mode == "time-invariant"
-    
+
     ss1 = statespace(unimodel1)
     @test ss1.filter_type <: KalmanFilter
     @test isa(ss1, StateSpace)
 
     unimodel2 = local_level(y)
-    
+
     ss2 = statespace(unimodel2; filter_type = SquareRootFilter{Float64})
     @test ss2.filter_type <: SquareRootFilter
     @test isa(ss2, StateSpace)
 
     unimodel3 = local_level(y)
-    
+
     ss3 = statespace(unimodel3; filter_type = UnivariateKalmanFilter{Float64})
     @test ss3.filter_type <: UnivariateKalmanFilter
     @test isa(ss3, StateSpace)
@@ -135,7 +135,7 @@ y = [0.0     # Deterministic local level generated time series
     ss5 = statespace(unimodel32_2; filter_type = SquareRootFilter{Float32})
     @test ss5.filter_type <: SquareRootFilter
     @test isa(ss5, StateSpace)
-    
+
     unimodel32_3 = local_level(Float32.(y))
     ss6 = statespace(unimodel32_3; filter_type = UnivariateKalmanFilter{Float32})
     @test ss6.filter_type <: UnivariateKalmanFilter
@@ -211,7 +211,7 @@ function test_model_estimation(nan_pos::Int, n; rtol = 1e-1, nseeds = 3, seed = 
 
     opt_method = SSM.BFGS(model, [[0.999]])
     ss = SSM.statespace(model; opt_method = opt_method, verbose = 0)
-    
+
     @test ss.model.Z[1] ≈ 1.0 rtol = rtol
     @test ss.model.Z[end] ≈ 1.0 rtol = rtol
     @test ss.model.T[1] ≈ 1.0 rtol = rtol

@@ -19,7 +19,7 @@ function univariate_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e
 
     # Kalman gain
     K = Matrix{Typ}(undef, model.dim.m, model.dim.n)
-    
+
     # Auxiliary structures
     ZP = Vector{Typ}(undef, model.dim.m)
     P_Ztransp_invF = Vector{Typ}(undef, model.dim.m)
@@ -100,8 +100,8 @@ function univariate_smoother(model::StateSpaceModel{Typ}, kfilter::UnivariateKal
     N     = Array{Typ, 3}(undef, m, m, n)
 
     # Initialization
-    N[:, :, end] = zeros(m, m)
-    r[end, :]    = zeros(m, 1)
+    N[:, :, end] = zeros(Typ, m, m)
+    r[end, :]    = zeros(Typ, m, 1)
 
     @views @inbounds for t = n:-1:2
         if t in model.missing_observations
@@ -144,7 +144,7 @@ end
 
 function kfas(model::StateSpaceModel{T}, filter_type::Type{UnivariateKalmanFilter{T}}) where T <: AbstractFloat
 
-    # Run filter and smoother 
+    # Run filter and smoother
     filtered_state = univariate_kalman_filter(model)
     smoothed_state = univariate_smoother(model, filtered_state)
     v = Matrix{T}(undef, length(filtered_state.v), 1)
@@ -152,8 +152,8 @@ function kfas(model::StateSpaceModel{T}, filter_type::Type{UnivariateKalmanFilte
     F = Array{T}(undef, 1, 1, length(filtered_state.F))
     F[1, 1, :] = filtered_state.F.*ones(1, 1)
 
-    return FilterOutput(filtered_state.a, filtered_state.att, v, 
+    return FilterOutput(filtered_state.a, filtered_state.att, v,
                         filtered_state.P, filtered_state.Ptt, F,
                         filtered_state.steadystate, filtered_state.tsteady),
-           SmoothedState(smoothed_state.alpha, smoothed_state.V) 
+           SmoothedState(smoothed_state.alpha, smoothed_state.V)
 end
