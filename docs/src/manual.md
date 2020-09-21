@@ -8,6 +8,7 @@ The package provides a variaty of pre-defined models, fell free to contribute if
 LocalLevel
 LocalLinearTrend
 BasicStructural
+MultivariateBasicStructural
 ```
 
 ### Implementing a custom StateSpaceModel

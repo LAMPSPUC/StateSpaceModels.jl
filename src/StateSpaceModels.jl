@@ -28,7 +28,7 @@ include("models/locallevel.jl")
 include("models/locallineartrend.jl")
 include("models/damped_lineartrend.jl")
 include("models/basicstructural.jl")
-include("models/basicstructural_bivariate.jl")
+include("models/basicstructural_multivariate.jl")
 include("models/arima.jl")
 include("models/linear_regression.jl")
 
@@ -40,7 +40,6 @@ include("forecast.jl")
 # Exported types and structs
 export ARIMA
 export BasicStructural
-export BivariateBasicStructural
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant
 export LinearRegression
@@ -48,6 +47,7 @@ export LinearUnivariateTimeInvariant
 export LinearUnivariateTimeVariant
 export LocalLevel
 export LocalLinearTrend
+export MultivariateBasicStructural
 export Optimizer
 export ScalarKalmanFilter
 export UnivariateKalmanFilter
