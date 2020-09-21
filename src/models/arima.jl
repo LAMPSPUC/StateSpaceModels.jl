@@ -303,3 +303,4 @@ function reinstantiate(model::ARIMA, y::Vector{Fl}) where Fl
     order = (model.order.p, model.order.d, model.order.q)
     return ARIMA(y, order)
 end
+has_exogenous(::ARIMA) = false
