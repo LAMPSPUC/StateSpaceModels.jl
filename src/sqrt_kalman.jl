@@ -39,12 +39,12 @@ function sqrt_kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) w
     tsteady      = n+1
 
     # Initial state: big Kappa initialization
-    a[1, :]        = zeros(m, 1)
+    a[1, :]        = zeros(Typ, m, 1)
     sqrtP[:, :, 1]    = 1e3 .* Matrix(I, m, m)
 
     # Pre-allocating for performance
-    zeros_pr = zeros(p, r)
-    zeros_mp = zeros(m, p)
+    zeros_pr = zeros(Typ, p, r)
+    zeros_mp = zeros(Typ, m, p)
     range1   = (p + 1):(p + m)
     range2   = 1:p
     sqrtH_zeros_pr  = [sqrtH zeros_pr]
@@ -149,8 +149,8 @@ function sqrt_smoother(model::StateSpaceModel{Typ}, sqrt_filter::SquareRootFilte
     sqrtN = Array{Typ, 3}(undef, m, m, n)
 
     # Initialization
-    sqrtN[:, :, end]  = zeros(m, m)
-    r[end, :]      = zeros(m, 1)
+    sqrtN[:, :, end]  = zeros(Typ, m, m)
+    r[end, :]      = zeros(Typ, m, 1)
     sqrtPsteady = sqrtP[:, :, end]
     sqrtFsteady = sqrtF[:, :, end]
 

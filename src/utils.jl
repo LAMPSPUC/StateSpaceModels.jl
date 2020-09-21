@@ -175,13 +175,13 @@ function Base.show(io::IO, model::StateSpaceModel)
     return nothing
 end
 
-function build_H(p::Int, T)
+function build_H(p::Int, Typ)
     H = fill(NaN, p, p)
-    return T.(H)
+    return Typ.(H)
 end
 
-function build_Q(r::Int, p::Int, T)
-    Q = kron(ones(p, p), Matrix{T}(I, Int(r/p), Int(r/p)))
+function build_Q(r::Int, p::Int, Typ)
+    Q = kron(ones(Typ, p, p), Matrix{Typ}(I, Int(r/p), Int(r/p)))
     Q[findall(isequal(1), Q)] .= NaN
     return Q
 end

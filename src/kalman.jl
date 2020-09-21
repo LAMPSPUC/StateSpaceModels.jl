@@ -19,7 +19,7 @@ function kalman_filter(model::StateSpaceModel{Typ}; tol::Typ = Typ(1e-5)) where 
 
     # Kalman gain
     K = Array{Typ, 3}(undef, model.dim.m, model.dim.p, model.dim.n)
-    
+
     # Auxiliary structures
     ZP = Array{Typ, 2}(undef, model.dim.p, model.dim.m)
     P_Ztransp_invF = Array{Typ, 2}(undef, model.dim.m, model.dim.p)
@@ -100,8 +100,8 @@ function smoother(model::StateSpaceModel{Typ}, kfilter::KalmanFilter{Typ}) where
     N     = Array{Typ, 3}(undef, m, m, n)
 
     # Initialization
-    N[:, :, end] = zeros(m, m)
-    r[end, :]    = zeros(m, 1)
+    N[:, :, end] = zeros(Typ, m, m)
+    r[end, :]    = zeros(Typ, m, 1)
 
     @views @inbounds for t = n:-1:2
         if t in model.missing_observations
@@ -144,11 +144,11 @@ end
 
 function kfas(model::StateSpaceModel{T}, filter_type::Type{KalmanFilter{T}}) where T
 
-    # Run filter and smoother 
+    # Run filter and smoother
     filtered_state = kalman_filter(model)
     smoothed_state = smoother(model, filtered_state)
-    return FilterOutput(filtered_state.a, filtered_state.att, filtered_state.v, 
+    return FilterOutput(filtered_state.a, filtered_state.att, filtered_state.v,
                         filtered_state.P, filtered_state.Ptt, filtered_state.F,
                         filtered_state.steadystate, filtered_state.tsteady),
-           SmoothedState(smoothed_state.alpha, smoothed_state.V) 
+           SmoothedState(smoothed_state.alpha, smoothed_state.V)
 end

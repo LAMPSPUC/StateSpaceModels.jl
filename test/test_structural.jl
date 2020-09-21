@@ -50,4 +50,9 @@
         ss = statespace(model)
         @test_throws ErrorException sim = simulate(ss, 10, 1000)
     end
+
+    @testset "Model with 32-bit precision" begin
+        model = structural(ones(Float32, 50), 3)
+        @test size(model) == (50, 1, 4, 3)
+    end
 end

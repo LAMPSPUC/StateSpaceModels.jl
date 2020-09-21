@@ -5,7 +5,7 @@ export structural, local_level, linear_trend, regression
 
 Build state-space system for a given structural model with observations `y`, seasonality `s`, and, optionally, exogenous variables `X`.
 
-If `y` is provided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`. The same will happen to X, 
+If `y` is provided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`. The same will happen to X,
 if an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
 """
 function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(undef, 0, 0)) where Typ <: Real
@@ -33,7 +33,7 @@ function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(und
             Z[:, :, t] = kron(
                 Matrix{Typ}(I, p, p),
                 [
-                    X[t, :]' 1 0 1 zeros(1, s - 2)
+                    X[t, :]' 1 0 1 zeros(Typ, 1, s - 2)
                 ]
                 )
         end
@@ -41,32 +41,32 @@ function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(und
         Z = kron(
             Matrix{Typ}(I, p, p),
             [
-                1 0 1 zeros(1, s - 2)
+                1 0 1 zeros(Typ, 1, s - 2)
             ]
             )
     end
-    
+
     # State equation
     if p_exp > 0
-        T0 = [Matrix{Typ}(I, p_exp, p_exp) zeros(p_exp, 1 + s)]
+        T0 = [Matrix{Typ}(I, p_exp, p_exp) zeros(Typ, p_exp, 1 + s)]
         T = kron(
             Matrix{Typ}(I, p, p),
             [
-                T0; 
-                zeros(1, p_exp) 1 1 zeros(1, s - 1); 
-                zeros(1, p_exp) 0 1 zeros(1, s - 1);
-                zeros(1, p_exp) 0 0 -ones(1, s - 1);
-                zeros(s - 2, p_exp) zeros(s - 2, 2) Matrix{Typ}(I, s - 2, s - 2) zeros(s - 2)
+                T0;
+                zeros(Typ, 1, p_exp) 1 1 zeros(Typ, 1, s - 1);
+                zeros(Typ, 1, p_exp) 0 1 zeros(Typ, 1, s - 1);
+                zeros(Typ, 1, p_exp) 0 0 -ones(Typ, 1, s - 1);
+                zeros(Typ, s - 2, p_exp) zeros(Typ, s - 2, 2) Matrix{Typ}(I, s - 2, s - 2) zeros(Typ, s - 2)
             ]
             )
     else
         T = kron(
             Matrix{Typ}(I, p, p),
             [
-                1 1 zeros(1, s - 1); 
-                0 1 zeros(1, s - 1);
-                0 0 -ones(1, s - 1);
-                zeros(s - 2, 2) Matrix{Typ}(I, s - 2, s - 2) zeros(s - 2)
+                1 1 zeros(Typ, 1, s - 1);
+                0 1 zeros(Typ, 1, s - 1);
+                0 0 -ones(Typ, 1, s - 1);
+                zeros(Typ, s - 2, 2) Matrix{Typ}(I, s - 2, s - 2) zeros(Typ, s - 2)
             ]
             )
         end
@@ -74,9 +74,9 @@ function structural(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Typ}(und
     R = kron(
         Matrix{Typ}(I, p, p),
         [
-            zeros(p_exp, 3); 
-            Matrix{Typ}(I, 3, 3); 
-            zeros(s - 2, 3)
+            zeros(Typ, p_exp, 3);
+            Matrix{Typ}(I, 3, 3);
+            zeros(Typ, s - 2, 3)
         ]
         )
 
@@ -163,8 +163,8 @@ function regression(y::VecOrMat{Typ}, X::VecOrMat{Typ}) where Typ <: Real
     T = Matrix{Typ}(I, p_X, p_X)
     R = zeros(Typ, p_X, 1)
     Q = zeros(Typ, 1, 1)
-    d = zeros(n_y, p_y)
-    c = zeros(n_X, p_X)
+    d = zeros(Typ, n_y, p_y)
+    c = zeros(Typ, n_X, p_X)
     # H is the only variable to estimate
     H = build_H(p_y, Typ)
 
