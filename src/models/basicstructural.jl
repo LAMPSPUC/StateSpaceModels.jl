@@ -49,7 +49,7 @@ function default_filter(model::BasicStructural)
     Fl = typeof_model_elements(model)
     steadystate_tol = Fl(1e-5)
     a1 = zeros(Fl, num_states(model))
-    P1 = 1e6 .* Matrix{Fl}(I, num_states(model), num_states(model))
+    P1 = Fl(1e6) .* Matrix{Fl}(I, num_states(model), num_states(model))
     return UnivariateKalmanFilter(a1, P1, num_states(model), steadystate_tol)
 end
 function initial_hyperparameters!(model::BasicStructural)

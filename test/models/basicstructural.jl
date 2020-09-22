@@ -3,7 +3,7 @@
     log_air_passengers = log.(air_passengers.passengers)
 
     @test has_fit_methods(BasicStructural)
-  
+
     model = BasicStructural(log_air_passengers, 12)
     fit!(model)
     # Runned on Python statsmodels
@@ -15,4 +15,11 @@
     # simualting
     scenarios = simulate_scenarios(model, 10, 10_000)
     test_scenarios_adequacy_with_forecast(forec, scenarios)
+
+    @testset "Basic structural with single precision" begin
+        log_ap32 = Float32.(log_air_passengers)
+        model = BasicStructural(log_ap32, 12)
+        @test model.system.Z == Float32[1.0; 0.0; 1.0; zeros(10)]
+        fit!(model)
+    end
 end

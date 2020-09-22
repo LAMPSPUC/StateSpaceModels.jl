@@ -27,7 +27,7 @@ end
 function default_filter(::DampedLinearTrend{Fl}) where Fl
     steadystate_tol = 1e-5
     a1 = zeros(Fl, 2)
-    P1 = 1e6 .* Matrix{Fl}(I, 2, 2)
+    P1 = Fl(1e6) .* Matrix{Fl}(I, 2, 2)
     return UnivariateKalmanFilter(a1, P1, 0, steadystate_tol)
 end
 function initial_hyperparameters!(model::DampedLinearTrend{Fl}) where Fl
