@@ -21,7 +21,7 @@ mutable struct MultivariateBasicStructural <: StateSpaceModel
 
     function MultivariateBasicStructural(y::Matrix{Fl}, s::Int) where Fl
         p = size(y, 2)
-        Z = kron(Matrix{Fl}(I, p, p), [1 0 1 zeros(1, s - 2)])
+        Z = kron(Matrix{Fl}(I, p, p), [1 0 1 zeros(Fl, 1, s - 2)])
         T = kron(Matrix{Fl}(I, p, p),
                 [1 1 zeros(Fl, 1, s - 1);
                  0 1 zeros(Fl, 1, s - 1);
@@ -45,11 +45,26 @@ mutable struct MultivariateBasicStructural <: StateSpaceModel
     end
 end
 
+function handle_multivariate_names(p::Int)
+    # generate \varepsilon  names
+    greek_letters_for_states = ["ε", "ξ", "ζ", "ω"]
+    names = String[]
+    # Walk the lower triangle positions
+    for letter in greek_letters_for_states, i in 1:p, j in 1:i
+        if i == j
+            push!(names, "sigma2_$(letter)$(i)")
+        else
+            push!(names, "sigma_$(letter)$(i)sigma_$(letter)$(j)")
+        end
+    end
+    return names
+end
+
 function default_filter(model::MultivariateBasicStructural)
     Fl = typeof_model_elements(model)
     steadystate_tol = Fl(1e-5)
     a1 = zeros(Fl, num_states(model))
-    P1 = 1e6 .* Matrix{Fl}(I, num_states(model), num_states(model))
+    P1 = Fl(1e6) .* Matrix{Fl}(I, num_states(model), num_states(model))
     return MultivariateKalmanFilter(size(model.system.y, 2), a1, P1, num_states(model), steadystate_tol)
 end
 function initial_hyperparameters!(model::MultivariateBasicStructural)

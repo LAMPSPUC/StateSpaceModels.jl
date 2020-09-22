@@ -1,5 +1,3 @@
-const MULTIVARIATE_INITIAL_STEADY_STATE = false
-
 """
     MultivariateKalmanState{Fl <: AbstractFloat}
 
@@ -23,7 +21,7 @@ mutable struct MultivariateKalmanState{Fl <: AbstractFloat}
         TPtt = zeros(Fl, m, m)
 
         return new{Fl}(zeros(Fl, num_series), zeros(Fl, num_series, num_series), zeros(Fl, m),
-                       a1, zeros(Fl, m, m), P1, zero(Fl), MULTIVARIATE_INITIAL_STEADY_STATE,
+                       a1, zeros(Fl, m, m), P1, zero(Fl), false,
                        P_to_check_steady_state,
                        TPtt)
     end
@@ -76,7 +74,7 @@ function reset_filter!(kf::MultivariateKalmanFilter{Fl}) where Fl
     set_state_llk_to_zero!(kf.kalman_state)
     fill!(kf.kalman_state.P_to_check_steady_state, zero(Fl))
     fill!(kf.kalman_state.TPtt, zero(Fl))
-    kf.kalman_state.steady_state = MULTIVARIATE_INITIAL_STEADY_STATE
+    kf.kalman_state.steady_state = false
     return
 end
 function set_state_llk_to_zero!(kalman_state::MultivariateKalmanState{Fl}) where Fl

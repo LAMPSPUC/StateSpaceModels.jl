@@ -216,7 +216,7 @@ function default_filter(model::ARIMA)
     num_arma_states = max(model.order.p, model.order.q + 1)
     r = model.order.d + num_arma_states
     a1 = zeros(Fl, r)
-    P1 = 1e6 .* Matrix{Fl}(I, r, r)
+    P1 = Fl(1e6) .* Matrix{Fl}(I, r, r)
     skip_llk_instants = model.order.d
     steadystate_tol = Fl(1e-5)
     return UnivariateKalmanFilter(a1, P1, skip_llk_instants, steadystate_tol)

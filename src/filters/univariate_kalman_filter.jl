@@ -1,5 +1,3 @@
-const UNIVARIATE_INITIAL_STEADY_STATE = false
-
 """
     UnivariateKalmanState{Fl <: AbstractFloat}
 
@@ -26,7 +24,7 @@ mutable struct UnivariateKalmanState{Fl <: AbstractFloat}
         TPtt = zeros(Fl, m, m)
 
         return new{Fl}(zero(Fl), zero(Fl), zeros(Fl, m),
-                       a1, zeros(Fl, m, m), P1, zero(Fl), UNIVARIATE_INITIAL_STEADY_STATE,
+                       a1, zeros(Fl, m, m), P1, zero(Fl), false,
                        P_to_check_steady_state,
                        ZP,
                        TPtt)
@@ -79,7 +77,7 @@ function reset_filter!(kf::UnivariateKalmanFilter{Fl}) where Fl
     fill!(kf.kalman_state.P_to_check_steady_state, zero(Fl))
     fill!(kf.kalman_state.ZP, zero(Fl))
     fill!(kf.kalman_state.TPtt, zero(Fl))
-    kf.kalman_state.steady_state = UNIVARIATE_INITIAL_STEADY_STATE
+    kf.kalman_state.steady_state = false
     return
 end
 function set_state_llk_to_zero!(kalman_state::UnivariateKalmanState{Fl}) where Fl
@@ -128,7 +126,7 @@ function update_a!(kalman_state::UnivariateKalmanState{Fl}, T::Matrix{Fl}, c::Ve
     return
 end
 function update_Ptt!(kalman_state::UnivariateKalmanState{Fl}) where Fl
-    LinearAlgebra.BLAS.gemm!('N', 'T', Fl(1.0), kalman_state.ZP, kalman_state.ZP, Fl(0.0), kalman_state.Ptt)
+    LinearAlgebra.BLAS.gemm!('N', 'T', one(Fl), kalman_state.ZP, kalman_state.ZP, zero(Fl), kalman_state.Ptt)
     @. kalman_state.Ptt = kalman_state.P - (kalman_state.Ptt / kalman_state.F)
     return
 end
@@ -140,21 +138,21 @@ function repeat_P_in_Ptt!(kalman_state::UnivariateKalmanState{Fl}) where Fl
 end
 function update_P!(kalman_state::UnivariateKalmanState{Fl}, T::Matrix{Fl},
                                      RQR::Matrix{Fl}) where Fl
-    LinearAlgebra.BLAS.gemm!('N', 'N', Fl(1.0), T, kalman_state.Ptt, Fl(0.0), kalman_state.TPtt)
-    LinearAlgebra.BLAS.gemm!('N', 'T', Fl(1.0), kalman_state.TPtt, T, Fl(0.0), kalman_state.P)
+    LinearAlgebra.BLAS.gemm!('N', 'N', one(Fl), T, kalman_state.Ptt, zero(Fl), kalman_state.TPtt)
+    LinearAlgebra.BLAS.gemm!('N', 'T', one(Fl), kalman_state.TPtt, T, zero(Fl), kalman_state.P)
     kalman_state.P .+= RQR
     return
 end
 function update_P!(kalman_state::UnivariateKalmanState{Fl}, T::Matrix{Fl},
                                      R::Matrix{Fl}, Q::Matrix{Fl}) where Fl
-    LinearAlgebra.BLAS.gemm!('N', 'N', Fl(1.0), T, kalman_state.Ptt, Fl(0.0), kalman_state.TPtt)
-    LinearAlgebra.BLAS.gemm!('N', 'T', Fl(1.0), kalman_state.TPtt, T, Fl(0.0), kalman_state.P)
+    LinearAlgebra.BLAS.gemm!('N', 'N', one(Fl), T, kalman_state.Ptt, zero(Fl), kalman_state.TPtt)
+    LinearAlgebra.BLAS.gemm!('N', 'T', one(Fl), kalman_state.TPtt, T, zero(Fl), kalman_state.P)
     kalman_state.P .+= R * Q * R'
     return
 end
 
 function update_llk!(kalman_state::UnivariateKalmanState{Fl}) where Fl
-    kalman_state.llk -= (HALF_LOG_2_PI + 0.5*(log(kalman_state.F) +  kalman_state.v^2 / kalman_state.F))
+    kalman_state.llk -= (HALF_LOG_2_PI + (log(kalman_state.F) +  kalman_state.v^2 / kalman_state.F)/2)
     return
 end
 

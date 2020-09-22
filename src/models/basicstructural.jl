@@ -44,33 +44,18 @@ mutable struct BasicStructural <: StateSpaceModel
     end
 end
 
-function handle_multivariate_names(p::Int)
-    # generate \varepsilon  names
-    greek_letters_for_states = ["ε", "ξ", "ζ", "ω"]
-    names = String[]
-    # Walk the lower triangle positions
-    for letter in greek_letters_for_states, i in 1:p, j in 1:i
-        if i == j
-            push!(names, "sigma2_$(letter)$(i)")
-        else
-            push!(names, "sigma_$(letter)$(i)sigma_$(letter)$(j)")
-        end
-    end
-    return names
-end
-
 function default_filter(model::BasicStructural)
     Fl = typeof_model_elements(model)
     steadystate_tol = Fl(1e-5)
     a1 = zeros(Fl, num_states(model))
-    P1 = 1e6 .* Matrix{Fl}(I, num_states(model), num_states(model))
+    P1 = Fl(1e6) .* Matrix{Fl}(I, num_states(model), num_states(model))
     return UnivariateKalmanFilter(a1, P1, num_states(model), steadystate_tol)
 end
 function initial_hyperparameters!(model::BasicStructural)
     Fl = typeof_model_elements(model)
     initial_hyperparameters = Dict{String, Fl}(
-        "sigma2_ε" => var(model.system.y),
-        "sigma2_ξ" => var(model.system.y),
+        "sigma2_ε" => one(Fl),
+        "sigma2_ξ" => one(Fl),
         "sigma2_ζ" => one(Fl),
         "sigma2_ω" => one(Fl)
     )
