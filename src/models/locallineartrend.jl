@@ -48,7 +48,7 @@ end
 
 function default_filter(model::LocalLinearTrend)
     Fl = typeof_model_elements(model)
-    steadystate_tol = 1e-5
+    steadystate_tol = Fl(1e-5)
     a1 = zeros(Fl, 2)
     P1 = Fl(1e6) .* Matrix{Fl}(I, 2, 2)
     return UnivariateKalmanFilter(a1, P1, 2, steadystate_tol)
