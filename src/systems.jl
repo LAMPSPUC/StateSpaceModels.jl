@@ -136,6 +136,9 @@ mutable struct LinearMultivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
     end
 end
 
+hasnan(y::Vector{Fl}) where Fl = findfirst(isnan, y) === nothing ? false : true
+num_states(system::LinearMultivariateTimeInvariant) = size(system.T, 1)
+
 """
 TODO
 """

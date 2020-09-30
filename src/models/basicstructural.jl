@@ -1,6 +1,6 @@
 @doc raw"""
-The basic structural state-space model consists of a trend, a slope, and a seasonal
-components. It is defined by:
+The basic structural state-space model consists of a trend (level + slope) and a seasonal
+component. It is defined by:
 ```math
 \begin{gather*}
     \begin{aligned}
@@ -19,7 +19,6 @@ mutable struct BasicStructural <: StateSpaceModel
     results::Results
 
     function BasicStructural(y::Vector{Fl}, s::Int) where Fl
-
         Z = [1; 0; 1; zeros(Fl, s - 2)]
         T = [
             1 1 zeros(Fl, 1, s - 1);
@@ -35,7 +34,7 @@ mutable struct BasicStructural <: StateSpaceModel
         c = zeros(Fl, s + 1)
         H = one(Fl)
         Q = zeros(Fl, 3, 3)
-
+        
         system = LinearUnivariateTimeInvariant{Fl}(y, Z, T, R, d, c, H, Q)
 
         names = ["sigma2_ε", "sigma2_ξ", "sigma2_ζ", "sigma2_ω"]
@@ -49,14 +48,14 @@ function default_filter(model::BasicStructural)
     Fl = typeof_model_elements(model)
     steadystate_tol = Fl(1e-5)
     a1 = zeros(Fl, num_states(model))
-    P1 = 1e6 .* Matrix{Fl}(I, num_states(model), num_states(model))
+    P1 = Fl(1e6) .* Matrix{Fl}(I, num_states(model), num_states(model))
     return UnivariateKalmanFilter(a1, P1, num_states(model), steadystate_tol)
 end
 function initial_hyperparameters!(model::BasicStructural)
     Fl = typeof_model_elements(model)
     initial_hyperparameters = Dict{String, Fl}(
-        "sigma2_ε" => var(model.system.y),
-        "sigma2_ξ" => var(model.system.y),
+        "sigma2_ε" => one(Fl),
+        "sigma2_ξ" => one(Fl),
         "sigma2_ζ" => one(Fl),
         "sigma2_ω" => one(Fl)
     )

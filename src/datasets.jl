@@ -68,3 +68,15 @@ See more on [Finland road traffic fatalities](@ref)
  * http://staff.feweb.vu.nl/koopman/projects/ckbook/OxCodeAll.zip
 """
 const VEHICLE_FATALITIES = joinpath(dirname(@__DIR__()), "datasets", "vehicle_fatalities.csv")
+
+@doc raw"""
+    FRONT_REAR_SEAT_KSI
+
+TODO - It is on Koopmaan's book on chapter 8 KSI stands for Killed or Serious Injuried
+
+# References
+ * Commandeur, Jacques J.F. & Koopman, Siem Jan, 2007. "An Introduction to State Space Time 
+    Series Analysis," OUP Catalogue, Oxford University Press (Chapter 3)
+ * http://staff.feweb.vu.nl/koopman/projects/ckbook/OxCodeAll.zip
+"""
+const FRONT_REAR_SEAT_KSI = joinpath(dirname(@__DIR__()), "datasets", "front_rear_seat.csv")
