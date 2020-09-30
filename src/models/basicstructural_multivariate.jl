@@ -39,13 +39,13 @@ mutable struct MultivariateBasicStructural <: StateSpaceModel
 
         system = LinearMultivariateTimeInvariant{Fl}(y, Z, T, R, d, c, H, Q)
 
-        names = handle_multivariate_names(p)
+        names = handle_multivariate_basicstructural_names(p)
         hyperparameters = HyperParameters{Fl}(names)
         return new(hyperparameters, system, s, Results{Fl}())
     end
 end
 
-function handle_multivariate_names(p::Int)
+function handle_multivariate_basicstructural_names(p::Int)
     # generate \varepsilon  names
     greek_letters_for_states = ["ε", "ξ", "ζ", "ω"]
     names = String[]
