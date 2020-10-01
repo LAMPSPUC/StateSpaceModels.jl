@@ -71,10 +71,10 @@ function forecast(model::StateSpaceModel, new_exogenous::Matrix{Fl};
     covariance = Vector{Matrix{Fl}}(undef, steps_ahead)
     for i in 1:steps_ahead
         if isunivariate(model)
-            expected_value[i] = [dot(model.system.Z[end - steps_ahead + i], fo.a[end - steps_ahead + i]) + 
+            expected_value[i] = [dot(model.system.Z[end - steps_ahead + i], fo.a[end - steps_ahead + i]) +
                                      model.system.d[end - steps_ahead + i]]
         else
-            expected_value[i] = model.system.Z[end - steps_ahead + i] * fo.a[end - steps_ahead + i] + 
+            expected_value[i] = model.system.Z[end - steps_ahead + i] * fo.a[end - steps_ahead + i] +
                                 model.system.d[end - steps_ahead + i]
         end
         covariance[i] = fo.F[end - steps_ahead + i]
