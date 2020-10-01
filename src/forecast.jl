@@ -3,7 +3,7 @@ export forecast, simulate
 """
     forecast(ss::StateSpace{Typ}, N::Int) where Typ
 
-Obtain the minimum mean square error forecasts N steps ahead. Returns the forecasts and the predictive distributions
+Obtain the minimum mean square error forecasts `N` steps ahead, returning the predictive distributions.
 at each time period.
 """
 function forecast(ss::StateSpace{Typ}, N::Int) where Typ
