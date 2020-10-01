@@ -3,7 +3,7 @@ export forecast, simulate
 """
     forecast(ss::StateSpace{Typ}, N::Int) where Typ
 
-Obtain the minimum mean square error forecasts N steps ahead. Returns the forecasts and the predictive distributions 
+Obtain the minimum mean square error forecasts N steps ahead. Returns the forecasts and the predictive distributions
 at each time period.
 """
 function forecast(ss::StateSpace{Typ}, N::Int) where Typ
@@ -21,36 +21,28 @@ function forecast(ss::StateSpace{Typ}, N::Int) where Typ
     c0 = ss.model.c[end, :]
     P0 = ss.filter.P[:, :, end]
     F0 = ss.filter.F[:, :, end]
-    
+
     # State and variance forecasts
     a = Matrix{Typ}(undef, N, m)
     P = Array{Typ, 3}(undef, m, m, N)
     F = Array{Typ, 3}(undef, p, p, N)
 
-    # Probability distribution
-    dist = Vector{Distribution}(undef, N)
-
-    # Initialization
+    # Probability distribution at time t=1
     a[1, :]    = T*a0 + c0
     P[:, :, 1] = T*P0*T' + R*Q*R'
     F[:, :, 1] = Z[:, :, 1]*P[:, :, 1]*Z[:, :, 1]' + H
     ensure_pos_sym!(F, 1)
-    dist[1]    = MvNormal(vec(Z[:, :, 1]*a[1, :] + d[1, :]), F[:, :, 1])
+    dist       = [MvNormal(vec(Z[:, :, 1]*a[1, :] + d[1, :]), F[:, :, 1])]
 
     for t = 2:N
         a[t, :]    = T*a[t-1, :] + c[t-1, :]
         P[:, :, t] = T*P[:, :, t-1]*T' + R*Q*R'
         F[:, :, t] = Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H
         ensure_pos_sym!(F, t)
-        dist[t]    = MvNormal(vec(Z[:, :, t]*a[t, :] + d[t, :]), F[:, :, t])
+        push!(dist, MvNormal(vec(Z[:, :, t]*a[t, :] + d[t, :]), F[:, :, t]))
     end
 
-    forec = Matrix{Typ}(undef, N, p)
-    for t = 1:N
-        forec[t, :] = mean(dist[t])
-    end
-
-    return forec, dist
+    return dist
 end
 
 """

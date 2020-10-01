@@ -128,8 +128,11 @@
 end
 
 function compare_forecast_simulation(ss::StateSpace, N::Int, S::Int, rtol::Float64)
-    sim = simulate(ss, N, S)
-    forec, dist = forecast(ss, N)
+    sim   = simulate(ss, N, S)
+    dist  = forecast(ss, N)
+    forec = mean.(dist)
 
-    @test forec ≈ mean(sim, dims = 3) rtol = rtol
+    fmat  = reduce(hcat, forec)'
+
+    @test fmat ≈ mean(sim, dims = 3) rtol = rtol
 end
