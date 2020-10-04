@@ -5,9 +5,12 @@
 The package provides a variaty of pre-defined models, fell free to contribute if you want to add one to the list.
 
 ```@docs
-LocalLevel
-LocalLinearTrend
+ARIMA
 BasicStructural
+LinearRegression
+LocalLevel
+LocalLevelCycle
+LocalLinearTrend
 MultivariateBasicStructural
 ```
 
@@ -24,6 +27,29 @@ LinearUnivariateTimeInvariant
 
 ## Hyperparameters
 
+StateSpaceModels hyperparameters are variables that are optimized when `fit!` is called.
+The packaage defines some useful getters and setters to accelerate experimentation with 
+models.
+
+The getters are
+```@docs
+get_names
+```
+
+The setters are
+```@docs
+fix_hyperparameters!
+```
+
+mappings
+```@docs
+constrain_variance!
+unconstrain_variance!
+constrain_box!
+unconstrain_box!
+constrain_identity!
+unconstrain_identity!
+```
 ## Optim interface
 
 ```@docs
