@@ -84,9 +84,6 @@ UK.
 const FRONT_REAR_SEAT_KSI = joinpath(dirname(@__DIR__()), "datasets", "front_rear_seat.csv")
 
 @doc raw"""
-    RJ_TEMPERATURE
-
-TODO - It is on Koopmaan's book on chapter 8 KSI stands for Killed or Serious Injuried
-
+TODO
 """
 const RJ_TEMPERATURE = joinpath(dirname(@__DIR__()), "datasets", "rj_temperature.csv")

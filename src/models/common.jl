@@ -59,7 +59,7 @@ end
 """
     results(model::StateSpaceModel)
 
-Query the results of the optimizaation called by `fit!`.
+Query the results of the optimization called by `fit!`.
 """
 results(model::StateSpaceModel) = model.results
 function Base.isempty(results::Results)

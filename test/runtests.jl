@@ -15,6 +15,7 @@ include("utils.jl")
 @testset "Models" begin
     include("models/locallevel.jl")
     include("models/locallineartrend.jl")
+    include("models/locallevelcycle.jl")
     include("models/basicstructural.jl")
     include("models/basicstructural_multivariate.jl")
     include("models/arima.jl")

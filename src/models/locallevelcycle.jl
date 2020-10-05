@@ -30,7 +30,7 @@ mutable struct LocalLevelCycle <: StateSpaceModel
     function LocalLevelCycle(y::Vector{Fl}) where Fl
 
         # Define system matrices
-        Z = Fl[1; 1; 0]
+        Z = Fl[1, 1, 0]
         T = Fl[
             1 0 0
             0 0 0
@@ -68,6 +68,9 @@ function initial_hyperparameters!(model::LocalLevelCycle)
         "sigma2_η" => observed_variance,
         "sigma2_ω1" => one(Fl),
         "sigma2_ω2" => one(Fl),
+        # This initial value corresponds to annual cycles 
+        # Durbin and Koopman (2012) comment possible values 
+        # in their book pp. 48
         "λ_c" => Fl(2*pi/12) 
     )
     set_initial_hyperparameters!(model, initial_hyperparameters)
@@ -79,6 +82,8 @@ function constrain_hyperparameters!(model::LocalLevelCycle)
     constrain_variance!(model, "sigma2_η")
     constrain_variance!(model, "sigma2_ω1")
     constrain_variance!(model, "sigma2_ω2")
+    # Durbin and Koopman (2012) comment possible values 
+    # in their book pp. 48
     constrain_box!(model, "λ_c", Fl(2*pi/1.5), Fl(2*pi/100))
     return
 end
@@ -88,6 +93,8 @@ function unconstrain_hyperparameters!(model::LocalLevelCycle)
     unconstrain_variance!(model, "sigma2_η")
     unconstrain_variance!(model, "sigma2_ω1")
     unconstrain_variance!(model, "sigma2_ω2")
+    # Durbin and Koopman (2012) comment possible values 
+    # in their book pp. 48
     unconstrain_box!(model, "λ_c", Fl(2*pi/1.5), Fl(2*pi/100))
     return
 end

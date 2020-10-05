@@ -28,7 +28,7 @@ LinearUnivariateTimeInvariant
 ## Hyperparameters
 
 StateSpaceModels hyperparameters are variables that are optimized when `fit!` is called.
-The packaage defines some useful getters and setters to accelerate experimentation with 
+The package defines some useful getters and setters to accelerate experimentation with 
 models.
 
 The getters are

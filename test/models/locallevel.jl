@@ -3,7 +3,7 @@
 
     @test has_fit_methods(LocalLevel)
 
-    model = StateSpaceModels.LocalLevel(nile.flow)
+    model = LocalLevel(nile.flow)
 
     # Test that getter functions throw error for model that hasn't been fitted yet
     @test_throws ErrorException get_innovations(model)
