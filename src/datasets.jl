@@ -72,7 +72,9 @@ const VEHICLE_FATALITIES = joinpath(dirname(@__DIR__()), "datasets", "vehicle_fa
 @doc raw"""
     FRONT_REAR_SEAT_KSI
 
-TODO - It is on Koopmaan's book on chapter 8 KSI stands for Killed or Serious Injuried
+The absolute path for the so called `FRONT_REAR_SEAT_KSI` dataset stored inside StateSpaceModels.jl.
+This dataset provides the log of british people killed or serious injuried in road accidents accross
+UK.
 
 # References
  * Commandeur, Jacques J.F. & Koopman, Siem Jan, 2007. "An Introduction to State Space Time 
@@ -80,3 +82,8 @@ TODO - It is on Koopmaan's book on chapter 8 KSI stands for Killed or Serious In
  * http://staff.feweb.vu.nl/koopman/projects/ckbook/OxCodeAll.zip
 """
 const FRONT_REAR_SEAT_KSI = joinpath(dirname(@__DIR__()), "datasets", "front_rear_seat.csv")
+
+@doc raw"""
+TODO
+"""
+const RJ_TEMPERATURE = joinpath(dirname(@__DIR__()), "datasets", "rj_temperature.csv")

@@ -55,6 +55,12 @@ function Results{Fl}() where Fl
         0
     )
 end
+
+"""
+    results(model::StateSpaceModel)
+
+Query the results of the optimization called by `fit!`.
+"""
 results(model::StateSpaceModel) = model.results
 function Base.isempty(results::Results)
     return isempty(results.coef_table) &&

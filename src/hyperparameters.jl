@@ -1,3 +1,6 @@
+"""
+TODO
+"""
 mutable struct HyperParameters{Fl <: AbstractFloat}
     num::Int
     names::Vector{String}
@@ -40,14 +43,17 @@ function register_unconstrained_values!(hyperparameters::HyperParameters,
     return nothing
 end
 
-#TODO same function but receiving hyperparameter
-function fill_minimizer_hyperparameter_position!(model::StateSpaceModel)
+function fill_minimizer_hyperparameter_position!(model::StateSpaceModel) 
+    fill_minimizer_hyperparameter_position!(model.hyperparameters)
+    return
+end
+function fill_minimizer_hyperparameter_position!(hyperparameters::HyperParameters)
     # Reset minimizer hyperparameter_position
-    model.hyperparameters.minimizer_hyperparameter_position = Dict{Int, String}()
+    hyperparameters.minimizer_hyperparameter_position = Dict{Int, String}()
     i = 1
-    for name in get_names(model.hyperparameters)
-        if is_free(name, model.hyperparameters)
-            model.hyperparameters.minimizer_hyperparameter_position[i] = name
+    for name in get_names(hyperparameters)
+        if is_free(name, hyperparameters)
+            hyperparameters.minimizer_hyperparameter_position[i] = name
             i += 1
         end
     end
@@ -68,8 +74,19 @@ function handle_optim_initial_hyperparameters(model::StateSpaceModel)
 end
 
 get_hyperparameters(model::StateSpaceModel) = model.hyperparameters
+
+"""
+    get_names(model::StateSpaceModel)
+
+Get the names of the hyperparameters registered on a `StateSpaceModel`.
+"""
 get_names(model::StateSpaceModel) = get_names(model.hyperparameters)
 
+"""
+    number_hyperparameters(model::StateSpaceModel)
+
+Get the number of hyperparameters registered on a `StateSpaceModel`.
+"""
 number_hyperparameters(model::StateSpaceModel) = number_hyperparameters(model.hyperparameters)
 number_hyperparameters(hyperparameters::HyperParameters) = hyperparameters.num
 
@@ -119,6 +136,15 @@ end
 
 
 """
+    set_initial_hyperparameters!(model::StateSpaceModel,
+                                 initial_hyperparameters::Dict{String, <:Real})
+
+Fill a model with user inputed initial points for hyperparameter optimzation.
+
+# Example
+```jldoctest
+julia> model = LocalLevel(rand(100));
+```
 """
 function set_initial_hyperparameters!(model::StateSpaceModel,
                                       initial_hyperparameters::Dict{String, <:Real})
@@ -144,21 +170,32 @@ function number_fixed_hyperparameters(hyperparameters::HyperParameters)
 end
 
 """
-    fix_hyperparameters!
+    fix_hyperparameters!(model::StateSpaceModel, fixed_hyperparameters::Dict)
 
 Fixes the desired hyperparameters so that they are not considered as decision variables in
 the model estimation.
+
+# Example
+```jldoctest
+julia> model = LocalLevel(rand(100));
+
+julia> get_names(model)
+2-element Array{String,1}:
+ "sigma2_ε"
+ "sigma2_η"
+
+julia> fix_hyperparameters!(model, Dict("sigma2_ε" => 15099.0))
+
+```
 """
 function fix_hyperparameters! end
 
 function fix_hyperparameters!(model::StateSpaceModel, fixed_hyperparameters::Dict)
     return fix_hyperparameters!(model.hyperparameters, fixed_hyperparameters)
 end
-
 function fix_hyperparameters!(hyperparameters::HyperParameters{Fl},
                               fixed_hyperparameters::Dict{String, Fl}) where Fl
     # assert we have these hyperparameters
-    #TODO falar qual está faltando como erro
     @assert has_hyperparameter(collect(keys(fixed_hyperparameters)), hyperparameters)
     # build dict
     hyperparameters.fixed_constrained_values = fixed_hyperparameters
@@ -180,8 +217,8 @@ Verify if `model` is fitted, i.e., returns `false` if there is at least one `NaN
 the hyperparameters.
 """
 function isfitted(model::StateSpaceModel)
-    c1 = any(x -> isnan(x), model.hyperparameters.unconstrained_values)
-    c2 = any(x -> isnan(x), model.hyperparameters.constrained_values)
+    c1 = any(isnan, model.hyperparameters.unconstrained_values)
+    c2 = any(isnan, model.hyperparameters.constrained_values)
     if c1 || c2
         return false
     else
@@ -191,7 +228,13 @@ end
 
 # Some special constraint functions
 """
-TODO
+    constrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
+
+Map a constrained hyperparameter ``\\psi \\in [lb, ub]`` to an unconstrained hyperparameter 
+``\\psi_* \\in \\mathbb{R}``.
+
+The mapping is
+``\\psi = lb + \\frac{ub - lb}{1 + \\exp{-\\psi_*}}``
 """
 function constrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
     update_constrained_value!(model, str, lb + ((ub - lb)/(1 + exp(-get_unconstrained_value(model, str)))))
@@ -199,15 +242,27 @@ function constrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) whe
 end
 
 """
-TODO
+    unconstrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
+
+Map an unconstrained hyperparameter ``\\psi_* \\in \\mathbb{R}`` to a constrained hyperparameter 
+``\\psi \\in [lb, ub]``.
+
+The mapping is
+``\\psi_* = -\\ln \\frac{ub - lb}{\\psi - lb} - 1``
 """
 function unconstrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
-    update_unconstrained_value!(model, str, -log((ub - lb)/(get_constrained_value(model, str) - lb - 1)))
+    update_unconstrained_value!(model, str, -log((ub - lb)/(get_constrained_value(model, str) - lb) - 1))
     return
 end
 
 """
-TODO
+    constrain_variance!(model::StateSpaceModel, str::String)
+
+Map a constrained hyperparameter ``\\psi \\in \\mathbb{R}^+`` to an unconstrained hyperparameter 
+``\\psi_* \\in \\mathbb{R}``.
+
+The mapping is
+``\\psi = \\psi_*^2``
 """
 function constrain_variance!(model::StateSpaceModel, str::String)
     update_constrained_value!(model, str, (get_unconstrained_value(model, str))^2)
@@ -215,7 +270,13 @@ function constrain_variance!(model::StateSpaceModel, str::String)
 end
 
 """
-TODO
+    unconstrain_variance!(model::StateSpaceModel, str::String)
+
+Map an unconstrained hyperparameter ``\\psi_* \\in \\mathbb{R}`` to a constrained hyperparameter 
+``\\psi \\in \\mathbb{R}^+``.
+
+The mapping is
+``\\psi_* = \\sqrt{\\psi_}``
 """
 function unconstrain_variance!(model::StateSpaceModel, str::String)
     update_unconstrained_value!(model, str, sqrt(get_constrained_value(model, str)))
@@ -223,7 +284,14 @@ function unconstrain_variance!(model::StateSpaceModel, str::String)
 end
 
 """
-TODO
+    constrain_identity!(model::StateSpaceModel, str::String)
+
+Map an constrained hyperparameter ``\\psi \\in \\mathbb{R}`` to an unconstrained hyperparameter 
+``\\psi_* \\in \\mathbb{R}``. This function is necessary to copy values from a location to another
+inside `HyperParameters`
+
+The mapping is
+``\\psi = \\psi_*``
 """
 function constrain_identity!(model::StateSpaceModel, str::String)
     update_constrained_value!(model, str, get_unconstrained_value(model, str))
@@ -231,7 +299,14 @@ function constrain_identity!(model::StateSpaceModel, str::String)
 end
 
 """
-TODO
+    unconstrain_identity!(model::StateSpaceModel, str::String)
+
+Map an unconstrained hyperparameter ``\\psi_* \\in \\mathbb{R}`` to a constrained hyperparameter 
+``\\psi \\in \\mathbb{R}``. This function is necessary to copy values from a location to another
+inside `HyperParameters`
+
+The mapping is
+``\\psi_* = \\psi``
 """
 function unconstrain_identity!(model::StateSpaceModel, str::String)
     update_unconstrained_value!(model, str, get_constrained_value(model, str))
