@@ -68,7 +68,6 @@ function initial_hyperparameters!(model::LocalLevelCycle)
         "sigma2_η" => observed_variance,
         "sigma2_ω1" => one(Fl),
         "sigma2_ω2" => one(Fl),
-        # This initial value corresponds to annual cycles 
         # Durbin and Koopman (2012) comment possible values 
         # in their book pp. 48
         "λ_c" => Fl(2*pi/12) 
