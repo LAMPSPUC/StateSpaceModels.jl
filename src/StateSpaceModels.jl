@@ -1,60 +1,89 @@
 module StateSpaceModels
 
-using Optim, Distributions, LinearAlgebra, StaticArrays, Dates, Printf, StatsBase
+import Base: show, length, isempty
 
-import Base: size, show
+using Distributions
+using LinearAlgebra
+using Statistics
+using Printf
+using Optim
 
-export statespace, kfas, diagnostics
+abstract type StateSpaceModel end
+
+include("datasets.jl")
+
+include("hyperparameters.jl")
+include("systems.jl")
+include("kalman_filter_and_smoother.jl")
+
+include("filters/univariate_kalman_filter.jl")
+include("filters/multivariate_kalman_filter.jl")
+include("filters/scalar_kalman_filter.jl")
+include("filters/regression_kalman_filter.jl")
+
+include("smoothers/kalman_smoother.jl")
+
+include("models/common.jl")
+include("models/locallevel.jl")
+include("models/locallevelcycle.jl")
+include("models/locallineartrend.jl")
+include("models/basicstructural.jl")
+include("models/basicstructural_multivariate.jl")
+include("models/arima.jl")
+include("models/linear_regression.jl")
 
 include("prints.jl")
-include("structures.jl")
-include("utils.jl")
-include("model_unknowns.jl")
-include("models.jl")
-include("estimation.jl")
-include("opt_methods.jl")
-include("kalman_utils.jl")
-include("univariate_kalman.jl")
-include("kalman.jl")
-include("sqrt_kalman.jl")
+include("optimizers.jl")
+include("fit.jl")
 include("forecast.jl")
-include("diagnostics.jl")
 
-"""
-    statespace(model; filter_type = KalmanFilter, opt_method = LBFGS(), verbose = 1)
+# Exported types and structs
+export ARIMA
+export BasicStructural
+export LinearMultivariateTimeInvariant
+export LinearMultivariateTimeVariant
+export LinearRegression
+export LinearUnivariateTimeInvariant
+export LinearUnivariateTimeVariant
+export LocalLevel
+export LocalLevelCycle
+export LocalLinearTrend
+export MultivariateBasicStructural
+export Optimizer
+export ScalarKalmanFilter
+export UnivariateKalmanFilter
 
-Estimate the pre-specified state-space model. The function will only estimate the entries that are declared `NaN`. If there are no NaNs in the `model` it will
-only perform the filter and smoother computations.
-"""
-function statespace(model::StateSpaceModel{T}; filter_type::DataType = KalmanFilter{T}, 
-                    opt_method::AbstractOptimizationMethod = LBFGS(model, 3), verbose::Int = 1) where T
+# Exported functions
+export constrain_box!
+export constrain_identity!
+export constrain_variance!
+export fit!
+export fix_hyperparameters!
+export forecast
+export forecast_expected_value
+export get_constrained_value
+export get_filtered_state
+export get_filtered_variance
+export get_hyperparameters
+export get_innovations
+export get_innovation_variance
+export get_names
+export get_predictive_state
+export get_predictive_variance
+export get_smoothed_state
+export get_smoothed_variance
+export has_fit_methods
+export isfitted
+export isunivariate
+export kalman_filter
+export kalman_smoother
+export loglike
+export results
+export set_initial_hyperparameters!
+export simulate
+export simulate_scenarios
+export unconstrain_box!
+export unconstrain_identity!
+export unconstrain_variance!
 
-    if !(verbose in [0, 1, 2, 3])
-        @warn("Incorrect verbose value input (should be 0, 1, 2 or 3): switching to default value 1")
-        verbose = 1
-    end
-
-    print_header(verbose)
-
-    # Maximum likelihood estimation
-    estimate_statespace!(model, filter_type, opt_method; verbose = verbose)
-
-    # Kalman filter and smoothing
-    filter_output, smoothed_state = kfas(model, filter_type)
-
-    print_bottom(verbose)
-
-    return StateSpace{T}(model, filter_output, smoothed_state, filter_type, opt_method)
 end
-
-"""
-    kfas(model::StateSpaceModel{T}, filter_type::DataType) where T
-
-Perform Kalman filter and smoother according to the chosen `filter_type`.
-"""
-function kfas(model::StateSpaceModel{T}, filter_type::DataType) where T
-    error(filter_type , " not implemented") # Returns an error if it cannot
-                                            # find a specialized kfas
-end
-
-end # end module

@@ -1,134 +1,109 @@
-export forecast, simulate
+mutable struct Forecast{Fl}
+    expected_value::Vector{Vector{Fl}}
+    covariance::Vector{Matrix{Fl}}
+end
 
-"""
-    forecast(ss::StateSpace{Typ}, N::Int) where Typ
-
-Obtain the minimum mean square error forecasts N steps ahead. Returns the forecasts and the predictive distributions 
-at each time period.
-"""
-function forecast(ss::StateSpace{Typ}, N::Int) where Typ
-
-    # Load estimated covariance matrices
-    H = ss.model.H
-    Q = ss.model.Q
-
-    # Load system
-    n, p, m, r    = size(ss.model)
-    Z, T, R, d, c = prepare_forecast(ss, N)
-
-    # Load a, c, P, and F at last in-sample instant
-    a0 = ss.smoother.alpha[end, :]
-    c0 = ss.model.c[end, :]
-    P0 = ss.filter.P[:, :, end]
-    F0 = ss.filter.F[:, :, end]
-    
-    # State and variance forecasts
-    a = Matrix{Typ}(undef, N, m)
-    P = Array{Typ, 3}(undef, m, m, N)
-    F = Array{Typ, 3}(undef, p, p, N)
-
-    # Probability distribution
-    dist = Vector{Distribution}(undef, N)
-
-    # Initialization
-    a[1, :]    = T*a0 + c0
-    P[:, :, 1] = T*P0*T' + R*Q*R'
-    F[:, :, 1] = Z[:, :, 1]*P[:, :, 1]*Z[:, :, 1]' + H
-    ensure_pos_sym!(F, 1)
-    dist[1]    = MvNormal(vec(Z[:, :, 1]*a[1, :] + d[1, :]), F[:, :, 1])
-
-    for t = 2:N
-        a[t, :]    = T*a[t-1, :] + c[t-1, :]
-        P[:, :, t] = T*P[:, :, t-1]*T' + R*Q*R'
-        F[:, :, t] = Z[:, :, t]*P[:, :, t]*Z[:, :, t]' + H
-        ensure_pos_sym!(F, t)
-        dist[t]    = MvNormal(vec(Z[:, :, t]*a[t, :] + d[t, :]), F[:, :, t])
-    end
-
-    forec = Matrix{Typ}(undef, N, p)
-    for t = 1:N
-        forec[t, :] = mean(dist[t])
-    end
-
-    return forec, dist
+function forecast_expected_value(forec::Forecast)
+    return permutedims(cat(forec.expected_value...; dims = 2))
 end
 
 """
-    simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ
+    forecast(model::StateSpaceModel, steps_ahead::Int; kwargs...)
+    forecast(model::StateSpaceModel, exogenous::Matrix{Fl}; kwargs...) where {Fl}
 
-Simulate S future scenarios up to N steps ahead. Returns a p x N x S matrix where the dimensions represent, respectively,
-the number of series in the model, the number of steps ahead, and the number of scenarios.
+Forecast the mean and covariance for future observations from a StateSpaceModel (SSM).
 """
-function simulate(ss::StateSpace{Typ}, N::Int, S::Int) where Typ
+function forecast end
 
-    # Load estimated covariance matrices
-    H = ss.model.H
-    Q = ss.model.Q
-
-    # Load system
-    n, p, m, r    = size(ss.model)
-    Z, T, R, d, c = prepare_forecast(ss, N)
-
-    # Distribution of the state space errors
-    dist_ϵ = MvNormal(H)
-    dist_η = MvNormal(Q)
-
-    αsim = Array{Typ, 3}(undef, N, m, S)
-    ysim = Array{Typ, 3}(undef, N, p, S)
-
-    for s = 1:S
-
-        # Sampling errors
-        ϵ = rand(dist_ϵ, N)'
-        η = rand(dist_η, N)'
-
-        # Initializing simulation
-        αsim[1, :, s] = T*ss.smoother.alpha[n, :] + c[1, :] + R*η[1, :]
-        ysim[1, :, s] = Z[:, :, 1]*αsim[1, :, s] + d[1, :] + ϵ[1, :]
-
-        # Simulating future scenarios
-        for t = 2:N
-            αsim[t, :, s] = T*αsim[t-1, :, s] + c[t-1, :] + R*η[t, :]
-            ysim[t, :, s] = Z[:, :, t]*αsim[t, :, s] + d[t, :] + ϵ[t, :]
-        end
+function forecast(model::StateSpaceModel, steps_ahead::Int;
+                  filter::KalmanFilter = default_filter(model))
+    if has_exogenous(model)
+        error("The model has exogenous variables, you should use the" *
+              "forecast(model::SSM, exogenous::Matrix{Fl}; kwargs...) method")
     end
+    # Query the type of model elements
+    Fl = typeof_model_elements(model)
+    # Observations to forecast
+    forecasting_y = isunivariate(model) ? [model.system.y; fill(NaN, steps_ahead)] :
+                                          [model.system.y; fill(NaN, steps_ahead, size(model.system.y, 2))]
+    # Copy hyperparameters
+    model_hyperparameters = deepcopy(model.hyperparameters)
+    # Instantiate a new model
+    forecasting_model = reinstantiate(model, forecasting_y)
+    # Associate with the model hyperparameters
+    forecasting_model.hyperparameters = model_hyperparameters
+    # Perform the kalman filter
+    fo = kalman_filter(forecasting_model)
+    # fill forecast matrices
+    expected_value = Vector{Vector{Fl}}(undef, steps_ahead)
+    covariance = Vector{Matrix{Fl}}(undef, steps_ahead)
+    for i in 1:steps_ahead
+        if isunivariate(model)
+            expected_value[i] = [dot(model.system.Z, fo.a[end - steps_ahead + i]) + model.system.d]
+        else
+            expected_value[i] = model.system.Z * fo.a[end - steps_ahead + i] .+ model.system.d
+        end
+        covariance[i] = fo.F[end - steps_ahead + i]
+    end
+    return Forecast{Fl}(expected_value, covariance)
+end
 
-    return ysim
+function forecast(model::StateSpaceModel, new_exogenous::Matrix{Fl};
+                  filter::KalmanFilter = default_filter(model)) where {Fl}
+    if !has_exogenous(model)
+        error("The model does not support exogenous variables, you should use the" *
+              "forecast(model::SSM, steps_ahead::Int; kwargs...) where SSM")
+    end
+    steps_ahead = size(new_exogenous, 1)
+    forecasting_y = isunivariate(model) ? [model.system.y; fill(NaN, steps_ahead)] :
+                                          [model.system.y; fill(NaN, steps_ahead, size(model.system.y, 2))]
+    forecasting_X = [model.exogenous; new_exogenous]
+    # Copy hyperparameters
+    model_hyperparameters = deepcopy(model.hyperparameters)
+    # Instantiate a new model
+    forecasting_model = reinstantiate(model, forecasting_y, forecasting_X)
+    # Associate with the model hyperparameters
+    forecasting_model.hyperparameters = model_hyperparameters
+    # Perform the kalman filter
+    fo = kalman_filter(forecasting_model)
+    # fill forecast matrices
+    expected_value = Vector{Vector{Fl}}(undef, steps_ahead)
+    covariance = Vector{Matrix{Fl}}(undef, steps_ahead)
+    for i in 1:steps_ahead
+        if isunivariate(model)
+            expected_value[i] = [dot(model.system.Z[end - steps_ahead + i], fo.a[end - steps_ahead + i]) +
+                                     model.system.d[end - steps_ahead + i]]
+        else
+            expected_value[i] = model.system.Z[end - steps_ahead + i] * fo.a[end - steps_ahead + i] +
+                                model.system.d[end - steps_ahead + i]
+        end
+        covariance[i] = fo.F[end - steps_ahead + i]
+    end
+    return Forecast{Fl}(expected_value, covariance)
 end
 
 """
-    prepare_forecast(ss::StateSpace{Typ}, N::Int) where Typ
+    simulate_scenarios(
+        model::StateSpaceModel, steps_ahead::Int, n_scenarios::Int;
+        filter::KalmanFilter=default_filter(model)
+    ) -> Array{<:AbstractFloat, 3}
 
-Adjust matrix Z for forecasting and check for dimension errors.
+Samples `n_scenarios` future scenarios via Monte Carlo simulation for `steps_ahead`
+using the desired `filter`.
 """
-function prepare_forecast(ss::StateSpace{Typ}, N::Int) where Typ
+function simulate_scenarios(
+    model::StateSpaceModel, steps_ahead::Int, n_scenarios::Int;
+    filter::KalmanFilter=default_filter(model)
+)
+    # Query the type of model elements
+    Fl = typeof_model_elements(model)
+    fo = kalman_filter(model)
+    last_state = fo.a[end]
+    num_series = size(model.system.y, 2)
 
-    # Load system
-    n, p, m, r = size(ss.model)
-    Z0, T, R   = ztr(ss.model)
-    d0 = ss.model.d
-    c0 = ss.model.c
-
-    Z = Array{Typ, 3}(undef, p, m, N)
-    d = Matrix{Typ}(undef, N, p)
-    c = Matrix{Typ}(undef, N, m)
-    if ss.model.mode == "time-invariant"
-        for t in 1:N, i in 1:p, j in 1:m
-            Z[i, j, t] = Z0[i, j, 1]
-            d[t, i] = d0[1, i]
-            c[t, j] = c0[1, j]
-        end
-    else
-        size(Z0, 3) < n + N && error("Time-variant Z too short for forecasting $N steps ahead")
-        size(d0, 1) < n + N && error("Time-variant d too short for forecasting $N steps ahead")
-        size(c0, 1) < n + N && error("Time-variant c too short for forecasting $N steps ahead")
-
-        for t in n + 1:n + N, i in 1:p, j in 1:m
-            Z[i, j, t - n] = Z0[i, j, t]
-            d[t - n, i] = d0[t, i]
-            c[t - n, j] = c0[t, j]
-        end
+    scenarios = Array{Fl, 3}(undef, steps_ahead, num_series, n_scenarios)
+    for s in 1:n_scenarios
+        scenarios[:, :, s] = simulate(model.system, last_state, steps_ahead)
     end
-
-    return Z, T, R, d, c
+    return scenarios
 end

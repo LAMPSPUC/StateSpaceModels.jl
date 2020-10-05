@@ -1,3 +1,9 @@
+[build-img]: https://travis-ci.com/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
+[build-url]: https://travis-ci.com/LAMPSPUC/StateSpaceModels.jl
+
+[codecov-img]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl/coverage.svg?branch=master
+[codecov-url]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl?branch=master
+
 # StateSpaceModels.jl
 
 | **Build Status** | **Coverage** | **Documentation** |
@@ -15,61 +21,26 @@ pkg> add StateSpaceModels
 
 ## Features
 
-Current features:
+Current features include:
 * Kalman filter and smoother
-* Square-root filter and smoother
 * Maximum likelihood estimation
-* Forecasting
-* Monte Carlo simulation
-* Multivariate modeling
-* User-defined models (input any `Z`, `T`, and `R`)
+* Forecasting and Monte Carlo simulation
+* User-defined models (user specifies the state-space system)
 * Several predefined models, including:
-  1. Basic structural model (trend, slope, seasonal)
-  2. Structural model with exogenous variables
-  3. Linear trend model
-  4. Local level model
+  * Basic structural model (trend, slope, seasonal)
+  * Linear trend model
+  * Local level model
+  * ARIMA
 * Completion of missing values
-* Diagnostics for the residuals, including:
-  1. Jarque-Bera test
-  2. Ljung-Box test
-  3. Homoscedasticity test
-
-Planned features:
-* Univariate treatment of multivariate models
-
-[build-img]: https://travis-ci.com/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
-[build-url]: https://travis-ci.com/LAMPSPUC/StateSpaceModels.jl
-
-[codecov-img]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl/coverage.svg?branch=master
-[codecov-url]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl?branch=master
+* Diagnostics for the residuals of fitted models
 
 ## Citing StateSpaceModels.jl
 
-If you use StateSpaceModels.jl in your work, we kindly ask you to cite the following paper ([pdf](https://arxiv.org/pdf/1908.01757.pdf)):
+If you use StateSpaceModels.jl in your work, we kindly ask you to cite the [following paper](https://arxiv.org/abs/1908.01757):
 
     @article{SaavedraBodinSouto2019,
-    title={StateSpaceModels.jl: a Julia Package for Time-Series Analysis in a State-Space Framework},
-    author={Raphael Saavedra and Guilherme Bodin and Mario Souto},
-    journal={arXiv preprint arXiv:1908.01757},
-    year={2019}
+      title={StateSpaceModels.jl: a Julia Package for Time-Series Analysis in a State-Space Framework},
+      author={Raphael Saavedra and Guilherme Bodin and Mario Souto},
+      journal={arXiv preprint arXiv:1908.01757},
+      year={2019}
     }
-
-## Examples
-
-### Nile
-
-These plots were generated in the [Nile river](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Nile-river-annual-flow-1) example.
-
-![Nile filtered state](./docs/src/assets/nile_filtered_state.png)
-
-### Airline passengers
-
-These plots were generated in the [Airline passengers](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Air-Passengers-1) example.
-
-![Airline passengers](./docs/src/assets/logap_components.png)
-
-### Vehicle tracking
-
-This gif was generated in the [Vehicle tracking](https://lampspuc.github.io/StateSpaceModels.jl/latest/examples/#Vehicle-tracking-1) example.
-
-![Vehicle tracking](./docs/src/assets/vehicle_tracking.gif)

@@ -1,14 +1,31 @@
-using Test, StateSpaceModels, Statistics, CSV, LinearAlgebra, Random, Distributions
+using CSV
+using DataFrames
+using Documenter
+using LinearAlgebra
+using StateSpaceModels
+using Statistics
+using Test
 
-const SSM = StateSpaceModels
+# Set up to run docstrings with jldoctest
+DocMeta.setdocmeta!(StateSpaceModels, :DocTestSetup, :(using StateSpaceModels); recursive=true)
 
-# Run tests
-include("test_utils.jl")
-include("test_userdefined.jl")
-include("test_locallevel.jl")
-include("test_lineartrend.jl")
-include("test_structural.jl")
-include("test_regression.jl")
-include("test_simulate.jl")
-include("test_opt_methods.jl")
-include("test_results.jl")
+# Functions that are used in different tests
+include("utils.jl")
+
+@testset "Models" begin
+    include("models/locallevel.jl")
+    include("models/locallineartrend.jl")
+    include("models/locallevelcycle.jl")
+    include("models/basicstructural.jl")
+    include("models/basicstructural_multivariate.jl")
+    include("models/arima.jl")
+    include("models/linear_regression.jl")
+end
+
+@testset "Systems" begin
+    include("systems.jl")
+end
+
+@testset "Documentation examples" begin
+    doctest(StateSpaceModels)
+end

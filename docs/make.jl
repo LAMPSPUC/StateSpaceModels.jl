@@ -1,17 +1,20 @@
-using Documenter, StateSpaceModels
+using Documenter
+using StateSpaceModels
+
+# Set up to run docstrings with jldoctest
+DocMeta.setdocmeta!(StateSpaceModels, :DocTestSetup, :(using StateSpaceModels); recursive=true)
 
 makedocs(
     modules = [StateSpaceModels],
-    doctest  = false,
+    doctest  = true,
     clean    = true,
-    format   = Documenter.HTML(mathengine = Documenter.MathJax()),
+    format   = Documenter.HTML(),
     sitename = "StateSpaceModels.jl",
     authors = "Raphael Saavedra, Guilherme Bodin, and Mario Souto",
     pages = [
         "Home" => "index.md",
         "manual.md",
-        "examples.md",
-        "reference.md"
+        "examples.md"
     ]
 )
 

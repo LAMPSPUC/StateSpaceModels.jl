@@ -1,45 +1,31 @@
+```@raw html
+<div style="width:100%; height:150px;border-width:1px;border-style:solid;padding-top:25px;
+        border-color:#000;border-radius:10px;text-align:center;background-color:#209cee;
+        color:#FFF">
+    <h3 style="color:white">Star us on GitHub!</h3>
+    <a class="github-button" href="https://github.com/LAMPSPUC/StateSpaceModels.jl" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star LAMPSPUC/StateSpaceModels.jl on GitHub" style="margin:auto">Star</a>
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+</div>
+```
+
 # StateSpaceModels.jl Documentation
 
 StateSpaceModels.jl is a package for modeling, forecasting, and simulating time series in a state-space framework. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by James Durbin and Siem Jan Koopman. The notation of the variables in the code also follows the book.
 
 ## Installation
 
-This package is registered in METADATA so you can `Pkg.add` it as follows:
+This package is registered so you can `Pkg.add` it as follows:
 ```julia
 pkg> add StateSpaceModels
 ```
-
-## Features
-
-Current features:
-* Kalman filter and smoother
-* Square-root filter and smoother
-* Maximum likelihood estimation
-* Forecasting
-* Monte Carlo simulation
-* Multivariate modeling
-* User-defined models (input any `Z`, `T`, and `R`)
-* Several predefined models, including:
-  1. Basic structural model (trend, slope, seasonal)
-  2. Structural model with exogenous variables
-  3. Linear trend model
-  4. Local level model
-* Completion of missing values
-* Diagnostics for the residuals, including:
-  1. Jarque-Bera test
-  2. Ljung-Box test
-  3. Homoscedasticity test
-
-Planned features:
-* Univariate treatment of multivariate models
 
 ## Citing StateSpaceModels.jl
 
 If you use StateSpaceModels.jl in your work, we kindly ask you to cite the following paper ([pdf](https://arxiv.org/pdf/1908.01757.pdf)):
 
-    @article{SaavedraBodinSouto2019,
-    title={StateSpaceModels.jl: a Julia Package for Time-Series Analysis in a State-Space Framework},
-    author={Raphael Saavedra and Guilherme Bodin and Mario Souto},
-    journal={arXiv preprint arXiv:1908.01757},
-    year={2019}
-    }
+@article{SaavedraBodinSouto2019,
+title={StateSpaceModels.jl: a Julia Package for Time-Series Analysis in a State-Space Framework},
+author={Raphael Saavedra and Guilherme Bodin and Mario Souto},
+journal={arXiv preprint arXiv:1908.01757},
+year={2019}
+}
