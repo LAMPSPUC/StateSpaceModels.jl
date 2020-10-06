@@ -4,7 +4,7 @@
     log_air_passengers = log.(air_passengers.passengers)
 
     @test has_fit_methods(BasicStructural)
-  
+
     model = BasicStructural(log_air_passengers, 12)
     fit!(model)
     # Runned on Python statsmodels

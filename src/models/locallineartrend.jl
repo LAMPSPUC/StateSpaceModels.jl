@@ -28,7 +28,6 @@ mutable struct LocalLinearTrend <: StateSpaceModel
     results::Results
 
     function LocalLinearTrend(y::Vector{Fl}) where Fl
-
         Z = Fl.([1.0; 0.0])
         T = Fl.([1 1; 0 1])
         R = Fl.([1 0; 0 1])
@@ -53,35 +52,41 @@ function default_filter(model::LocalLinearTrend)
     P1 = Fl(1e6) .* Matrix{Fl}(I, 2, 2)
     return UnivariateKalmanFilter(a1, P1, 2, steadystate_tol)
 end
+
 function initial_hyperparameters!(model::LocalLinearTrend)
     Fl = typeof_model_elements(model)
-    initial_hyperparameters = Dict{String, Fl}(
+    initial_hyperparameters = Dict{String,Fl}(
         "sigma2_ε" => var(model.system.y),
         "sigma2_ξ" => var(model.system.y),
-        "sigma2_ζ" => one(Fl)
+        "sigma2_ζ" => one(Fl),
     )
     set_initial_hyperparameters!(model, initial_hyperparameters)
-    return
+    return model
 end
+
 function constrain_hyperparameters!(model::LocalLinearTrend)
     constrain_variance!(model, "sigma2_ε")
     constrain_variance!(model, "sigma2_ξ")
     constrain_variance!(model, "sigma2_ζ")
-    return
+    return model
 end
+
 function unconstrain_hyperparameters!(model::LocalLinearTrend)
     unconstrain_variance!(model, "sigma2_ε")
     unconstrain_variance!(model, "sigma2_ξ")
     unconstrain_variance!(model, "sigma2_ζ")
-    return
+    return model
 end
+
 function fill_model_system!(model::LocalLinearTrend)
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_ξ")
     model.system.Q[end] = get_constrained_value(model, "sigma2_ζ")
-    return
+    return model
 end
+
 function reinstantiate(::LocalLinearTrend, y::Vector{Fl}) where Fl
     return LocalLinearTrend(y)
 end
+
 has_exogenous(::LocalLinearTrend) = false

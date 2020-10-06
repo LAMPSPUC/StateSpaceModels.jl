@@ -7,7 +7,9 @@ using Statistics
 using Test
 
 # Set up to run docstrings with jldoctest
-DocMeta.setdocmeta!(StateSpaceModels, :DocTestSetup, :(using StateSpaceModels); recursive=true)
+DocMeta.setdocmeta!(
+    StateSpaceModels, :DocTestSetup, :(using StateSpaceModels); recursive=true
+)
 
 # Functions that are used in different tests
 include("utils.jl")

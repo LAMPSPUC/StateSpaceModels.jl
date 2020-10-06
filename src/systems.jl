@@ -31,7 +31,7 @@ where:
 * ``H`` is a scalar
 * ``Q`` is a ``r \times r`` matrix
 """
-mutable struct LinearUnivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
+mutable struct LinearUnivariateTimeInvariant{Fl<:Real} <: StateSpaceSystem
     y::Vector{Fl}
     Z::Vector{Fl}
     T::Matrix{Fl}
@@ -41,19 +41,25 @@ mutable struct LinearUnivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
     H::Fl
     Q::Matrix{Fl}
 
-    function LinearUnivariateTimeInvariant{Fl}(y::Vector{Fl}, Z::Vector{Fl},
-                                               T::Matrix{Fl}, R::Matrix{Fl},
-                                               d::Fl, c::Vector{Fl}, H::Fl,
-                                               Q::Matrix{Fl}) where Fl
-
-        mz       = length(Z)
+    function LinearUnivariateTimeInvariant{Fl}(
+        y::Vector{Fl},
+        Z::Vector{Fl},
+        T::Matrix{Fl},
+        R::Matrix{Fl},
+        d::Fl,
+        c::Vector{Fl},
+        H::Fl,
+        Q::Matrix{Fl},
+    ) where Fl
+        mz = length(Z)
         mt1, mt2 = size(T)
-        mr, rr   = size(R)
-        mc       = length(c)
+        mr, rr = size(R)
+        mc = length(c)
         rq1, rq2 = size(Q)
 
-        dim_str = "Z is $(mz)x1, T is $(mt1)x$(mt2), R is $(mr)x$(rr), " *
-                  "d is a scalar, c is $(mc)x1, H is a scalar."
+        dim_str =
+            "Z is $(mz)x1, T is $(mt1)x$(mt2), R is $(mr)x$(rr), " *
+            "d is a scalar, c is $(mc)x1, H is a scalar."
 
         !(mz == mt1 == mt2 == mr == mc) && throw(DimensionMismatch(dim_str))
         !(rr == rq1 == rq2) && throw(DimensionMismatch(dim_str))
@@ -89,7 +95,7 @@ where:
 * ``H_{t}`` is a scalar
 * ``Q_{t}`` is a ``r \times r`` matrix
 """
-mutable struct LinearUnivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
+mutable struct LinearUnivariateTimeVariant{Fl<:Real} <: StateSpaceSystem
     y::Vector{Fl}
     Z::Vector{Vector{Fl}}
     T::Vector{Matrix{Fl}}
@@ -99,10 +105,16 @@ mutable struct LinearUnivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
     H::Vector{Fl}
     Q::Vector{Matrix{Fl}}
 
-    function LinearUnivariateTimeVariant{Fl}(y::Vector{Fl}, Z::Vector{Vector{Fl}},
-                                             T::Vector{Matrix{Fl}}, R::Vector{Matrix{Fl}},
-                                             d::Vector{Fl}, c::Vector{Vector{Fl}},
-                                             H::Vector{Fl}, Q::Vector{Matrix{Fl}}) where Fl
+    function LinearUnivariateTimeVariant{Fl}(
+        y::Vector{Fl},
+        Z::Vector{Vector{Fl}},
+        T::Vector{Matrix{Fl}},
+        R::Vector{Matrix{Fl}},
+        d::Vector{Fl},
+        c::Vector{Vector{Fl}},
+        H::Vector{Fl},
+        Q::Vector{Matrix{Fl}},
+    ) where Fl
 
         # TODO assert dimensions
 
@@ -115,7 +127,7 @@ num_states(system::LinearUnivariateTimeVariant) = size(system.T[1], 1)
 """
 TODO
 """
-mutable struct LinearMultivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
+mutable struct LinearMultivariateTimeInvariant{Fl<:Real} <: StateSpaceSystem
     y::Matrix{Fl}
     Z::Matrix{Fl}
     T::Matrix{Fl}
@@ -125,10 +137,16 @@ mutable struct LinearMultivariateTimeInvariant{Fl <: Real} <: StateSpaceSystem
     H::Matrix{Fl}
     Q::Matrix{Fl}
 
-    function LinearMultivariateTimeInvariant{Fl}(y::Matrix{Fl}, Z::Matrix{Fl},
-                                                 T::Matrix{Fl}, R::Matrix{Fl},
-                                                 d::Vector{Fl}, c::Vector{Fl}, H::Matrix{Fl},
-                                                 Q::Matrix{Fl}) where Fl
+    function LinearMultivariateTimeInvariant{Fl}(
+        y::Matrix{Fl},
+        Z::Matrix{Fl},
+        T::Matrix{Fl},
+        R::Matrix{Fl},
+        d::Vector{Fl},
+        c::Vector{Fl},
+        H::Matrix{Fl},
+        Q::Matrix{Fl},
+    ) where Fl
 
         # TODO assert dimensions
 
@@ -142,7 +160,7 @@ num_states(system::LinearMultivariateTimeInvariant) = size(system.T, 1)
 """
 TODO
 """
-mutable struct LinearMultivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
+mutable struct LinearMultivariateTimeVariant{Fl<:Real} <: StateSpaceSystem
     y::Matrix{Fl}
     Z::Vector{Matrix{Fl}}
     T::Vector{Matrix{Fl}}
@@ -152,10 +170,16 @@ mutable struct LinearMultivariateTimeVariant{Fl <: Real} <: StateSpaceSystem
     H::Vector{Matrix{Fl}}
     Q::Vector{Matrix{Fl}}
 
-    function LinearMultivariateTimeVariant{Fl}(y::Matrix{Fl}, Z::Vector{Matrix{Fl}},
-                                                   T::Vector{Matrix{Fl}}, R::Vector{Matrix{Fl}},
-                                                   d::Vector{Vector{Fl}}, c::Vector{Vector{Fl}},
-                                                   H::Vector{Matrix{Fl}}, Q::Vector{Matrix{Fl}}) where Fl
+    function LinearMultivariateTimeVariant{Fl}(
+        y::Matrix{Fl},
+        Z::Vector{Matrix{Fl}},
+        T::Vector{Matrix{Fl}},
+        R::Vector{Matrix{Fl}},
+        d::Vector{Vector{Fl}},
+        c::Vector{Vector{Fl}},
+        H::Vector{Matrix{Fl}},
+        Q::Vector{Matrix{Fl}},
+    ) where Fl
 
         # TODO assert dimensions
 
@@ -247,25 +271,26 @@ end
 to_multivariate_time_variant(system::LinearMultivariateTimeVariant) = system
 
 # Functions for simulations
-function simulate(sys::LinearUnivariateTimeInvariant{Fl},
-                  initial_state::Vector{Fl},
-                  n::Int;
-                  return_simulated_states::Bool=false) where Fl
-
+function simulate(
+    sys::LinearUnivariateTimeInvariant{Fl},
+    initial_state::Vector{Fl},
+    n::Int;
+    return_simulated_states::Bool=false,
+) where Fl
     m = size(sys.T, 1)
     y = Vector{Fl}(undef, n)
     alpha = Matrix{Fl}(undef, n + 1, m)
     # Sampling errors
-    chol_H     = sqrt(sys.H)
-    chol_Q     = cholesky(sys.Q)
+    chol_H = sqrt(sys.H)
+    chol_Q = cholesky(sys.Q)
     standard_ε = randn(n)
     standard_η = randn(n + 1, size(sys.Q, 1))
 
     # The first state of the simulation is the update of a_0
     alpha[1, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[1, :]
     # Simulate scenarios
-    for t = 1:n
-        y[t]            = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
+    for t in 1:n
+        y[t] = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
         alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
     end
 
