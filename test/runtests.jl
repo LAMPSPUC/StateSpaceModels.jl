@@ -1,15 +1,9 @@
 using CSV
 using DataFrames
-using Documenter
 using LinearAlgebra
 using StateSpaceModels
 using Statistics
 using Test
-
-# Set up to run docstrings with jldoctest
-DocMeta.setdocmeta!(
-    StateSpaceModels, :DocTestSetup, :(using StateSpaceModels); recursive=true
-)
 
 # Functions that are used in different tests
 include("utils.jl")
@@ -26,8 +20,4 @@ end
 
 @testset "Systems" begin
     include("systems.jl")
-end
-
-@testset "Documentation examples" begin
-    doctest(StateSpaceModels)
 end
