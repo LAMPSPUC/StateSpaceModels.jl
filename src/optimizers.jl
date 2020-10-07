@@ -8,7 +8,8 @@ Users can choose among all suitable Optimizers in Optim.jl using very similar sy
 ```@jldoctest
 julia> using Optim
 
-julia> opt = Optimizer(Optim.LBFGS(), Optim.Options(show_trace = true)); # ; to hide the big log on the repl
+# use a semicolon to avoid displaying the big log
+julia> opt = Optimizer(Optim.LBFGS(), Optim.Options(show_trace = true));
 ```
 """
 mutable struct Optimizer
