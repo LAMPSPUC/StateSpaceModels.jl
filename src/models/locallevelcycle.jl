@@ -60,43 +60,45 @@ function default_filter(model::LocalLevelCycle)
     steadystate_tol = Fl(1e-5)
     return UnivariateKalmanFilter(a1, P1, num_states(model), steadystate_tol)
 end
+
 function initial_hyperparameters!(model::LocalLevelCycle)
     Fl = typeof_model_elements(model)
     observed_variance = var(model.system.y[findall(!isnan, model.system.y)])
-    initial_hyperparameters = Dict{String, Fl}(
+    initial_hyperparameters = Dict{String,Fl}(
         "sigma2_ε" => observed_variance,
         "sigma2_η" => observed_variance,
         "sigma2_ω1" => one(Fl),
         "sigma2_ω2" => one(Fl),
-        # Durbin and Koopman (2012) comment possible values 
+        # Durbin and Koopman (2012) comment possible values
         # in their book pp. 48
-        "λ_c" => Fl(2*pi/12) 
+        "λ_c" => Fl(2 * pi / 12),
     )
     set_initial_hyperparameters!(model, initial_hyperparameters)
-    return
+    return model
 end
+
 function constrain_hyperparameters!(model::LocalLevelCycle)
     Fl = typeof_model_elements(model)
     constrain_variance!(model, "sigma2_ε")
     constrain_variance!(model, "sigma2_η")
     constrain_variance!(model, "sigma2_ω1")
     constrain_variance!(model, "sigma2_ω2")
-    # Durbin and Koopman (2012) comment possible values 
-    # in their book pp. 48
-    constrain_box!(model, "λ_c", Fl(2*pi/1.5), Fl(2*pi/100))
-    return
+    # Durbin and Koopman (2012) comment possible values in their book pp. 48
+    constrain_box!(model, "λ_c", Fl(2 * pi / 1.5), Fl(2 * pi / 100))
+    return model
 end
+
 function unconstrain_hyperparameters!(model::LocalLevelCycle)
     Fl = typeof_model_elements(model)
     unconstrain_variance!(model, "sigma2_ε")
     unconstrain_variance!(model, "sigma2_η")
     unconstrain_variance!(model, "sigma2_ω1")
     unconstrain_variance!(model, "sigma2_ω2")
-    # Durbin and Koopman (2012) comment possible values 
-    # in their book pp. 48
-    unconstrain_box!(model, "λ_c", Fl(2*pi/1.5), Fl(2*pi/100))
-    return
+    # Durbin and Koopman (2012) comment possible values in their book pp. 48
+    unconstrain_box!(model, "λ_c", Fl(2 * pi / 1.5), Fl(2 * pi / 100))
+    return model
 end
+
 function fill_model_system!(model::LocalLevelCycle)
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
@@ -106,9 +108,11 @@ function fill_model_system!(model::LocalLevelCycle)
     model.system.T[6] = -sin(get_constrained_value(model, "λ_c"))
     model.system.T[8] = sin(get_constrained_value(model, "λ_c"))
     model.system.T[9] = cos(get_constrained_value(model, "λ_c"))
-    return
+    return model
 end
+
 function reinstantiate(::LocalLevelCycle, y::Vector{Fl}) where Fl
     return LocalLevelCycle(y)
 end
+
 has_exogenous(::LocalLevelCycle) = false

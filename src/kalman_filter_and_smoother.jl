@@ -4,33 +4,34 @@ abstract type KalmanFilter end
 const HALF_LOG_2_PI = 0.5 * log(2 * pi)
 
 # Default loglikelihood function for optimization
-function optim_loglike(model::StateSpaceModel,
-                       filter::KalmanFilter,
-                       unconstrained_hyperparameters::Vector{Fl}) where Fl
+function optim_loglike(
+    model::StateSpaceModel, filter::KalmanFilter, unconstrained_hyperparameters::Vector{Fl}
+) where Fl
     reset_filter!(filter)
     update_model_hyperparameters!(model, unconstrained_hyperparameters)
     update_filter_hyperparameters!(filter, model)
     return optim_kalman_filter(model.system, filter)
 end
 
-function update_model_hyperparameters!(model::StateSpaceModel,
-                                       unconstrained_hyperparameters::Vector{Fl}) where Fl
+function update_model_hyperparameters!(
+    model::StateSpaceModel, unconstrained_hyperparameters::Vector{Fl}
+) where Fl
     register_unconstrained_values!(model, unconstrained_hyperparameters)
     constrain_hyperparameters!(model)
     fill_model_system!(model)
-    return nothing
+    return model
 end
 
 function update_filter_hyperparameters!(filter::KalmanFilter, model::StateSpaceModel)
     fill_model_filter!(filter, model)
-    return nothing
+    return filter
 end
+
 function fill_model_filter!(::KalmanFilter, ::StateSpaceModel)
     return nothing
 end
 
-function loglike(model::StateSpaceModel;
-                 filter::KalmanFilter = default_filter(model))
+function loglike(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     return optim_loglike(model, filter, get_free_unconstrained_values(model))
 end
 
@@ -209,7 +210,7 @@ Returns the smoothed state `alpha` obtained with the smoother.
 """
 function get_smoothed_state end
 
-get_smoothed_state(smoother::SmootherOutput) = permutedims(cat(smoother.alpha...; dims = 2))
+get_smoothed_state(smoother::SmootherOutput) = permutedims(cat(smoother.alpha...; dims=2))
 
 function get_smoothed_state(model::StateSpaceModel; filter=default_filter(model))
     isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")
@@ -223,7 +224,7 @@ Returns the variance `V` of the smoothed state obtained with the smoother.
 """
 function get_smoothed_variance end
 
-get_smoothed_variance(smoother::SmootherOutput) = cat(smoother.V...; dims = 3)
+get_smoothed_variance(smoother::SmootherOutput) = cat(smoother.V...; dims=3)
 
 function get_smoothed_variance(model::StateSpaceModel; filter=default_filter(model))
     isfitted(model) || error("Model has not been estimated yet, please use `fit!`.")

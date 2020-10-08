@@ -46,8 +46,14 @@ function beta_names(num_states::Int)
     end
     return str
 end
-get_beta_name(model::LinearRegression, i::Int) = model.hyperparameters_auxiliary.beta_names[i]
-fill_H_in_time(model::LinearRegression, H::Fl) where Fl = fill_system_matrice_with_value_in_time(model.system.H, H)
+
+function get_beta_name(model::LinearRegression, i::Int)
+    return model.hyperparameters_auxiliary.beta_names[i]
+end
+
+function fill_H_in_time(model::LinearRegression, H::Fl) where Fl
+    return fill_system_matrice_with_value_in_time(model.system.H, H)
+end
 
 # Obligatory functions
 function default_filter(model::LinearRegression)
@@ -55,45 +61,51 @@ function default_filter(model::LinearRegression)
     a1 = zeros(Fl, num_states(model))
     return RegressionKalmanFilter(a1)
 end
+
 function initial_hyperparameters!(model::LinearRegression)
     Fl = typeof_model_elements(model)
-    initial_hyperparameters = Dict{String, Fl}(
-        "sigma2_ε" => var(model.system.y)
-    )
+    initial_hyperparameters = Dict{String,Fl}("sigma2_ε" => var(model.system.y))
     # The optimal regressors are the result of X \ y
     betas = model.exogenous \ model.system.y
     for i in 1:num_states(model)
         initial_hyperparameters[get_beta_name(model, i)] = betas[i]
     end
     set_initial_hyperparameters!(model, initial_hyperparameters)
-    return
+    return model
 end
+
 function constrain_hyperparameters!(model::LinearRegression)
     for i in 1:num_states(model)
         constrain_identity!(model, get_beta_name(model, i))
     end
     constrain_variance!(model, "sigma2_ε")
-    return
+    return model
 end
+
 function unconstrain_hyperparameters!(model::LinearRegression)
     for i in 1:num_states(model)
         unconstrain_identity!(model, get_beta_name(model, i))
     end
     unconstrain_variance!(model, "sigma2_ε")
-    return
+    return model
 end
+
 function fill_model_system!(model::LinearRegression)
     # Fill the same H for every timestamp
     H = get_constrained_value(model, "sigma2_ε")
     fill_H_in_time(model, H)
-    return
+    return nothing
 end
+
 function fill_model_filter!(filter::KalmanFilter, model::LinearRegression)
     for i in axes(filter.kalman_state.a, 1)
         filter.kalman_state.a[i] = get_constrained_value(model, get_beta_name(model, i))
     end
+    return filter
 end
+
 function reinstantiate(::LinearRegression, y::Vector{Fl}, X::Matrix{Fl}) where Fl
     return LinearRegression(X, y)
 end
+
 has_exogenous(::LinearRegression) = true

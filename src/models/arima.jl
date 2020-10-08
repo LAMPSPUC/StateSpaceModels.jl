@@ -14,8 +14,12 @@ struct ARIMAHyperParametersAuxiliary
     ma_pos::Vector{Int}
     ma_names::Vector{String}
     function ARIMAHyperParametersAuxiliary(order::ARIMAOrder)
-        return new(ar_position_T_matrix(order), create_ar_names(order),
-                   ma_position_R_matrix(order), create_ma_names(order))
+        return new(
+            ar_position_T_matrix(order),
+            create_ar_names(order),
+            ma_position_R_matrix(order),
+            create_ma_names(order),
+        )
     end
 end
 
@@ -32,9 +36,7 @@ mutable struct ARIMA <: StateSpaceModel
     system::LinearUnivariateTimeInvariant
     results::Results
 
-    function ARIMA(y::Vector{Fl},
-                   order::Tuple{Int, Int, Int}) where Fl
-
+    function ARIMA(y::Vector{Fl}, order::Tuple{Int,Int,Int}) where Fl
         or = ARIMAOrder(order[1], order[2], order[3])
         hyperparameters_auxiliary = ARIMAHyperParametersAuxiliary(or)
 
@@ -50,10 +52,10 @@ mutable struct ARIMA <: StateSpaceModel
 
         num_hyperparameters = or.p + or.q + 1
         names = Vector{String}(undef, num_hyperparameters)
-        for i in 1:or.p
+        for i in 1:(or.p)
             names[i] = "ar_L$i"
         end
-        for j in 1:or.q
+        for j in 1:(or.q)
             names[or.p + j] = "ma_L$j"
         end
         names[end] = "sigma2_η"
@@ -72,26 +74,28 @@ function build_Z(or, Fl)
     # Build ARIMA Z matrix from ARMA Z matrix
     return vcat(ones(Fl, or.d), arma_Z_matrix)
 end
+
 function build_T(or, Fl)
     # Build ARMA T matrix
     r = max(or.p, or.q + 1)
     # zeros matrix in the correct dimension
     arma_T_matrix = zeros(Fl, r, r)
     # Fill ARMA p indices
-    for i in 1:or.p
+    for i in 1:(or.p)
         arma_T_matrix[i, 1] = 1
     end
-    for k in 1:r-1
-        arma_T_matrix[k, k+1] = 1
+    for k in 1:(r - 1)
+        arma_T_matrix[k, k + 1] = 1
     end
     # Build ARIMA T matrix from ARMA T matrix
     arima_T_matrix = zeros(Fl, r + or.d, r + or.d)
-    arima_T_matrix[end-r+1:end, end-r+1:end] = arma_T_matrix
-    for i in 1:or.d, j in i:or.d+1
+    arima_T_matrix[(end - r + 1):end, (end - r + 1):end] = arma_T_matrix
+    for i in 1:(or.d), j in i:(or.d + 1)
         arima_T_matrix[i, j] = 1
     end
     return arima_T_matrix
 end
+
 function build_R(or, Fl)
     # Build ARMA R matrix
     r = max(or.p, or.q + 1)
@@ -99,13 +103,14 @@ function build_R(or, Fl)
     # Build ARIMA R matrix from ARMA R matrix
     return vcat(zeros(Fl, or.d), arma_R_matrix)
 end
+
 function build_c(or, Fl)
     return zeros(Fl, or.d + max(or.p, or.q + 1))
 end
 
 function ar_position_T_matrix(or)
     ar_index = CartesianIndex[]
-    for i in 1:or.p
+    for i in 1:(or.p)
         push!(ar_index, CartesianIndex(or.d + i, or.d + 1))
     end
     # To make ARIMA faster we need to rewrite this column wise to access the matrix
@@ -118,27 +123,31 @@ function ar_position_T_matrix(or)
     end
     return ar_index_columnwise
 end
+
 function ma_position_R_matrix(or)
     ma_index = Int[]
-    for i in 1:or.q
-        push!(ma_index, or.d + i+1)
+    for i in 1:(or.q)
+        push!(ma_index, or.d + i + 1)
     end
     return ma_index
 end
+
 function create_ar_names(or)
     ar_names = Vector{String}(undef, or.p)
-    for i in 1:or.p
+    for i in 1:(or.p)
         ar_names[i] = "ar_L$i"
     end
     return ar_names
 end
+
 function create_ma_names(or)
     ma_names = Vector{String}(undef, or.q)
-    for i in 1:or.q
+    for i in 1:(or.q)
         ma_names[i] = "ma_L$i"
     end
     return ma_names
 end
+
 get_ar_name(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ar_names[i]
 get_ma_name(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ma_names[i]
 get_ar_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ar_pos[i]
@@ -157,13 +166,14 @@ function impose_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
         return r
     end
     @inbounds for k in 1:n
-        for i in 1:k-1
+        for i in 1:(k - 1)
             y[k, i] = y[k - 1, i] + r[k] * y[k - 1, k - i]
         end
         y[k, k] = r[k]
     end
     return -@view y[n, :]
 end
+
 function relax_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
     #     Monahan, John F. 1984.
     #    "A Note on Enforcing Stationarity in
@@ -172,42 +182,48 @@ function relax_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
     n = length(hyperparameter_values)
     y = fill(zero(Fl), n, n)
     y[n, :] = -hyperparameter_values
-    for k in n:-1:2, i in 1:k-1
+    for k in n:-1:2, i in 1:(k - 1)
         y[k - 1, i] = (y[k, i] - y[k, k] * y[k, k - i]) / (1 - y[k, k]^2)
     end
     r = diag(y)
-    x = r ./ sqrt.(1 .- r.^2)
+    x = r ./ sqrt.(1 .- r .^ 2)
     return x
 end
 
-function ARIMA_exact_initalization!(filter::KalmanFilter,
-                                    model::ARIMA)
+function ARIMA_exact_initalization!(filter::KalmanFilter, model::ARIMA)
     num_arma_states = max(model.order.p, model.order.q + 1)
     ARIMA_exact_initialization!(filter.kalman_state, model.system, num_arma_states)
-    return
+    return nothing
 end
+
 function ARIMA_exact_initialization!(kalman_state, system, num_arma_states)
-    arma_T = system.T[end-num_arma_states+1:end, end-num_arma_states+1:end]
-    arma_R = system.R[end-num_arma_states+1:end]
+    arma_T = system.T[(end - num_arma_states + 1):end, (end - num_arma_states + 1):end]
+    arma_R = system.R[(end - num_arma_states + 1):end]
     # Calculate exact initial P1
-    vec_P1 = (I - kron(arma_T, arma_T)) \ vec(arma_R*arma_R')
+    vec_P1 = (I - kron(arma_T, arma_T)) \ vec(arma_R * arma_R')
     arma_P1 = reshape(vec_P1, num_arma_states, num_arma_states)
     # Fill P1 in the arma states
-    kalman_state.P[end-num_arma_states+1:end, end-num_arma_states+1:end] .= system.Q[1] .* arma_P1
-    return
+    kalman_state.P[(end - num_arma_states + 1):end, (end - num_arma_states + 1):end] .=
+        system.Q[1] .* arma_P1
+    return nothing
 end
 
 function update_ar_terms!(model::ARIMA)
-    for i in 1:model.order.p
-        model.system.T[get_ar_pos(model, i)] = get_constrained_value(model, get_ar_name(model, i))
+    for i in 1:(model.order.p)
+        model.system.T[get_ar_pos(model, i)] = get_constrained_value(
+            model, get_ar_name(model, i)
+        )
     end
-    return
+    return nothing
 end
+
 function update_ma_terms!(model::ARIMA)
-    for j in 1:model.order.q
-        model.system.R[get_ma_pos(model, j)] = get_constrained_value(model, get_ma_name(model, j))
+    for j in 1:(model.order.q)
+        model.system.R[get_ma_pos(model, j)] = get_constrained_value(
+            model, get_ma_name(model, j)
+        )
     end
-    return
+    return nothing
 end
 
 # Obligatory functions
@@ -221,86 +237,91 @@ function default_filter(model::ARIMA)
     steadystate_tol = Fl(1e-5)
     return UnivariateKalmanFilter(a1, P1, skip_llk_instants, steadystate_tol)
 end
+
 function initial_hyperparameters!(model::ARIMA)
     Fl = typeof_model_elements(model)
     # TODO find out how to better estimate initial parameters
     y = filter(!isnan, model.system.y)
-    initial_hyperparameters = Dict{String, Fl}(
-        "sigma2_η" => dot(y, y)/length(y)
-    )
-    for i in 1:model.order.p
+    initial_hyperparameters = Dict{String,Fl}("sigma2_η" => dot(y, y) / length(y))
+    for i in 1:(model.order.p)
         initial_hyperparameters[get_ar_name(model, i)] = zero(Fl)
     end
-    for j in 1:model.order.q
+    for j in 1:(model.order.q)
         initial_hyperparameters[get_ma_name(model, j)] = zero(Fl)
     end
     set_initial_hyperparameters!(model, initial_hyperparameters)
-    return
+    return nothing
 end
+
 function constrain_hyperparameters!(model::ARIMA)
     Fl = typeof_model_elements(model)
     # Constraint AR terms
     unconstrained_ar = Vector{Fl}(undef, model.order.p)
-    for i in 1:model.order.p
+    for i in 1:(model.order.p)
         unconstrained_ar[i] = get_unconstrained_value(model, get_ar_name(model, i))
     end
     constrained_ar = impose_unit_root_constraint(unconstrained_ar)
-    for i in 1:model.order.p
+    for i in 1:(model.order.p)
         update_constrained_value!(model, get_ar_name(model, i), constrained_ar[i])
     end
 
     # Constraint MA terms
     unconstrained_ma = Vector{Fl}(undef, model.order.q)
-    for j in 1:model.order.q
+    for j in 1:(model.order.q)
         unconstrained_ma[j] = get_unconstrained_value(model, get_ma_name(model, j))
     end
     constrained_ma = -impose_unit_root_constraint(unconstrained_ma)
-    for j in 1:model.order.q
+    for j in 1:(model.order.q)
         update_constrained_value!(model, get_ma_name(model, j), constrained_ma[j])
     end
 
     # Constrain variance
     constrain_variance!(model, "sigma2_η")
-    return
+    return nothing
 end
+
 function unconstrain_hyperparameters!(model::ARIMA)
     Fl = typeof_model_elements(model)
     # Unconstraint AR terms
     constrained_ar = Vector{Fl}(undef, model.order.p)
-    for i in 1:model.order.p
+    for i in 1:(model.order.p)
         constrained_ar[i] = get_constrained_value(model, get_ar_name(model, i))
     end
     unconstrained_ar = relax_unit_root_constraint(constrained_ar)
-    for i in 1:model.order.p
+    for i in 1:(model.order.p)
         update_unconstrained_value!(model, get_ar_name(model, i), unconstrained_ar[i])
     end
 
     # Unconstraint MA terms
     constrained_ma = Vector{Fl}(undef, model.order.q)
-    for j in 1:model.order.q
+    for j in 1:(model.order.q)
         constrained_ma[j] = get_constrained_value(model, get_ma_name(model, j))
     end
     unconstrained_ma = -relax_unit_root_constraint(constrained_ma)
-    for j in 1:model.order.q
+    for j in 1:(model.order.q)
         update_unconstrained_value!(model, get_ma_name(model, j), unconstrained_ma[j])
     end
 
     # Unconstrain variance
     unconstrain_variance!(model, "sigma2_η")
-    return
+    return nothing
 end
+
 function fill_model_system!(model::ARIMA)
     update_ar_terms!(model)
     update_ma_terms!(model)
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
     return nothing
 end
+
 function fill_model_filter!(filter::KalmanFilter, model::ARIMA)
     ARIMA_exact_initalization!(filter, model)
     return nothing
 end
+
 function reinstantiate(model::ARIMA, y::Vector{Fl}) where Fl
     order = (model.order.p, model.order.d, model.order.q)
     return ARIMA(y, order)
 end
+
 has_exogenous(::ARIMA) = false
