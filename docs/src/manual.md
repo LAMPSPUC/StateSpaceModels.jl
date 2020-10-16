@@ -2,7 +2,7 @@
 
 ## Models
 
-The package provides a variaty of pre-defined models, fell free to contribute if you want to add one to the list.
+The package provides a variaty of pre-defined models. If there is any model that you wish was in the package, feel free to open an issue or pull request.
 
 ```@docs
 ARIMA
@@ -14,34 +14,39 @@ LocalLinearTrend
 MultivariateBasicStructural
 ```
 
-### Implementing a custom StateSpaceModel
+### Implementing a custom model
+
+Users are able to implement any custom user-defined model.
 
 ## Systems
 
-You can represent the `StateSpaceModel` matrices as a `StateSpaceSystem`. 
+The `StateSpaceModel` matrices are represented as a `StateSpaceSystem`.
 
 ```@docs
 StateSpaceModels.StateSpaceSystem
 LinearUnivariateTimeInvariant
+LinearUnivariateTimeVariant
+LinearMultivariateTimeInvariant
+LinearMultivariateTimeVariant
 ```
 
 ## Hyperparameters
 
-StateSpaceModels hyperparameters are variables that are optimized when `fit!` is called.
-The package defines some useful getters and setters to accelerate experimentation with 
-models.
+The model hyperparameters are constant (non-time-varying) parameters that are optimized when `fit!` is called.
+The package provides some useful getters and setters to accelerate experimentation with models.
 
-The getters are
+The getters are:
 ```@docs
+get_hyperparameters
 get_names
 ```
 
-The setters are
+The setters are:
 ```@docs
 fix_hyperparameters!
 ```
 
-mappings
+Mappings:
 ```@docs
 constrain_variance!
 unconstrain_variance!
@@ -50,7 +55,10 @@ unconstrain_box!
 constrain_identity!
 unconstrain_identity!
 ```
-## Optim interface
+
+## Optim.jl interface
+
+The optimizer to be used can be configured through an interface with [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl):
 
 ```@docs
 Optimizer
@@ -58,15 +66,16 @@ Optimizer
 
 ## Datasets
 
-The package provides some datasets to illustrate the funtionalities and models. The datasets 
-are strings with the absolute path of the file inside your computer, they are all stored as 
-csv files and you may read them the way that fits you better. In the examples we illustrate the
-datasets using [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) and [CSV.jl](https://github.com/JuliaData/CSV.jl)
+The package provides some datasets to illustrate the funtionalities and models. 
+These datasets are stored as csv files and the path to these files can be obtained through their names as seen below.
+In the examples we illustrate the datasets using [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) and [CSV.jl](https://github.com/JuliaData/CSV.jl)
 
 ```@docs
-StateSpaceModels.NILE
 StateSpaceModels.AIR_PASSENGERS
+StateSpaceModels.FRONT_REAR_SEAT_KSI
 StateSpaceModels.INTERNET
-StateSpaceModels.WHOLESALE_PRICE_INDEX
+StateSpaceModels.NILE
+StateSpaceModels.RJ_TEMPERATURE
 StateSpaceModels.VEHICLE_FATALITIES
+StateSpaceModels.WHOLESALE_PRICE_INDEX
 ```
