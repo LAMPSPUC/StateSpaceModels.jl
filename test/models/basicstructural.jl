@@ -1,4 +1,5 @@
 @testset "Basic Structural Model" begin
+    # Univariate
     air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
     log_air_passengers = log.(air_passengers.passengers)
 
@@ -21,5 +22,6 @@
         model = BasicStructural(log_ap32, 12)
         @test model.system.Z == Float32[1.0; 0.0; 1.0; zeros(10)]
         fit!(model)
+        @test loglike(model) ≈ 234.3364f0 rtol = 1e-4
     end
 end

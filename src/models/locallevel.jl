@@ -54,32 +54,37 @@ function default_filter(model::LocalLevel)
     steadystate_tol = Fl(1e-5)
     return ScalarKalmanFilter(a1, P1, 1, steadystate_tol)
 end
+
 function initial_hyperparameters!(model::LocalLevel)
     Fl = typeof_model_elements(model)
     observed_variance = var(model.system.y[findall(!isnan, model.system.y)])
-    initial_hyperparameters = Dict{String, Fl}(
-        "sigma2_ε" => observed_variance,
-        "sigma2_η" => observed_variance
+    initial_hyperparameters = Dict{String,Fl}(
+        "sigma2_ε" => observed_variance, "sigma2_η" => observed_variance
     )
     set_initial_hyperparameters!(model, initial_hyperparameters)
-    return
+    return model
 end
+
 function constrain_hyperparameters!(model::LocalLevel)
     constrain_variance!(model, "sigma2_ε")
     constrain_variance!(model, "sigma2_η")
-    return
+    return model
 end
+
 function unconstrain_hyperparameters!(model::LocalLevel)
     unconstrain_variance!(model, "sigma2_ε")
     unconstrain_variance!(model, "sigma2_η")
-    return
+    return model
 end
+
 function fill_model_system!(model::LocalLevel)
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
-    return
+    return model
 end
+
 function reinstantiate(::LocalLevel, y::Vector{Fl}) where Fl
     return LocalLevel(y)
 end
+
 has_exogenous(::LocalLevel) = false

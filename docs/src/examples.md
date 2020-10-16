@@ -25,21 +25,21 @@ We can fit a [`LocalLevel`](@ref) model
 
 ```@example nile
 model = LocalLevel(nile.flow)
-fit(model)
+fit!(model)
 ```
 
 Analyse the filtered estimates for the level of the annual flow volume from the Kalman filter algorithm.
 
 ```@example nile
 filter_output = kalman_filter(model)
-plot!(plt, nile.year, filtered_estimates(filter_output), label = "Filtered level")
+plot!(plt, nile.year, get_filtered_state(filter_output), label = "Filtered level")
 ```
 
 And analyse the smoothed estimates for the level of the annual flow volume from the Kalman smoother algorithm.
 
 ```@example nile
 smoother_output = kalman_smoother(model)
-plot!(plt, nile.year, smoothed_estimates(smoother_output), label = "Smoothed level")
+plot!(plt, nile.year, get_smoothed_state(smoother_output), label = "Smoothed level")
 ```
 
 StateSpaceModels.jl has a flexible forecasting schema that easily allows users to 
@@ -71,7 +71,7 @@ We can proceed to the same analysis
 
 ```@example nile
 model = LocalLevel(nile.flow)
-fit(model)
+fit!(model)
 ```
 
 And you have the exact same code for filtering and smoothing 
@@ -79,8 +79,8 @@ And you have the exact same code for filtering and smoothing
 ```@example nile
 filter_output = kalman_filter(model)
 smoother_output = kalman_smoother(model)
-plot!(plt, nile.year, filtered_estimates(filter_output), label = "Filtered level")
-plot!(plt, nile.year, smoothed_estimates(smoother_output), label = "Smoothed level")
+plot!(plt, nile.year, get_filtered_state(filter_output), label = "Filtered level")
+plot!(plt, nile.year, get_smoothed_state(smoother_output), label = "Smoothed level")
 ```
 
 ## Log of airline passengers
@@ -117,8 +117,7 @@ in Finland was increasing in the years 1970, 1982, 1984 through to 1988, and in 
 
 ```@example fatalities
 smoother_output = kalman_smoother(model)
-plot(df.date, smoothed_estimates(smoother_output)[:, 2], label = "slope")
-hline!([0.0], label = "", color="black")
+plot(df.date, get_smoothed_state(smoother_output)[:, 2], label = "slope")
 ```
 
 

@@ -45,7 +45,7 @@
     hyperparameters = get_hyperparameters(model)
     @test !isempty(hyperparameters.minimizer_hyperparameter_position)
 
-    @test loglike(model; filter=scalar_filter) ≈  -632.54421 atol = 1e-5 rtol = 1e-5
+    @test loglike(model; filter=scalar_filter) ≈ -632.54421 atol = 1e-5 rtol = 1e-5
     @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 atol = 1
 
     # Estimate with Float32
@@ -64,7 +64,7 @@
     smoother = kalman_smoother(model)
     @test filter.Ptt[end] == smoother.V[end] # by construction
 
-    for t in 2:length(model.system.y) - 1
+    for t in 2:(length(model.system.y) - 1)
         @test filter.Ptt[t][1] > smoother.V[t][1] # by construction
     end
 
@@ -74,5 +74,4 @@
     # simulating
     scenarios = simulate_scenarios(model, 10, 100_000)
     test_scenarios_adequacy_with_forecast(forec, scenarios)
-
 end

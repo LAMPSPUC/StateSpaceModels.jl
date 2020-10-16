@@ -1,5 +1,4 @@
 @testset "Regression" begin
-
     @test has_fit_methods(LinearRegression)
 
     # Test for 10 random points
@@ -8,7 +7,7 @@
         y = rand(100)
         model = LinearRegression(X, y)
         fit!(model)
-        β = X\y
+        β = X \ y
         for i in 1:size(X, 2)
             @test get_constrained_value(model, "β_$i") .≈ β[i] atol = 1e-5
         end
@@ -31,5 +30,4 @@
     fit!(model)
     forec = forecast(model, [1 6.0])
     forec.expected_value[1] == [11.0]
-
 end
