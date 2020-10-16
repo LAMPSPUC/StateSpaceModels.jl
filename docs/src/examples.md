@@ -1,13 +1,11 @@
 # Examples
 
-In this section we show examples of applications and different use cases of the package.
+In this section we show examples of applications and use cases of the package.
 
 ## Nile river annual flow
 
-In this example we will follow what is illustrated on Durbin, James, & Siem Jan Koopman. (2012). 
-"Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. We will 
-study the [`LocalLevel`](@ref) model with a series of readings of the annual flow volume at 
-Aswan from 1871 to 1970.
+Here we will follow an example from Durbin & Koopman's book.
+We will use the [`LocalLevel`](@ref) model applied to the annual flow of the Nile river at the city of Aswan between 1871 and 1970.
 
 ```@setup nile
 using StateSpaceModels
@@ -15,35 +13,37 @@ using Plots
 using Dates
 ```
 
+First, we load the data:
+
 ```@example nile
 using CSV, DataFrames
 nile = CSV.read(StateSpaceModels.NILE, DataFrame)
 plt = plot(nile.year, nile.flow, label = "Nile river annual flow")
 ```
 
-We can fit a [`LocalLevel`](@ref) model
+Next, we fit a [`LocalLevel`](@ref) model:
 
 ```@example nile
 model = LocalLevel(nile.flow)
 fit!(model)
 ```
 
-Analyse the filtered estimates for the level of the annual flow volume from the Kalman filter algorithm.
+We can analyze the filtered estimates for the level of the annual flow:
 
 ```@example nile
 filter_output = kalman_filter(model)
 plot!(plt, nile.year, get_filtered_state(filter_output), label = "Filtered level")
 ```
 
-And analyse the smoothed estimates for the level of the annual flow volume from the Kalman smoother algorithm.
+We can do the same for the smoothed estimates for the level of the annual flow:
 
 ```@example nile
 smoother_output = kalman_smoother(model)
 plot!(plt, nile.year, get_smoothed_state(smoother_output), label = "Smoothed level")
 ```
 
-StateSpaceModels.jl has a flexible forecasting schema that easily allows users to 
-get forecasts and confidence intervals. Here we forecast 10 steps ahead.
+StateSpaceModels.jl can also be used to obtain forecasts. 
+Here we forecast 10 steps ahead:
 
 ```@example nile
 steps_ahead = 10
@@ -53,28 +53,29 @@ expected_value = forecast_expected_value(forec)
 plot!(plt, dates, expected_value, label = "Forecast")
 ```
 
-StateSpaceModels.jl also enables simulating multiple scenarios for the forecasting horizon based on the estimated distributions.
+We can also simulate multiple scenarios for the forecasting horizon based on the estimated predictive distributions.
 
 ```@example nile
 scenarios = simulate_scenarios(model, 10, 100)
 plot!(plt, dates, scenarios[:, 1, :], label = "", color = "grey", width = 0.2)
 ```
 
-StateSpaceModels.jl handles missing values automatically, the package consider that observations with `NaN` are missing values.
+The package also handles missing values automatically. 
+To that end, the package considers that any `NaN` entries in the observations are missing values.
 
 ```@example nile
 nile.flow[[collect(21:40); collect(61:80)]] .= NaN
 plt = plot(nile.year, nile.flow, label = "Annual nile river flow")
 ```
 
-We can proceed to the same analysis
+Even though the series has several missing values, the same analysis is possible:
 
 ```@example nile
 model = LocalLevel(nile.flow)
 fit!(model)
 ```
 
-And you have the exact same code for filtering and smoothing 
+And the exact same code can be used for filtering and smoothing:
 
 ```@example nile
 filter_output = kalman_filter(model)
@@ -83,11 +84,13 @@ plot!(plt, nile.year, get_filtered_state(filter_output), label = "Filtered level
 plot!(plt, nile.year, get_smoothed_state(smoother_output), label = "Smoothed level")
 ```
 
-## Log of airline passengers
+## Airline passengers
+
+TODO
 
 ## Finland road traffic fatalities
 
-In this example we will follow what is illustrated on Commandeur, Jacques J.F. & Koopman, 
+In this example, we will follow what is illustrated on Commandeur, Jacques J.F. & Koopman, 
 Siem Jan, 2007. "An Introduction to State Space Time Series Analysis," OUP Catalogue, 
 Oxford University Press (Chapter 3). We will study the [`LocalLinearTrend`](@ref) model with 
 a series of the log of road traffic fatalities in Finalnd and analyse its slope to tell if
