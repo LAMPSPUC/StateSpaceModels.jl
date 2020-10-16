@@ -91,4 +91,5 @@ end
 function reinstantiate(model::BasicStructural, y::Vector{Fl}) where Fl
     return BasicStructural(y, model.seasonality)
 end
+
 has_exogenous(::BasicStructural) = false
