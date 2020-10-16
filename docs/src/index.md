@@ -13,9 +13,9 @@ pkg> add StateSpaceModels
 
 If you use StateSpaceModels.jl in your work, we kindly ask you to cite the following paper ([pdf](https://arxiv.org/pdf/1908.01757.pdf)):
 
-@article{SaavedraBodinSouto2019,
-title={StateSpaceModels.jl: a Julia Package for Time-Series Analysis in a State-Space Framework},
-author={Raphael Saavedra and Guilherme Bodin and Mario Souto},
-journal={arXiv preprint arXiv:1908.01757},
-year={2019}
-}
+    @article{SaavedraBodinSouto2019,
+    title={StateSpaceModels.jl: a Julia Package for Time-Series Analysis in a State-Space Framework},
+    author={Raphael Saavedra and Guilherme Bodin and Mario Souto},
+    journal={arXiv preprint arXiv:1908.01757},
+    year={2019}
+    }
