@@ -295,7 +295,7 @@ Map a constrained hyperparameter ``\\psi \\in [lb, ub]`` to an unconstrained hyp
 ``\\psi_* \\in \\mathbb{R}``.
 
 The mapping is
-``\\psi = lb + \\frac{ub - lb}{1 + \\exp{-\\psi_*}}``
+``\\psi = lb + \\frac{ub - lb}{1 + \\exp(-\\psi_{*})}``
 """
 function constrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
     update_constrained_value!(
@@ -337,11 +337,10 @@ end
 """
     unconstrain_variance!(model::StateSpaceModel, str::String)
 
-Map an unconstrained hyperparameter ``\\psi_* \\in \\mathbb{R}`` to a constrained hyperparameter
+Map an unconstrained hyperparameter ``\\psi_{*} \\in \\mathbb{R}`` to a constrained hyperparameter 
 ``\\psi \\in \\mathbb{R}^+``.
 
-The mapping is
-``\\psi_* = \\sqrt{\\psi_}``
+The mapping is ``\\psi_{*} = \\sqrt{\\psi_}``.
 """
 function unconstrain_variance!(model::StateSpaceModel, str::String)
     update_unconstrained_value!(model, str, sqrt(get_constrained_value(model, str)))
