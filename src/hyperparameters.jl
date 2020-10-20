@@ -340,7 +340,7 @@ end
 Map an unconstrained hyperparameter ``\\psi_{*} \\in \\mathbb{R}`` to a constrained hyperparameter 
 ``\\psi \\in \\mathbb{R}^+``.
 
-The mapping is ``\\psi_{*} = \\sqrt{\\psi_}``.
+The mapping is ``\\psi_{*} = \\sqrt{\\psi}``.
 """
 function unconstrain_variance!(model::StateSpaceModel, str::String)
     update_unconstrained_value!(model, str, sqrt(get_constrained_value(model, str)))
