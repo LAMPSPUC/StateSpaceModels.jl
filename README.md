@@ -14,7 +14,7 @@ StateSpaceModels.jl is a package for modeling, forecasting, and simulating time 
 
 ## Installation
 
-This package is registered in METADATA so you can `Pkg.add` it as follows:
+This package is registered so you can simply `add` it using Julia's `Pkg` manager:
 ```julia
 pkg> add StateSpaceModels
 ```
