@@ -31,6 +31,7 @@ include("models/basicstructural.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/arima.jl")
 include("models/linear_regression.jl")
+include("models/localregression.jl")
 
 include("prints.jl")
 include("optimizers.jl")
@@ -43,6 +44,7 @@ export BasicStructural
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant
 export LinearRegression
+export LocalRegression
 export LinearUnivariateTimeInvariant
 export LinearUnivariateTimeVariant
 export LocalLevel
