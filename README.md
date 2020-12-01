@@ -1,5 +1,5 @@
-[build-img]: https://travis-ci.com/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
-[build-url]: https://travis-ci.com/LAMPSPUC/StateSpaceModels.jl
+[build-img]: https://github.com/LAMPSPUC/StateSpaceModels.jl/workflows/CI/badge.svg?branch=master
+[build-url]: https://github.com/LAMPSPUC/StateSpaceModels.jl/actions?query=workflow%3ACI
 
 [codecov-img]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl/coverage.svg?branch=master
 [codecov-url]: https://codecov.io/gh/LAMPSPUC/StateSpaceModels.jl?branch=master

@@ -26,6 +26,7 @@ include("smoothers/kalman_smoother.jl")
 include("models/common.jl")
 include("models/locallevel.jl")
 include("models/locallevelcycle.jl")
+include("models/locallevelexplanatory.jl")
 include("models/locallineartrend.jl")
 include("models/basicstructural.jl")
 include("models/basicstructural_multivariate.jl")
@@ -47,10 +48,12 @@ export LinearUnivariateTimeInvariant
 export LinearUnivariateTimeVariant
 export LocalLevel
 export LocalLevelCycle
+export LocalLevelExplanatory
 export LocalLinearTrend
 export MultivariateBasicStructural
 export Optimizer
 export ScalarKalmanFilter
+export StateSpaceModel
 export UnivariateKalmanFilter
 
 # Exported functions
