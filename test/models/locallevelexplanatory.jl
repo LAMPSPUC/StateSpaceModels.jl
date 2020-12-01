@@ -1,4 +1,4 @@
-@testset "Local Level With Explanaatory Model" begin
+@testset "Local Level With Explanatory Model" begin
     @test has_fit_methods(LocalLevelExplanatory)
     y = [
     0.8297606696482265 
