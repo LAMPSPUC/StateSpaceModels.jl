@@ -10,6 +10,7 @@ BasicStructural
 LinearRegression
 LocalLevel
 LocalLevelCycle
+LocalLevelExplanatory
 LocalLinearTrend
 MultivariateBasicStructural
 ```
