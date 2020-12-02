@@ -162,8 +162,9 @@ function impose_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
     n = length(hyperparameter_values)
     y = fill(zero(Fl), n, n)
     r = @. hyperparameter_values / sqrt((1 + hyperparameter_values^2))
+    # TODO must check but I am almost sure (Guilherme)
     if n == 1
-        return r
+        return -r
     end
     @inbounds for k in 1:n
         for i in 1:(k - 1)
@@ -243,8 +244,12 @@ function initial_hyperparameters!(model::ARIMA)
     # TODO find out how to better estimate initial parameters
     y = filter(!isnan, model.system.y)
     initial_hyperparameters = Dict{String,Fl}("sigma2_η" => dot(y, y) / length(y))
+    # Other packages have other heuristics
+    # Haven't seen a paper that shows the best one
+    # Some heuristics are not suitable for missing values
+    p_plus_q = model.order.p + model.order.d + model.order.q
     for i in 1:(model.order.p)
-        initial_hyperparameters[get_ar_name(model, i)] = zero(Fl)
+        initial_hyperparameters[get_ar_name(model, i)] = one(Fl) / p_plus_q
     end
     for j in 1:(model.order.q)
         initial_hyperparameters[get_ma_name(model, j)] = zero(Fl)
