@@ -162,7 +162,6 @@ function impose_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
     n = length(hyperparameter_values)
     y = fill(zero(Fl), n, n)
     r = @. hyperparameter_values / sqrt((1 + hyperparameter_values^2))
-    # TODO must check but I am almost sure (Guilherme)
     if n == 1
         return -r
     end
