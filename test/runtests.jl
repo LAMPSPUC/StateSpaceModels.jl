@@ -8,17 +8,15 @@ using Test
 # Functions that are used in different tests
 include("utils.jl")
 
-@testset "Models" begin
-    include("models/locallevel.jl")
-    include("models/locallineartrend.jl")
-    include("models/locallevelcycle.jl")
-    include("models/locallevelexplanatory.jl")
-    include("models/basicstructural.jl")
-    include("models/basicstructural_multivariate.jl")
-    include("models/arima.jl")
-    include("models/linear_regression.jl")
-end
+# Core functionality
+include("systems.jl")
 
-@testset "Systems" begin
-    include("systems.jl")
-end
+# Models
+include("models/locallevel.jl")
+include("models/locallineartrend.jl")
+include("models/locallevelcycle.jl")
+include("models/locallevelexplanatory.jl")
+include("models/basicstructural.jl")
+include("models/basicstructural_multivariate.jl")
+include("models/arima.jl")
+include("models/linear_regression.jl")
