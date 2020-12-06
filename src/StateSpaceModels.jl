@@ -4,6 +4,7 @@ import Base: show, length, isempty
 
 using Distributions
 using LinearAlgebra
+using ShiftedArrays
 using Statistics
 using Printf
 using Optim

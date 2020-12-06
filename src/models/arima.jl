@@ -163,7 +163,7 @@ function impose_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
     y = fill(zero(Fl), n, n)
     r = @. hyperparameter_values / sqrt((1 + hyperparameter_values^2))
     if n == 1
-        return r
+        return -r
     end
     @inbounds for k in 1:n
         for i in 1:(k - 1)
@@ -238,17 +238,57 @@ function default_filter(model::ARIMA)
     return UnivariateKalmanFilter(a1, P1, skip_llk_instants, steadystate_tol)
 end
 
+function lagmat(y::Vector{Fl}, k::Int) where Fl
+    X = Matrix{Fl}(undef, length(y) - k, k)
+    for i in 1:k
+        X[:, i] = lag(y, i)[k + 1:end]
+    end
+    return X
+end
+
+function concatenate_on_bottom(X1::Matrix{Fl}, X2::Matrix{Fl}) where Fl
+    n = min(size(X1, 1), size(X2, 1))
+    return hcat(X1[end-n+1:end, :], X2[end-n+1:end, :])
+end
+
+function diff_arma(y::Vector{Fl}, d::Int) where Fl
+    if d > 0
+        return Vector{Fl}((y - lag(y, d))[d+1:end])
+    else
+        return y
+    end
+end
+
 function initial_hyperparameters!(model::ARIMA)
     Fl = typeof_model_elements(model)
     # TODO find out how to better estimate initial parameters
+    initial_hyperparameters = Dict{String,Fl}()
+    # Heuristic inspired in statsmodels from python
+    # TODO find a reference to this heuristic
     y = filter(!isnan, model.system.y)
-    initial_hyperparameters = Dict{String,Fl}("sigma2_η" => dot(y, y) / length(y))
+    y_diff = diff_arma(y, model.order.d)
+    k = model.order.p + model.order.q
+    residuals = nothing
+    X = lagmat(y_diff, k)
+    if model.order.q > 0
+        residuals = y_diff[k+1:end] - X * (X \ y_diff[k+1:end])
+    end
+    X_ar = lagmat(y_diff, model.order.p)
+    X_ma = lagmat(residuals, model.order.q)
+    X = concatenate_on_bottom(X_ar, X_ma)
+    initial_params = X \ y_diff[end - size(X, 1) + 1:end]
+
+    offset = 1
     for i in 1:(model.order.p)
-        initial_hyperparameters[get_ar_name(model, i)] = zero(Fl)
+        initial_hyperparameters[get_ar_name(model, i)] = initial_params[offset]
+        offset += 1
     end
     for j in 1:(model.order.q)
-        initial_hyperparameters[get_ma_name(model, j)] = zero(Fl)
+        initial_hyperparameters[get_ma_name(model, j)] = initial_params[offset]
+        offset += 1
     end
+    initial_hyperparameters["sigma2_η"] = var(y_diff)
+    
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return nothing
 end

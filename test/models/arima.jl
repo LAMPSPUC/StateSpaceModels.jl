@@ -37,7 +37,7 @@
 
     model = ARIMA(missing_dinternet, (1, 0, 1))
     fit!(model)
-    @test_broken loglike(model) ≈ -225.770 atol = 1e-5 rtol = 1e-5
+    @test loglike(model) ≈ -225.770 atol = 1e-5 rtol = 1e-5
 
     wpi = CSV.read(StateSpaceModels.WHOLESALE_PRICE_INDEX, DataFrame).wpi
     model = ARIMA(wpi, (1, 1, 1))

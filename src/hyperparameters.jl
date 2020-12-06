@@ -198,7 +198,10 @@ function set_initial_hyperparameters!(
     model::StateSpaceModel, initial_hyperparameters::Dict{String,<:Real}
 )
     for (k, v) in initial_hyperparameters
-        update_constrained_value!(model, k, v)
+        # Only update if it has not been updated before.
+        if isnan(get_constrained_value(model, k))
+            update_constrained_value!(model, k, v)
+        end
     end
     return model
 end
