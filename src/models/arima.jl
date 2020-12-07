@@ -35,8 +35,9 @@ mutable struct ARIMA <: StateSpaceModel
     hyperparameters::HyperParameters
     system::LinearUnivariateTimeInvariant
     results::Results
+    mean_c::Bool
 
-    function ARIMA(y::Vector{Fl}, order::Tuple{Int,Int,Int}) where Fl
+    function ARIMA(y::Vector{Fl}, order::Tuple{Int,Int,Int}; mean_c::Bool = false) where Fl
         or = ARIMAOrder(order[1], order[2], order[3])
         hyperparameters_auxiliary = ARIMAHyperParametersAuxiliary(or)
 
@@ -51,6 +52,9 @@ mutable struct ARIMA <: StateSpaceModel
         system = LinearUnivariateTimeInvariant{Fl}(y, Z, T, R, d_ss, c, H, Q_ss)
 
         num_hyperparameters = or.p + or.q + 1
+        if mean_c 
+            num_hyperparameters += 1
+        end
         names = Vector{String}(undef, num_hyperparameters)
         for i in 1:(or.p)
             names[i] = "ar_L$i"
@@ -58,11 +62,14 @@ mutable struct ARIMA <: StateSpaceModel
         for j in 1:(or.q)
             names[or.p + j] = "ma_L$j"
         end
+        if mean_c
+            names[end-1] = "mean"
+        end
         names[end] = "sigma2_η"
 
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new(or, hyperparameters_auxiliary, hyperparameters, system, Results{Fl}())
+        return new(or, hyperparameters_auxiliary, hyperparameters, system, Results{Fl}(), mean_c)
     end
 end
 
@@ -252,27 +259,22 @@ function concatenate_on_bottom(X1::Matrix{Fl}, X2::Matrix{Fl}) where Fl
 end
 
 function diff_arma(y::Vector{Fl}, d::Int) where Fl
-    if d > 0
-        return Vector{Fl}((y - lag(y, d))[d+1:end])
-    else
-        return y
+    for _ in 1:d
+        y = diff(y)
     end
+    return y
 end
 
 function initial_hyperparameters!(model::ARIMA)
     Fl = typeof_model_elements(model)
-    # TODO find out how to better estimate initial parameters
     initial_hyperparameters = Dict{String,Fl}()
     # Heuristic inspired in statsmodels from python
     # TODO find a reference to this heuristic
     y = filter(!isnan, model.system.y)
     y_diff = diff_arma(y, model.order.d)
     k = model.order.p + model.order.q
-    residuals = nothing
     X = lagmat(y_diff, k)
-    if model.order.q > 0
-        residuals = y_diff[k+1:end] - X * (X \ y_diff[k+1:end])
-    end
+    residuals = y_diff[k+1:end] - X * (X \ y_diff[k+1:end])
     X_ar = lagmat(y_diff, model.order.p)
     X_ma = lagmat(residuals, model.order.q)
     X = concatenate_on_bottom(X_ar, X_ma)
@@ -288,6 +290,9 @@ function initial_hyperparameters!(model::ARIMA)
         offset += 1
     end
     initial_hyperparameters["sigma2_η"] = var(y_diff)
+    if model.mean_c 
+        initial_hyperparameters["mean"] = mean(y_diff)
+    end
     
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return nothing
@@ -296,54 +301,66 @@ end
 function constrain_hyperparameters!(model::ARIMA)
     Fl = typeof_model_elements(model)
     # Constraint AR terms
-    unconstrained_ar = Vector{Fl}(undef, model.order.p)
-    for i in 1:(model.order.p)
-        unconstrained_ar[i] = get_unconstrained_value(model, get_ar_name(model, i))
-    end
-    constrained_ar = impose_unit_root_constraint(unconstrained_ar)
-    for i in 1:(model.order.p)
-        update_constrained_value!(model, get_ar_name(model, i), constrained_ar[i])
+    if model.order.p > 0
+        unconstrained_ar = Vector{Fl}(undef, model.order.p)
+        for i in 1:(model.order.p)
+            unconstrained_ar[i] = get_unconstrained_value(model, get_ar_name(model, i))
+        end
+        constrained_ar = impose_unit_root_constraint(unconstrained_ar)
+        for i in 1:(model.order.p)
+            update_constrained_value!(model, get_ar_name(model, i), constrained_ar[i])
+        end
     end
 
     # Constraint MA terms
-    unconstrained_ma = Vector{Fl}(undef, model.order.q)
-    for j in 1:(model.order.q)
-        unconstrained_ma[j] = get_unconstrained_value(model, get_ma_name(model, j))
-    end
-    constrained_ma = -impose_unit_root_constraint(unconstrained_ma)
-    for j in 1:(model.order.q)
-        update_constrained_value!(model, get_ma_name(model, j), constrained_ma[j])
+    if model.order.q > 0
+        unconstrained_ma = Vector{Fl}(undef, model.order.q)
+        for j in 1:(model.order.q)
+            unconstrained_ma[j] = get_unconstrained_value(model, get_ma_name(model, j))
+        end
+        constrained_ma = -impose_unit_root_constraint(unconstrained_ma)
+        for j in 1:(model.order.q)
+            update_constrained_value!(model, get_ma_name(model, j), constrained_ma[j])
+        end
     end
 
-    # Constrain variance
     constrain_variance!(model, "sigma2_η")
+    if model.mean_c
+        constrain_identity!(model, "mean")
+    end
     return nothing
 end
 
 function unconstrain_hyperparameters!(model::ARIMA)
     Fl = typeof_model_elements(model)
     # Unconstraint AR terms
-    constrained_ar = Vector{Fl}(undef, model.order.p)
-    for i in 1:(model.order.p)
-        constrained_ar[i] = get_constrained_value(model, get_ar_name(model, i))
-    end
-    unconstrained_ar = relax_unit_root_constraint(constrained_ar)
-    for i in 1:(model.order.p)
-        update_unconstrained_value!(model, get_ar_name(model, i), unconstrained_ar[i])
+    if model.order.p > 0
+        constrained_ar = Vector{Fl}(undef, model.order.p)
+        for i in 1:(model.order.p)
+            constrained_ar[i] = get_constrained_value(model, get_ar_name(model, i))
+        end
+        unconstrained_ar = relax_unit_root_constraint(constrained_ar)
+        for i in 1:(model.order.p)
+            update_unconstrained_value!(model, get_ar_name(model, i), unconstrained_ar[i])
+        end
     end
 
     # Unconstraint MA terms
-    constrained_ma = Vector{Fl}(undef, model.order.q)
-    for j in 1:(model.order.q)
-        constrained_ma[j] = get_constrained_value(model, get_ma_name(model, j))
-    end
-    unconstrained_ma = -relax_unit_root_constraint(constrained_ma)
-    for j in 1:(model.order.q)
-        update_unconstrained_value!(model, get_ma_name(model, j), unconstrained_ma[j])
+    if model.order.q > 0
+        constrained_ma = Vector{Fl}(undef, model.order.q)
+        for j in 1:(model.order.q)
+            constrained_ma[j] = get_constrained_value(model, get_ma_name(model, j))
+        end
+        unconstrained_ma = -relax_unit_root_constraint(constrained_ma)
+        for j in 1:(model.order.q)
+            update_unconstrained_value!(model, get_ma_name(model, j), unconstrained_ma[j])
+        end
     end
 
-    # Unconstrain variance
     unconstrain_variance!(model, "sigma2_η")
+    if model.mean_c
+        unconstrain_identity!(model, "mean")
+    end
     return nothing
 end
 
@@ -351,6 +368,9 @@ function fill_model_system!(model::ARIMA)
     update_ar_terms!(model)
     update_ma_terms!(model)
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
+    if model.mean_c
+        model.system.d = get_constrained_value(model, "mean")
+    end
     return nothing
 end
 
@@ -365,3 +385,14 @@ function reinstantiate(model::ARIMA, y::Vector{Fl}) where Fl
 end
 
 has_exogenous(::ARIMA) = false
+
+function Base.show(io::IO, model::ARIMA)
+    p, d, q = model.order.p, model.order.d, model.order.q
+    str = "ARIMA($p, $d, $q)"
+    if model.mean_c 
+        str *= " with non-zero mean"
+    end
+    str *= " model"
+    print(io, str)
+    return nothing
+end

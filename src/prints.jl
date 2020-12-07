@@ -33,17 +33,17 @@ function print_coef_table(io::IO, coef_table::CoefficientTable{Fl}) where Fl
 end
 
 function print_coef(coef_table::CoefficientTable{Fl}, offset::Int) where Fl
-    p_c = @sprintf("%.2f", coef_table.coef[offset])
+    p_c = @sprintf("%.3f", coef_table.coef[offset])
     p_std = if isnan(coef_table.std_err[offset])
         " - "
     else
-        @sprintf("%.2f", coef_table.std_err[offset])
+        @sprintf("%.3f", coef_table.std_err[offset])
     end
-    p_z_stat = isnan(coef_table.z[offset]) ? " - " : @sprintf("%.2f", coef_table.z[offset])
+    p_z_stat = isnan(coef_table.z[offset]) ? " - " : @sprintf("%.3f", coef_table.z[offset])
     p_p_val = if isnan(coef_table.p_value[offset])
         " - "
     else
-        @sprintf("%.2f", coef_table.p_value[offset])
+        @sprintf("%.3f", coef_table.p_value[offset])
     end
     return p_c, p_std, p_z_stat, p_p_val
 end

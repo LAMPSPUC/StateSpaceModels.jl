@@ -91,3 +91,11 @@ const FRONT_REAR_SEAT_KSI = joinpath(dirname(@__DIR__()), "datasets", "front_rea
 TODO
 """
 const RJ_TEMPERATURE = joinpath(dirname(@__DIR__()), "datasets", "rj_temperature.csv")
+
+@doc raw"""
+Percentage changes in quarterly personal consumption expenditure, personal disposable income,
+production, savings and the unemployment rate for the US, 1960 to 2016.
+
+Federal Reserve Bank of St Louis.
+"""
+const US_CHANGE = joinpath(dirname(@__DIR__()), "datasets", "uschange.csv")
