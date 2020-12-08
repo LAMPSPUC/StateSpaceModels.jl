@@ -2,6 +2,7 @@ struct ARIMAOrder
     p::Int
     d::Int
     q::Int
+    # TODO assert p, d, q are positive
 end
 
 # This is used to some optimizations such as
@@ -35,9 +36,9 @@ mutable struct ARIMA <: StateSpaceModel
     hyperparameters::HyperParameters
     system::LinearUnivariateTimeInvariant
     results::Results
-    mean_c::Bool
+    include_mean::Bool
 
-    function ARIMA(y::Vector{Fl}, order::Tuple{Int,Int,Int}; mean_c::Bool = false) where Fl
+    function ARIMA(y::Vector{Fl}, order::Tuple{Int,Int,Int}; include_mean::Bool = false) where Fl
         or = ARIMAOrder(order[1], order[2], order[3])
         hyperparameters_auxiliary = ARIMAHyperParametersAuxiliary(or)
 
@@ -52,7 +53,7 @@ mutable struct ARIMA <: StateSpaceModel
         system = LinearUnivariateTimeInvariant{Fl}(y, Z, T, R, d_ss, c, H, Q_ss)
 
         num_hyperparameters = or.p + or.q + 1
-        if mean_c 
+        if include_mean 
             num_hyperparameters += 1
         end
         names = Vector{String}(undef, num_hyperparameters)
@@ -62,14 +63,14 @@ mutable struct ARIMA <: StateSpaceModel
         for j in 1:(or.q)
             names[or.p + j] = "ma_L$j"
         end
-        if mean_c
+        if include_mean
             names[end-1] = "mean"
         end
         names[end] = "sigma2_η"
 
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new(or, hyperparameters_auxiliary, hyperparameters, system, Results{Fl}(), mean_c)
+        return new(or, hyperparameters_auxiliary, hyperparameters, system, Results{Fl}(), include_mean)
     end
 end
 
@@ -289,11 +290,11 @@ function initial_hyperparameters!(model::ARIMA)
         initial_hyperparameters[get_ma_name(model, j)] = initial_params[offset]
         offset += 1
     end
-    initial_hyperparameters["sigma2_η"] = var(y_diff)
-    if model.mean_c 
+    if model.include_mean 
         initial_hyperparameters["mean"] = mean(y_diff)
     end
     
+    initial_hyperparameters["sigma2_η"] = var(y_diff)
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return nothing
 end
@@ -324,10 +325,10 @@ function constrain_hyperparameters!(model::ARIMA)
         end
     end
 
-    constrain_variance!(model, "sigma2_η")
-    if model.mean_c
+    if model.include_mean
         constrain_identity!(model, "mean")
     end
+    constrain_variance!(model, "sigma2_η")
     return nothing
 end
 
@@ -357,20 +358,24 @@ function unconstrain_hyperparameters!(model::ARIMA)
         end
     end
 
-    unconstrain_variance!(model, "sigma2_η")
-    if model.mean_c
+    if model.include_mean
         unconstrain_identity!(model, "mean")
     end
+    unconstrain_variance!(model, "sigma2_η")
     return nothing
 end
 
 function fill_model_system!(model::ARIMA)
-    update_ar_terms!(model)
-    update_ma_terms!(model)
-    model.system.Q[1] = get_constrained_value(model, "sigma2_η")
-    if model.mean_c
+    if model.order.p > 0
+        update_ar_terms!(model)
+    end
+    if model.order.q > 0
+        update_ma_terms!(model)
+    end
+    if model.include_mean
         model.system.d = get_constrained_value(model, "mean")
     end
+    model.system.Q[1] = get_constrained_value(model, "sigma2_η")
     return nothing
 end
 
@@ -389,7 +394,7 @@ has_exogenous(::ARIMA) = false
 function Base.show(io::IO, model::ARIMA)
     p, d, q = model.order.p, model.order.d, model.order.q
     str = "ARIMA($p, $d, $q)"
-    if model.mean_c 
+    if model.include_mean 
         str *= " with non-zero mean"
     end
     str *= " model"

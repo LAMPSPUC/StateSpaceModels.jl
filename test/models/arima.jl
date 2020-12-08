@@ -45,11 +45,11 @@
     @test loglike(model) ≈ -137.246818 atol = 1e-5 rtol = 1e-5
 
     uschange_consumption = CSV.read(StateSpaceModels.US_CHANGE, DataFrame).Consumption
-    model = ARIMA(uschange_consumption, (1, 0, 3); mean_c = true)
+    model = ARIMA(uschange_consumption, (1, 0, 3); include_mean = true)
     fit!(model)
     @test loglike(model) ≈ -164.8 atol = 1e-1 rtol = 1e-1
 
-    model = ARIMA(uschange_consumption, (3, 0, 0); mean_c = true)
+    model = ARIMA(uschange_consumption, (3, 0, 0); include_mean = true)
     fit!(model)
     @test loglike(model) ≈ -165.2 atol = 1e-1 rtol = 1e-1
 end
