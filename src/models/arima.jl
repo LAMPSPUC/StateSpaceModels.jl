@@ -2,7 +2,12 @@ struct ARIMAOrder
     p::Int
     d::Int
     q::Int
-    # TODO assert p, d, q are positive
+    function ARIMAOrder(p::Int, d::Int, q::Int)
+        @assert p >= 0
+        @assert d >= 0
+        @assert q >= 0
+        return new(p, d, q)
+    end
 end
 
 # This is used to some optimizations such as
