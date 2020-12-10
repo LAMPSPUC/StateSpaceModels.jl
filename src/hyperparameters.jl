@@ -31,6 +31,9 @@ mutable struct HyperParameters{Fl<:AbstractFloat}
     end
 end
 
+function has_hyperparameter(::SS) where SS <: StateSpaceModel
+    return :hyperparameters in fieldnames(SS)
+end
 function register_unconstrained_values!(
     model::StateSpaceModel, unconstrained_values::Vector{Fl}
 ) where Fl

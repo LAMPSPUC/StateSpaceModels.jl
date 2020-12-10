@@ -52,6 +52,7 @@ export LocalLevelCycle
 export LocalLevelExplanatory
 export LocalLinearTrend
 export MultivariateBasicStructural
+export MultivariateKalmanFilter
 export Optimizer
 export ScalarKalmanFilter
 export StateSpaceModel
@@ -82,10 +83,12 @@ export isunivariate
 export kalman_filter
 export kalman_smoother
 export loglike
+export num_states
 export results
 export set_initial_hyperparameters!
 export simulate
 export simulate_scenarios
+export typeof_model_elements
 export unconstrain_box!
 export unconstrain_identity!
 export unconstrain_variance!
