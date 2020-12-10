@@ -54,6 +54,11 @@ Current features include:
 * Completion of missing values
 * Diagnostics for the residuals of fitted models
 
+## Contributing
+
+* PRs such as adding new models and fixing bugs are very welcome!
+* For nontrivial changes, you'll probably want to first discuss the changes via issue.
+
 ## Citing StateSpaceModels.jl
 
 If you use StateSpaceModels.jl in your work, we kindly ask you to cite the [following paper](https://arxiv.org/abs/1908.01757):
