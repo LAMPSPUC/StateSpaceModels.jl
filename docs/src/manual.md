@@ -79,4 +79,5 @@ StateSpaceModels.NILE
 StateSpaceModels.RJ_TEMPERATURE
 StateSpaceModels.VEHICLE_FATALITIES
 StateSpaceModels.WHOLESALE_PRICE_INDEX
+StateSpaceModels.US_CHANGE
 ```

@@ -12,11 +12,31 @@
 
 StateSpaceModels.jl is a package for modeling, forecasting, and simulating time series in a state-space framework. Implementations were made based on the book "Time Series Analysis by State Space Methods" (2012) by James Durbin and Siem Jan Koopman. The notation of the variables in the code also follows the book.
 
-## Installation
-
-This package is registered so you can simply `add` it using Julia's `Pkg` manager:
+## Quickstart
 ```julia
-pkg> add StateSpaceModels
+import Pkg
+
+Pkg.add("StateSpaceModels")
+
+using StateSpaceModels
+
+y = rand(100)
+
+model = LocalLevel(y)
+
+fit!(model)
+
+results(model)
+
+forecast(model, 10)
+
+kf = kalman_filter(model)
+
+v = get_innovations(kf)
+
+ks = kalman_smoother(model)
+
+alpha = get_smoothed_state(ks)
 ```
 
 ## Features
@@ -33,6 +53,11 @@ Current features include:
   * ARIMA
 * Completion of missing values
 * Diagnostics for the residuals of fitted models
+
+## Contributing
+
+* PRs such as adding new models and fixing bugs are very welcome!
+* For nontrivial changes, you'll probably want to first discuss the changes via issue.
 
 ## Citing StateSpaceModels.jl
 
