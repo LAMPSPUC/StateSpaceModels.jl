@@ -40,7 +40,7 @@ end
 # sim = simulate(model.system, initial_state, 100)
 
 # model = VehicleTracking(sim, 0.1, H, Q)
-kalman_filter(model)
+# kalman_filter(model)
 # pos_filter = get_filtered_state(model)
 # pos_smoother = get_smoothed_state(model)
 
