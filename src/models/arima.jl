@@ -1,12 +1,26 @@
-struct ARIMAOrder
+struct SARIMAOrder
     p::Int
     d::Int
     q::Int
-    function ARIMAOrder(p::Int, d::Int, q::Int)
+    P::Int
+    D::Int
+    Q::Int
+    s::Int
+    r::Int # Model order
+    n_states_diff::Int
+    n_states::Int
+    function SARIMAOrder(p::Int, d::Int, q::Int, P::Int, D::Int, Q::Int, s::Int)
         @assert p >= 0
         @assert d >= 0
         @assert q >= 0
-        return new(p, d, q)
+        @assert P >= 0
+        @assert D >= 0
+        @assert Q >= 0
+        @assert s >= 0
+        r = max(p + s * P, q + s * Q + 1)
+        n_states_diff = d + D * s
+        n_states = d + D * s + r
+        return new(p, d, q, P, D, Q, s, r, n_states_diff, n_states)
     end
 end
 
@@ -14,38 +28,50 @@ end
 # defining the position of each parameter before hand
 # and avoiding string interpolations such as "ar_L$i"
 # for "ar_L1"
-struct ARIMAHyperParametersAuxiliary
+struct SARIMAHyperParametersAuxiliary
     ar_pos::Vector{Int}
     ar_names::Vector{String}
+    seasonal_ar_pos::Vector{Int}
+    seasonal_ar_names::Vector{String}
     ma_pos::Vector{Int}
     ma_names::Vector{String}
-    function ARIMAHyperParametersAuxiliary(order::ARIMAOrder)
+    seasonal_ma_pos::Vector{Int}
+    seasonal_ma_names::Vector{String}
+    function SARIMAHyperParametersAuxiliary(order::SARIMAOrder)
         return new(
             ar_position_T_matrix(order),
-            create_ar_names(order),
+            create_names("ar_L", order.p),
+            seasonal_ar_position_T_matrix(order),
+            create_names("s_ar_L", order.P),
             ma_position_R_matrix(order),
-            create_ma_names(order),
+            create_names("ma_L", order.q),
+            seasonal_ma_position_R_matrix(order),
+            create_names("s_ma_L", order.Q),
         )
     end
 end
 
 """
-    ARIMA
+    SARIMA
 
-An ARIMA model (autoregressive integrated moving average) implemented within the state-space
+A SARIMA model (seasonal autoregressive integrated moving average) implemented within the state-space
 framework.
 """
-mutable struct ARIMA <: StateSpaceModel
-    order::ARIMAOrder
-    hyperparameters_auxiliary::ARIMAHyperParametersAuxiliary
+mutable struct SARIMA <: StateSpaceModel
+    order::SARIMAOrder
+    hyperparameters_auxiliary::SARIMAHyperParametersAuxiliary
     hyperparameters::HyperParameters
     system::LinearUnivariateTimeInvariant
     results::Results
     include_mean::Bool
 
-    function ARIMA(y::Vector{Fl}, order::Tuple{Int,Int,Int}; include_mean::Bool = false) where Fl
-        or = ARIMAOrder(order[1], order[2], order[3])
-        hyperparameters_auxiliary = ARIMAHyperParametersAuxiliary(or)
+    function SARIMA(y::Vector{Fl}; 
+                    order::Tuple{Int,Int,Int} = (1, 0, 0), 
+                    seasonal_order::Tuple{Int, Int, Int, Int} = (0, 0, 0, 0),
+                    include_mean::Bool = false) where Fl
+        or = SARIMAOrder(order[1], order[2], order[3], 
+                        seasonal_order[1], seasonal_order[2], seasonal_order[3], seasonal_order[4])
+        hyperparameters_auxiliary = SARIMAHyperParametersAuxiliary(or)
 
         Z = build_Z(or, Fl)
         T = build_T(or, Fl)
@@ -57,7 +83,7 @@ mutable struct ARIMA <: StateSpaceModel
 
         system = LinearUnivariateTimeInvariant{Fl}(y, Z, T, R, d_ss, c, H, Q_ss)
 
-        num_hyperparameters = or.p + or.q + 1
+        num_hyperparameters = or.p + or.q + or.P + or.Q + 1
         if include_mean 
             num_hyperparameters += 1
         end
@@ -67,6 +93,12 @@ mutable struct ARIMA <: StateSpaceModel
         end
         for j in 1:(or.q)
             names[or.p + j] = "ma_L$j"
+        end
+        for is in 1:(or.P)
+            names[or.p + or.q + is] = "s_ar_L$is"
+        end
+        for js in 1:(or.Q)
+            names[or.p + or.q + or.P + js] = "s_ma_L$js"
         end
         if include_mean
             names[end-1] = "mean"
@@ -81,44 +113,56 @@ end
 
 # Auxiliary functions
 function build_Z(or, Fl)
-    # Build ARMA Z matrix
-    r = max(or.p, or.q + 1)
-    arma_Z_matrix = vcat(1, zeros(Fl, r - 1))
-    # Build ARIMA Z matrix from ARMA Z matrix
-    return vcat(ones(Fl, or.d), arma_Z_matrix)
+    seasonal_entries = or.s - 1 >= 0 ? or.s - 1 : 0
+    return vcat(
+            fill(one(Fl), or.d),
+            repeat(vcat(zeros(Fl, seasonal_entries), one(Fl)), or.D),
+            one(Fl),
+            fill(zero(Fl), or.r - 1)
+        )
 end
 
+triu_indices(k::Int) = findall(isone, triu(ones(k, k)))
 function build_T(or, Fl)
-    # Build ARMA T matrix
-    r = max(or.p, or.q + 1)
     # zeros matrix in the correct dimension
-    arma_T_matrix = zeros(Fl, r, r)
-    # Fill ARMA p indices
-    for i in 1:(or.p)
-        arma_T_matrix[i, 1] = 1
+    T = zeros(Fl, or.n_states, or.n_states)
+    if or.r > 0
+        T[end - or.r + 1:end, end - or.r + 1:end] = diagm(1 => ones(or.r - 1))
     end
-    for k in 1:(r - 1)
-        arma_T_matrix[k, k + 1] = 1
+    if or.D > 0
+        seasonal_companion = diagm(-1 => ones(or.s - 1))
+        seasonal_companion[1, end] = 1
+        for l in 1:or.D
+            start_idx = or.d + (l - 1) * or.s
+            end_idx = or.d + l * or.s
+            T[start_idx + 1:end_idx, start_idx + 1:end_idx] .= seasonal_companion
+            if l + 1 <= or.D
+                T[start_idx + 1, end_idx + or.s] = 1
+            end
+            T[start_idx + 1, or.n_states_diff + 1] = 1
+        end
     end
-    # Build ARIMA T matrix from ARMA T matrix
-    arima_T_matrix = zeros(Fl, r + or.d, r + or.d)
-    arima_T_matrix[(end - r + 1):end, (end - r + 1):end] = arma_T_matrix
-    for i in 1:(or.d), j in i:(or.d + 1)
-        arima_T_matrix[i, j] = 1
+    if or.d > 0
+        idx = triu_indices(or.d)
+        T[idx] .= 1
+        if or.s > 0
+            start_idx = or.d
+            end_idx = or.n_states_diff
+            T[1:or.d, start_idx+1:end_idx] .= repeat(hcat(zeros(Fl, 1, or.s - 1), one(Fl)), 1, or.D)
+        end
+        T[1:or.d, or.n_states_diff + 1] .= 1
     end
-    return arima_T_matrix
+    return T
 end
-
 function build_R(or, Fl)
-    # Build ARMA R matrix
-    r = max(or.p, or.q + 1)
-    arma_R_matrix = vcat(ones(1, 1), zeros(Fl, r - 1))
-    # Build ARIMA R matrix from ARMA R matrix
-    return vcat(zeros(Fl, or.d), arma_R_matrix)
+    return vcat(
+        fill(zero(Fl), or.n_states_diff, 1),
+        fill(one(Fl), 1, 1),
+        fill(zero(Fl), or.r - 1, 1)
+    )
 end
-
 function build_c(or, Fl)
-    return zeros(Fl, or.d + max(or.p, or.q + 1))
+    return zeros(Fl, or.n_states)
 end
 
 function ar_position_T_matrix(or)
@@ -126,7 +170,7 @@ function ar_position_T_matrix(or)
     for i in 1:(or.p)
         push!(ar_index, CartesianIndex(or.d + i, or.d + 1))
     end
-    # To make ARIMA faster we need to rewrite this column wise to access the matrix
+    # To make SARIMA faster we need to rewrite this column wise to access the matrix
     T_dim = max(or.p, or.q + 1) + or.d
     T = zeros(T_dim, T_dim)
     I = LinearIndices(T)
@@ -136,7 +180,6 @@ function ar_position_T_matrix(or)
     end
     return ar_index_columnwise
 end
-
 function ma_position_R_matrix(or)
     ma_index = Int[]
     for i in 1:(or.q)
@@ -144,27 +187,29 @@ function ma_position_R_matrix(or)
     end
     return ma_index
 end
-
-function create_ar_names(or)
-    ar_names = Vector{String}(undef, or.p)
-    for i in 1:(or.p)
-        ar_names[i] = "ar_L$i"
+function seasonal_ar_position_T_matrix(or)
+    return Int[]
+end
+function seasonal_ma_position_R_matrix(or)
+    ma_index = Int[]
+    return ma_index
+end
+function create_names(str::String, dim::Int)
+    names = Vector{String}(undef, dim)
+    for i in 1:dim
+        names[i] = str*"$i"
     end
-    return ar_names
+    return names
 end
 
-function create_ma_names(or)
-    ma_names = Vector{String}(undef, or.q)
-    for i in 1:(or.q)
-        ma_names[i] = "ma_L$i"
-    end
-    return ma_names
-end
-
-get_ar_name(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ar_names[i]
-get_ma_name(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ma_names[i]
-get_ar_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ar_pos[i]
-get_ma_pos(model::ARIMA, i::Int) = model.hyperparameters_auxiliary.ma_pos[i]
+get_ar_name(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.ar_names[i]
+get_ma_name(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.ma_names[i]
+get_seasonal_ar_name(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.seasonal_ar_names[i]
+get_seasonal_ma_name(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.seasonal_ma_names[i]
+get_ar_pos(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.ar_pos[i]
+get_ma_pos(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.ma_pos[i]
+get_seasonal_ar_pos(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.seasonal_ar_pos[i]
+get_seasonal_ma_pos(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.seasonal_ma_pos[i]
 
 # TODO improve performance possibly preallocating y
 #     Monahan, John F. 1984.
@@ -203,13 +248,13 @@ function relax_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
     return x
 end
 
-function ARIMA_exact_initalization!(filter::KalmanFilter, model::ARIMA)
+function SARIMA_exact_initalization!(filter::KalmanFilter, model::SARIMA)
     num_arma_states = max(model.order.p, model.order.q + 1)
-    ARIMA_exact_initialization!(filter.kalman_state, model.system, num_arma_states)
+    SARIMA_exact_initialization!(filter.kalman_state, model.system, num_arma_states)
     return nothing
 end
 
-function ARIMA_exact_initialization!(kalman_state, system, num_arma_states)
+function SARIMA_exact_initialization!(kalman_state, system, num_arma_states)
     arma_T = system.T[(end - num_arma_states + 1):end, (end - num_arma_states + 1):end]
     arma_R = system.R[(end - num_arma_states + 1):end]
     # Calculate exact initial P1
@@ -221,34 +266,45 @@ function ARIMA_exact_initialization!(kalman_state, system, num_arma_states)
     return nothing
 end
 
-function update_ar_terms!(model::ARIMA)
-    for i in 1:(model.order.p)
-        model.system.T[get_ar_pos(model, i)] = get_constrained_value(
-            model, get_ar_name(model, i)
-        )
+function update_ar_terms!(model::SARIMA)
+    if model.order.p > 0
+        for i in 1:(model.order.p)
+            model.system.T[get_ar_pos(model, i)] = get_constrained_value(
+                model, get_ar_name(model, i)
+            )
+        end
     end
     return nothing
 end
-
-function update_ma_terms!(model::ARIMA)
-    for j in 1:(model.order.q)
-        model.system.R[get_ma_pos(model, j)] = get_constrained_value(
-            model, get_ma_name(model, j)
-        )
+function update_ma_terms!(model::SARIMA)
+    if model.order.q > 0
+        for j in 1:(model.order.q)
+            model.system.R[get_ma_pos(model, j)] = get_constrained_value(
+                model, get_ma_name(model, j)
+            )
+        end
     end
     return nothing
 end
-
-# Obligatory functions
-function default_filter(model::ARIMA)
-    Fl = typeof_model_elements(model)
-    num_arma_states = max(model.order.p, model.order.q + 1)
-    r = model.order.d + num_arma_states
-    a1 = zeros(Fl, r)
-    P1 = Fl(1e6) .* Matrix{Fl}(I, r, r)
-    skip_llk_instants = model.order.d
-    steadystate_tol = Fl(1e-5)
-    return UnivariateKalmanFilter(a1, P1, skip_llk_instants, steadystate_tol)
+function update_seasonal_ar_terms!(model::SARIMA)
+    if model.order.P > 0
+        for i in 1:(model.order.p)
+            model.system.T[get_seaasonal_ar_pos(model, i)] = get_constrained_value(
+                model, get_seaasonal_ar_name(model, i)
+            )
+        end
+    end
+    return nothing
+end
+function update_seasonal_ma_terms!(model::SARIMA)
+    if model.order.Q > 0
+        for j in 1:(model.order.q)
+            model.system.R[get_seaasonal_ma_pos(model, j)] = get_constrained_value(
+                model, get_seaasonal_ma_name(model, j)
+            )
+        end
+    end
+    return nothing
 end
 
 function lagmat(y::Vector{Fl}, k::Int) where Fl
@@ -271,7 +327,138 @@ function diff_arma(y::Vector{Fl}, d::Int) where Fl
     return y
 end
 
-function initial_hyperparameters!(model::ARIMA)
+function constrain_ar!(model::SARIMA, Fl::DataType)
+    if model.order.p > 0
+        unconstrained_ar = Vector{Fl}(undef, model.order.p)
+        for i in 1:(model.order.p)
+            unconstrained_ar[i] = get_unconstrained_value(model, get_ar_name(model, i))
+        end
+        constrained_ar = impose_unit_root_constraint(unconstrained_ar)
+        for i in 1:(model.order.p)
+            update_constrained_value!(model, get_ar_name(model, i), constrained_ar[i])
+        end
+    end
+    return nothing
+end
+function constrain_ma!(model::SARIMA, Fl::DataType)
+    if model.order.q > 0
+        unconstrained_ma = Vector{Fl}(undef, model.order.q)
+        for j in 1:(model.order.q)
+            unconstrained_ma[j] = get_unconstrained_value(model, get_ma_name(model, j))
+        end
+        constrained_ma = -impose_unit_root_constraint(unconstrained_ma)
+        for j in 1:(model.order.q)
+            update_constrained_value!(model, get_ma_name(model, j), constrained_ma[j])
+        end
+    end
+    return nothing
+end
+function constrain_seasonal_ar!(model::SARIMA, Fl::DataType)
+    if model.order.P > 0
+        unconstrained_seasonal_ar = Vector{Fl}(undef, model.order.P)
+        for i in 1:(model.order.P)
+            unconstrained_seasonal_ar[i] = get_unconstrained_value(model, get_seasonal_ar_name(model, i))
+        end
+        constrained_seasonal_ar = impose_unit_root_constraint(unconstrained_seasonal_ar)
+        for i in 1:(model.order.P)
+            update_constrained_value!(model, get_seasonal_ar_name(model, i), constrained_seasonal_ar[i])
+        end
+    end
+    return nothing
+end
+function constrain_seasonal_ma!(model::SARIMA, Fl::DataType)
+    if model.order.Q > 0
+        unconstrained_seasonal_ma = Vector{Fl}(undef, model.order.Q)
+        for j in 1:(model.order.Q)
+            unconstrained_seasonal_ma[j] = get_unconstrained_value(model, get_seasonal_ma_name(model, j))
+        end
+        constrained_seasonal_ma = -impose_unit_root_constraint(unconstrained_seasonal_ma)
+        for j in 1:(model.order.Q)
+            update_constrained_value!(model, get_seasonal_ma_name(model, j), constrained_seasonal_ma[j])
+        end
+    end
+    return nothing
+end
+function constrain_mean!(model::SARIMA)
+    if model.include_mean
+        constrain_identity!(model, "mean")
+    end
+    return nothing
+end
+
+function unconstrain_ar!(model::SARIMA, Fl::DataType)
+    if model.order.p > 0
+        constrained_ar = Vector{Fl}(undef, model.order.p)
+        for i in 1:(model.order.p)
+            constrained_ar[i] = get_constrained_value(model, get_ar_name(model, i))
+        end
+        unconstrained_ar = relax_unit_root_constraint(constrained_ar)
+        for i in 1:(model.order.p)
+            update_unconstrained_value!(model, get_ar_name(model, i), unconstrained_ar[i])
+        end
+    end
+    return nothing
+end
+function unconstrain_ma!(model::SARIMA, Fl::DataType)
+    if model.order.q > 0
+        constrained_ma = Vector{Fl}(undef, model.order.q)
+        for j in 1:(model.order.q)
+            constrained_ma[j] = get_constrained_value(model, get_ma_name(model, j))
+        end
+        unconstrained_ma = -relax_unit_root_constraint(constrained_ma)
+        for j in 1:(model.order.q)
+            update_unconstrained_value!(model, get_ma_name(model, j), unconstrained_ma[j])
+        end
+    end
+    return nothing
+end
+function unconstrain_seasonal_ar!(model::SARIMA, Fl::DataType)
+    if model.order.P > 0
+        constrained_seasonal_ar = Vector{Fl}(undef, model.order.P)
+        for i in 1:(model.order.P)
+            constrained_seasonal_ar[i] = get_constrained_value(model, get_seasonal_ar_name(model, i))
+        end
+        unconstrained_seasonal_ar = relax_unit_root_constraint(constrained_seasonal_ar)
+        for i in 1:(model.order.P)
+            update_unconstrained_value!(model, get_seasonal_ar_name(model, i), unconstrained_seasonal_ar[i])
+        end
+    end
+    return nothing
+end
+function unconstrain_seasonal_ma!(model::SARIMA, Fl::DataType)
+    if model.order.Q > 0
+        constrained_seasonal_ma = Vector{Fl}(undef, model.order.Q)
+        for j in 1:(model.order.Q)
+            constrained_seasonal_ma[j] = get_constrained_value(model, get_seasonal_ma_name(model, j))
+        end
+        unconstrained_seasonal_ma = -relax_unit_root_constraint(constrained_seasonal_ma)
+        for j in 1:(model.order.Q)
+            update_unconstrained_value!(model, get_seasonal_ma_name(model, j), unconstrained_seasonal_ma[j])
+        end
+    end
+    return nothing
+end
+function unconstrain_mean!(model::SARIMA)
+    if model.include_mean
+        unconstrain_identity!(model, "mean")
+    end
+    return nothing
+end
+
+
+# Obligatory functions
+function default_filter(model::SARIMA)
+    Fl = typeof_model_elements(model)
+    num_arma_states = max(model.order.p, model.order.q + 1)
+    r = model.order.d + num_arma_states
+    a1 = zeros(Fl, r)
+    P1 = Fl(1e6) .* Matrix{Fl}(I, r, r)
+    skip_llk_instants = model.order.d
+    steadystate_tol = Fl(1e-5)
+    return UnivariateKalmanFilter(a1, P1, skip_llk_instants, steadystate_tol)
+end
+
+function initial_hyperparameters!(model::SARIMA)
     Fl = typeof_model_elements(model)
     initial_hyperparameters = Dict{String,Fl}()
     # Heuristic inspired in statsmodels from python
@@ -304,79 +491,33 @@ function initial_hyperparameters!(model::ARIMA)
     return nothing
 end
 
-function constrain_hyperparameters!(model::ARIMA)
+function constrain_hyperparameters!(model::SARIMA)
     Fl = typeof_model_elements(model)
-    # Constraint AR terms
-    if model.order.p > 0
-        unconstrained_ar = Vector{Fl}(undef, model.order.p)
-        for i in 1:(model.order.p)
-            unconstrained_ar[i] = get_unconstrained_value(model, get_ar_name(model, i))
-        end
-        constrained_ar = impose_unit_root_constraint(unconstrained_ar)
-        for i in 1:(model.order.p)
-            update_constrained_value!(model, get_ar_name(model, i), constrained_ar[i])
-        end
-    end
-
-    # Constraint MA terms
-    if model.order.q > 0
-        unconstrained_ma = Vector{Fl}(undef, model.order.q)
-        for j in 1:(model.order.q)
-            unconstrained_ma[j] = get_unconstrained_value(model, get_ma_name(model, j))
-        end
-        constrained_ma = -impose_unit_root_constraint(unconstrained_ma)
-        for j in 1:(model.order.q)
-            update_constrained_value!(model, get_ma_name(model, j), constrained_ma[j])
-        end
-    end
-
-    if model.include_mean
-        constrain_identity!(model, "mean")
-    end
+    constrain_ar!(model, Fl)
+    constrain_ma!(model, Fl)
+    constrain_seasonal_ar!(model, Fl)
+    constrain_seasonal_ma!(model, Fl)
+    constrain_mean!(model)
     constrain_variance!(model, "sigma2_η")
     return nothing
 end
 
-function unconstrain_hyperparameters!(model::ARIMA)
+function unconstrain_hyperparameters!(model::SARIMA)
     Fl = typeof_model_elements(model)
-    # Unconstraint AR terms
-    if model.order.p > 0
-        constrained_ar = Vector{Fl}(undef, model.order.p)
-        for i in 1:(model.order.p)
-            constrained_ar[i] = get_constrained_value(model, get_ar_name(model, i))
-        end
-        unconstrained_ar = relax_unit_root_constraint(constrained_ar)
-        for i in 1:(model.order.p)
-            update_unconstrained_value!(model, get_ar_name(model, i), unconstrained_ar[i])
-        end
-    end
-
-    # Unconstraint MA terms
-    if model.order.q > 0
-        constrained_ma = Vector{Fl}(undef, model.order.q)
-        for j in 1:(model.order.q)
-            constrained_ma[j] = get_constrained_value(model, get_ma_name(model, j))
-        end
-        unconstrained_ma = -relax_unit_root_constraint(constrained_ma)
-        for j in 1:(model.order.q)
-            update_unconstrained_value!(model, get_ma_name(model, j), unconstrained_ma[j])
-        end
-    end
-
-    if model.include_mean
-        unconstrain_identity!(model, "mean")
-    end
+    unconstrain_ar!(model, Fl)
+    unconstrain_ma!(model, Fl)
+    unconstrain_seasonal_ar!(model, Fl)
+    unconstrain_seasonal_ma!(model, Fl)
+    unconstrain_mean!(model)
     unconstrain_variance!(model, "sigma2_η")
     return nothing
 end
 
-function fill_model_system!(model::ARIMA)
-    if model.order.p > 0
-        update_ar_terms!(model)
-    end
-    if model.order.q > 0
-        update_ma_terms!(model)
-    end
+function fill_model_system!(model::SARIMA)
+    update_ar_terms!(model)
+    update_ma_terms!(model)
+    update_seasonal_ar_terms!(model)
+    update_seasonal_ma_terms!(model)
     if model.include_mean
         model.system.d = get_constrained_value(model, "mean")
     end
@@ -384,21 +525,25 @@ function fill_model_system!(model::ARIMA)
     return nothing
 end
 
-function fill_model_filter!(filter::KalmanFilter, model::ARIMA)
-    ARIMA_exact_initalization!(filter, model)
+function fill_model_filter!(filter::KalmanFilter, model::SARIMA)
+    SARIMA_exact_initalization!(filter, model)
     return nothing
 end
 
-function reinstantiate(model::ARIMA, y::Vector{Fl}) where Fl
-    order = (model.order.p, model.order.d, model.order.q)
-    return ARIMA(y, order)
+function reinstantiate(model::SARIMA, y::Vector{Fl}) where Fl
+    return SARIMA(y; 
+                order = (model.order.p, model.order.d, model.order.q), 
+                seasonal_order = (model.order.P, model.order.D, model.order.Q, model.order.s), 
+                include_mean = model.include_mean
+            )
 end
 
-has_exogenous(::ARIMA) = false
+has_exogenous(::SARIMA) = false
 
-function Base.show(io::IO, model::ARIMA)
+function Base.show(io::IO, model::SARIMA)
     p, d, q = model.order.p, model.order.d, model.order.q
-    str = "ARIMA($p, $d, $q)"
+    P, D, Q, s = model.order.P, model.order.D, model.order.Q, model.order.s
+    str = "SARIMA($p, $d, $q)x($P, $D, $Q, $s)"
     if model.include_mean 
         str *= " with non-zero mean"
     end
