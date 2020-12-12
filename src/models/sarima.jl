@@ -194,7 +194,7 @@ function update_T_terms!(model::SARIMA)
     update_seasonal_ar_poly!(model)
     p3 = Polynomial(model.hyperparameters_auxiliary.ar_poly) * Polynomial(model.hyperparameters_auxiliary.seasonal_ar_poly)
     start_row = model.order.n_states_diff + 1
-    end_row = start_row + model.order.p + model.order.P - 1
+    end_row = start_row + model.order.p + model.order.s * model.order.P - 1
     col = model.order.n_states_diff + 1
     model.system.T[start_row:end_row, col] = p3.coeffs[2:end]
     return nothing
@@ -205,7 +205,7 @@ function update_R_terms!(model::SARIMA)
     update_seasonal_ma_poly!(model)
     p3 = Polynomial(model.hyperparameters_auxiliary.ma_poly) * Polynomial(model.hyperparameters_auxiliary.seasonal_ma_poly)
     start_row = model.order.n_states_diff + 1
-    end_row = start_row + model.order.q + model.order.Q
+    end_row = start_row + model.order.q + model.order.s * model.order.Q
     model.system.R[start_row+1:end_row, 1] = p3.coeffs[2:end]
     return nothing
 end
@@ -286,8 +286,7 @@ function relax_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
 end
 
 function SARIMA_exact_initalization!(filter::KalmanFilter, model::SARIMA)
-    num_arma_states = max(model.order.p, model.order.q + 1)
-    SARIMA_exact_initialization!(filter.kalman_state, model.system, num_arma_states)
+    SARIMA_exact_initialization!(filter.kalman_state, model.system, model.order.r)
     return nothing
 end
 
@@ -295,8 +294,7 @@ function SARIMA_exact_initialization!(kalman_state, system, num_arma_states)
     arma_T = system.T[(end - num_arma_states + 1):end, (end - num_arma_states + 1):end]
     arma_R = system.R[(end - num_arma_states + 1):end]
     # Calculate exact initial P1
-    vec_P1 = (I - kron(arma_T, arma_T)) \ vec(arma_R * arma_R')
-    arma_P1 = reshape(vec_P1, num_arma_states, num_arma_states)
+    arma_P1 = lyapd(arma_T, arma_R * arma_R')
     # Fill P1 in the arma states
     kalman_state.P[(end - num_arma_states + 1):end, (end - num_arma_states + 1):end] .=
         system.Q[1] .* arma_P1
@@ -445,11 +443,9 @@ end
 # Obligatory functions
 function default_filter(model::SARIMA)
     Fl = typeof_model_elements(model)
-    num_arma_states = max(model.order.p, model.order.q + 1)
-    r = model.order.d + num_arma_states
-    a1 = zeros(Fl, r)
-    P1 = Fl(1e6) .* Matrix{Fl}(I, r, r)
-    skip_llk_instants = model.order.d
+    a1 = zeros(Fl, model.order.n_states)
+    P1 = Fl(1e6) .* Matrix{Fl}(I, model.order.n_states, model.order.n_states)
+    skip_llk_instants = model.order.d + model.order.s * model.order.D
     steadystate_tol = Fl(1e-5)
     return UnivariateKalmanFilter(a1, P1, skip_llk_instants, steadystate_tol)
 end
@@ -477,6 +473,12 @@ function initial_hyperparameters!(model::SARIMA)
     for j in 1:(model.order.q)
         initial_hyperparameters[get_ma_name(model, j)] = initial_params[offset]
         offset += 1
+    end
+    for i in 1:(model.order.P)
+        initial_hyperparameters[get_seasonal_ar_name(model, i)] = 0.2
+    end
+    for j in 1:(model.order.Q)
+        initial_hyperparameters[get_seasonal_ma_name(model, j)] = 0.2
     end
     if model.include_mean 
         initial_hyperparameters["mean"] = mean(y_diff)

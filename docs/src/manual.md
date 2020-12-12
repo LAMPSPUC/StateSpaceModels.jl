@@ -5,7 +5,7 @@
 The package provides a variaty of pre-defined models. If there is any model that you wish was in the package, feel free to open an issue or pull request.
 
 ```@docs
-ARIMA
+SARIMA
 BasicStructural
 LinearRegression
 LocalLevel

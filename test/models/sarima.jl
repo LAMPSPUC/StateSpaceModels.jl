@@ -1,9 +1,9 @@
-@testset "ARIMA" begin
+@testset "SARIMA" begin
     internet = CSV.read(StateSpaceModels.INTERNET, DataFrame)
     dinternet = internet.dinternet[2:end]
-    @test has_fit_methods(ARIMA)
+    @test has_fit_methods(SARIMA)
 
-    model = ARIMA(dinternet, (1, 0, 1))
+    model = SARIMA(dinternet; order = (1, 0, 1))
     fit!(model)
     @test loglike(model) ≈ -254.149 atol = 1e-5 rtol = 1e-5
 
@@ -35,21 +35,31 @@
     missing_dinternet = copy(dinternet)
     missing_dinternet[missing_obs] .= NaN
 
-    model = ARIMA(missing_dinternet, (1, 0, 1))
+    model = SARIMA(missing_dinternet; order = (1, 0, 1))
     fit!(model)
     @test loglike(model) ≈ -225.770 atol = 1e-5 rtol = 1e-5
 
     wpi = CSV.read(StateSpaceModels.WHOLESALE_PRICE_INDEX, DataFrame).wpi
-    model = ARIMA(wpi, (1, 1, 1))
+    model = SARIMA(wpi; order = (1, 1, 1))
     fit!(model)
     @test loglike(model) ≈ -137.246818 atol = 1e-5 rtol = 1e-5
 
     uschange_consumption = CSV.read(StateSpaceModels.US_CHANGE, DataFrame).Consumption
-    model = ARIMA(uschange_consumption, (1, 0, 3); include_mean = true)
+    model = SARIMA(uschange_consumption; order = (1, 0, 3), include_mean = true)
     fit!(model)
     @test loglike(model) ≈ -164.8 atol = 1e-1 rtol = 1e-1
 
-    model = ARIMA(uschange_consumption, (3, 0, 0); include_mean = true)
+    model = SARIMA(uschange_consumption; order = (3, 0, 0), include_mean = true)
     fit!(model)
     @test loglike(model) ≈ -165.2 atol = 1e-1 rtol = 1e-1
+    
+    air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
+    log_air_passengers = log.(air_passengers.passengers)
+    model = SARIMA(log_air_passengers; order = (2, 1, 0), seasonal_order = (1, 1, 0, 4))
+    @test_broken fit!(model)
+    @test_broken loglike(model) ≈ 69.931 atol = 1e-3 rtol = 1e-3
+
+    model = SARIMA(log_air_passengers; order = (2, 1, 0), seasonal_order = (1, 1, 0, 12))
+    @test_broken fit!(model)
+    @test_broken loglike(model) ≈ 240.821 atol = 1e-3 rtol = 1e-3
 end

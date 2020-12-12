@@ -33,7 +33,7 @@ const AIR_PASSENGERS = joinpath(dirname(@__DIR__()), "datasets", "airpassengers.
 The absolute path for the so called `INTERNET` dataset stored inside StateSpaceModels.jl.
 This dataset provides the number of users logged on to an Internet server each minute over 100 minutes.
 
-See more on ARIMA... under contruction
+See more on SARIMA... under contruction
 
 # References
  * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods:
@@ -47,10 +47,10 @@ const INTERNET = joinpath(dirname(@__DIR__()), "datasets", "internet.csv")
 The absolute path for the so called `INTERNET` dataset stored inside StateSpaceModels.jl.
 This dataset provides the number of users logged on to an Internet server each minute over 100 minutes.
 
-See more on ARIMA... under contruction
+See more on SARIMA... under contruction
 
 # References
- * https://www.stata.com/manuals13/tsarima.pdf
+ * https://www.stata.com/manuals13/tsSARIMA.pdf
 """
 const WHOLESALE_PRICE_INDEX = joinpath(
     dirname(@__DIR__()), "datasets", "wholesalepriceindex.csv"
