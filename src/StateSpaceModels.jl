@@ -8,6 +8,7 @@ using ShiftedArrays
 using Statistics
 using Printf
 using Optim
+using RecipesBase
 
 abstract type StateSpaceModel end
 
@@ -38,6 +39,8 @@ include("prints.jl")
 include("optimizers.jl")
 include("fit.jl")
 include("forecast.jl")
+
+include("visualization/forecasting.jl")
 
 # Exported types and structs
 export ARIMA
