@@ -55,11 +55,39 @@
     
     air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
     log_air_passengers = log.(air_passengers.passengers)
+    model = SARIMA(log_air_passengers; order = (2, 1, 0), seasonal_order = (1, 1, 0, 12))
+    fit!(model)
+    @test_broken loglike(model) ≈ 240.821 atol = 1e-3 rtol = 1e-3
+
+    model = SARIMA(log_air_passengers; order = (2, 1, 1))
+    fit!(model)
+    @test loglike(model) ≈ 129.732 atol = 1e-3 rtol = 1e-3
+
     model = SARIMA(log_air_passengers; order = (2, 1, 0), seasonal_order = (1, 1, 0, 4))
     @test_broken fit!(model)
     @test_broken loglike(model) ≈ 69.931 atol = 1e-3 rtol = 1e-3
 
-    model = SARIMA(log_air_passengers; order = (2, 1, 0), seasonal_order = (1, 1, 0, 12))
-    @test_broken fit!(model)
-    @test_broken loglike(model) ≈ 240.821 atol = 1e-3 rtol = 1e-3
+    model = SARIMA(log_air_passengers; order = (0, 1, 1), seasonal_order = (0, 1, 1, 12))
+    fit!(model)
+    @test loglike(model) ≈ 244.696 atol = 1e-3 rtol = 1e-3
+
+    model = SARIMA(log_air_passengers; order = (0, 1, 2), seasonal_order = (0, 1, 1, 12))
+    fit!(model)
+    @test loglike(model) ≈ 244.805 atol = 1e-3 rtol = 1e-3
+
+    model = SARIMA(log_air_passengers; order = (0, 1, 2), seasonal_order = (0, 1, 2, 12))
+    fit!(model)
+    @test loglike(model) ≈ 245.074 atol = 1e-3 rtol = 1e-3
+
+    model = SARIMA(log_air_passengers; order = (0, 1, 2), seasonal_order = (0, 1, 2, 5))
+    fit!(model)
+    @test loglike(model) ≈ 115.009 atol = 1e-3 rtol = 1e-3
+
+    model = SARIMA(log_air_passengers; order = (1, 1, 2), seasonal_order = (0, 1, 2, 5))
+    fit!(model)
+    @test loglike(model) ≈ 120.128 atol = 1e-3 rtol = 1e-3
+
+    model = SARIMA(log_air_passengers; order = (2, 0, 0), seasonal_order = (0, 1, 0, 12))
+    fit!(model)
+    @test loglike(model) ≈ 228.502 atol = 1e-3 rtol = 1e-3
 end

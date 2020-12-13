@@ -11,7 +11,7 @@ hyperparameters and the corresponding log-likelihood are stored within the model
 function fit!(
     model::StateSpaceModel;
     filter::KalmanFilter=default_filter(model),
-    optimizer::Optimizer=Optimizer(Optim.LBFGS()),
+    optimizer::Optimizer=default_optimizer(model),
 )
     initial_unconstrained_hyperparameter = handle_optim_initial_hyperparameters(model)
     # TODO Should there be a try catch?

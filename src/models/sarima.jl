@@ -38,15 +38,19 @@ mutable struct SARIMAHyperParametersAuxiliary{Fl <: AbstractFloat}
     seasonal_ma_poly::Vector{Fl}
     seasonal_ma_names::Vector{String}
     function SARIMAHyperParametersAuxiliary{Fl}(order::SARIMAOrder) where Fl
+        ar_poly = create_poly(order.p, Fl)
+        seasonal_ar_poly = create_seasonal_poly(order.P, order.s, Fl)
+        ma_poly = create_poly(order.q, Fl)
+        seasonal_ma_poly = create_seasonal_poly(order.Q, order.s, Fl)
         return new{Fl}(
-            create_poly(order.p, Fl),
+            ar_poly,
             create_names("ar_L", order.p),
-            create_seasonal_poly(order.P, order.s, Fl),
+            seasonal_ar_poly,
             create_names("s_ar_L", order.P, order.s),
-            create_poly(order.q, Fl),
+            ma_poly,
             create_names("ma_L", order.q),
-            create_seasonal_poly(order.Q, order.s, Fl),
-            create_names("s_ma_L", order.Q, order.s),
+            seasonal_ma_poly,
+            create_names("s_ma_L", order.Q, order.s)
         )
     end
 end
@@ -183,7 +187,20 @@ function create_seasonal_poly(n::Int, s::Int, Fl::DataType)
     end
     return seasonal_poly
 end
-
+function poly_mul(p1::Vector{Fl}, p2::Vector{Fl}) where Fl
+    n, m = length(p1), length(p2)
+    if n > 1 && m > 1
+        c = zeros(Fl, m + n - 1)
+        for i in 1:n, j in 1:m
+            c[i + j - 1] += p1[i] * p2[j]
+        end
+        return c
+    elseif n <= 1
+        return p2
+    else
+        return p1
+    end
+end
 get_ar_name(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.ar_names[i]
 get_ma_name(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.ma_names[i]
 get_seasonal_ar_name(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.seasonal_ar_names[i]
@@ -192,21 +209,25 @@ get_seasonal_ma_name(model::SARIMA, i::Int) = model.hyperparameters_auxiliary.se
 function update_T_terms!(model::SARIMA)
     update_ar_poly!(model)
     update_seasonal_ar_poly!(model)
-    p3 = Polynomial(model.hyperparameters_auxiliary.ar_poly) * Polynomial(model.hyperparameters_auxiliary.seasonal_ar_poly)
+    # TODO increaase performance
+    # We could preallocate this polynomial p3
+    p3 = poly_mul(model.hyperparameters_auxiliary.ar_poly, model.hyperparameters_auxiliary.seasonal_ar_poly)
     start_row = model.order.n_states_diff + 1
     end_row = start_row + model.order.p + model.order.s * model.order.P - 1
     col = model.order.n_states_diff + 1
-    model.system.T[start_row:end_row, col] = p3.coeffs[2:end]
+    model.system.T[start_row:end_row, col] = p3[2:end]
     return nothing
 end
 
 function update_R_terms!(model::SARIMA)
     update_ma_poly!(model)
     update_seasonal_ma_poly!(model)
-    p3 = Polynomial(model.hyperparameters_auxiliary.ma_poly) * Polynomial(model.hyperparameters_auxiliary.seasonal_ma_poly)
+    # TODO increaase performance
+    # We could preallocate this polynomial p3
+    p3 = poly_mul(model.hyperparameters_auxiliary.ma_poly, model.hyperparameters_auxiliary.seasonal_ma_poly)
     start_row = model.order.n_states_diff + 1
     end_row = start_row + model.order.q + model.order.s * model.order.Q
-    model.system.R[start_row+1:end_row, 1] = p3.coeffs[2:end]
+    model.system.R[start_row+1:end_row, 1] = p3[2:end]
     return nothing
 end
 
@@ -285,12 +306,15 @@ function relax_unit_root_constraint(hyperparameter_values::Vector{Fl}) where Fl
     return x
 end
 
-function SARIMA_exact_initalization!(filter::KalmanFilter, model::SARIMA)
+function SARIMA_exact_initialization!(filter::KalmanFilter, model::SARIMA)
     SARIMA_exact_initialization!(filter.kalman_state, model.system, model.order.r)
     return nothing
 end
 
-function SARIMA_exact_initialization!(kalman_state, system, num_arma_states)
+function SARIMA_exact_initialization!(kalman_state, 
+                                      system,
+                                      num_arma_states::Int)
+    # TODO we could preallocate these arrays
     arma_T = system.T[(end - num_arma_states + 1):end, (end - num_arma_states + 1):end]
     arma_R = system.R[(end - num_arma_states + 1):end]
     # Calculate exact initial P1
@@ -314,7 +338,12 @@ function concatenate_on_bottom(X1::Matrix{Fl}, X2::Matrix{Fl}) where Fl
     return hcat(X1[end-n+1:end, :], X2[end-n+1:end, :])
 end
 
-function diff_arma(y::Vector{Fl}, d::Int) where Fl
+function diff_sarima(y::Vector{Fl}, d::Int, D::Int, s::Int) where Fl
+    # Seasonal differencing
+    for _ in 1:D
+        y = y[s:end] - y[1:end-s+1]
+    end
+    # Simple differencing
     for _ in 1:d
         y = diff(y)
     end
@@ -439,6 +468,55 @@ function unconstrain_mean!(model::SARIMA)
     return nothing
 end
 
+function roots_in_unit_circle(p::Vector{Fl}) where Fl
+    poly = Polynomial([reverse(p); one(Fl)])
+    return all(abs.(roots(poly)) .< 1)
+end
+function conditional_sum_of_squares(y_diff::Vector{Fl}, k_ar::Int, k_ma::Int) where Fl
+    if (k_ar == 0) && (k_ma == 0)
+        return (Fl[], Fl[])
+    end
+    k = 2 * k_ma
+    r = max(k + k_ma, k_ar)
+    residuals = nothing
+    X = nothing
+    if k_ar + k_ma > 0
+        # If we have MA terms, get residuals from an AR(k) model to use
+        # as data for conditional sum of squares estimates of the MA
+        # parameters
+        if k_ma > 0
+            y = y_diff[k:end]
+            X = lagmat(y_diff, k)
+            params_ar = X \ y[end - size(X, 1) + 1:end]
+            residuals = y[end - size(X, 1) + 1:end] - X * params_ar
+        end
+        # Run an ARMA(p,q) model using the just computed residuals as
+        # data
+        y = y_diff[r:end]
+        X = Matrix{Fl}(undef, length(y), 0)
+        X = concatenate_on_bottom(X, lagmat(y_diff, k_ar))
+        if k_ma > 0
+            X = concatenate_on_bottom(X, lagmat(residuals, k_ma))
+        end
+    end
+
+    initial_params = X \ y_diff[end - size(X, 1) + 1:end]
+    params_ar = Fl[]
+    params_ma = Fl[]
+    offset = 1
+    if k_ar > 0
+        params_ar = initial_params[offset:offset + k_ar - 1]
+        offset += k_ar
+    end
+    if k_ma > 0
+        params_ma = initial_params[offset:offset + k_ma - 1]
+    end
+    return params_ar, params_ma
+end
+
+function default_optimizer(model::SARIMA)
+    return Optimizer(Optim.NelderMead())
+end
 
 # Obligatory functions
 function default_filter(model::SARIMA)
@@ -455,30 +533,41 @@ function initial_hyperparameters!(model::SARIMA)
     initial_hyperparameters = Dict{String,Fl}()
     # Heuristic inspired in statsmodels from python
     # TODO find a reference to this heuristic
-    y = filter(!isnan, model.system.y)
-    y_diff = diff_arma(y, model.order.d)
-    k = model.order.p + model.order.q
-    X = lagmat(y_diff, k)
-    residuals = y_diff[k+1:end] - X * (X \ y_diff[k+1:end])
-    X_ar = lagmat(y_diff, model.order.p)
-    X_ma = lagmat(residuals, model.order.q)
-    X = concatenate_on_bottom(X_ar, X_ma)
-    initial_params = X \ y_diff[end - size(X, 1) + 1:end]
-
-    offset = 1
+    # conditional sum of squares
+    y_diff = diff_sarima(model.system.y, model.order.d, model.order.D, model.order.s)
+    y_diff = filter(!isnan, y_diff)
+    # Non-seasonal ARMA
+    (initial_ar, initial_ma) = conditional_sum_of_squares(y_diff, model.order.p, model.order.q)
+    if !roots_in_unit_circle(-initial_ar)
+        @warn("Conditional sum of squares estimated initial_ar out of the unit circle, using zero as starting params")
+        initial_ar .= zero(Fl)
+    end
+    if !roots_in_unit_circle(initial_ma)
+        @warn("Conditional sum of squares estimated initial_ma out of the unit circle, using zero as starting params")
+        initial_ma .= zero(Fl)
+    end
+    # Seasonal ARMA
+    (initial_seasonal_ar, 
+    initial_seasonal_ma) = conditional_sum_of_squares(y_diff, model.order.P, model.order.Q)
+    if !roots_in_unit_circle(-initial_seasonal_ar)
+        @warn("Conditional sum of squares estimated initial_seasonal_ar out of the unit circle, using zero as starting params")
+        initial_seasonal_ar .= zero(Fl)
+    end
+    if !roots_in_unit_circle(initial_seasonal_ma)
+        @warn("Conditional sum of squares estimated initial_seasonal_ma out of the unit circle, using zero as starting params")
+        initial_seasonal_ma .= zero(Fl)
+    end
     for i in 1:(model.order.p)
-        initial_hyperparameters[get_ar_name(model, i)] = initial_params[offset]
-        offset += 1
+        initial_hyperparameters[get_ar_name(model, i)] = initial_ar[i]
     end
     for j in 1:(model.order.q)
-        initial_hyperparameters[get_ma_name(model, j)] = initial_params[offset]
-        offset += 1
+        initial_hyperparameters[get_ma_name(model, j)] = initial_ma[j]
     end
     for i in 1:(model.order.P)
-        initial_hyperparameters[get_seasonal_ar_name(model, i)] = 0.2
+        initial_hyperparameters[get_seasonal_ar_name(model, i)] = initial_seasonal_ar[i]
     end
     for j in 1:(model.order.Q)
-        initial_hyperparameters[get_seasonal_ma_name(model, j)] = 0.2
+        initial_hyperparameters[get_seasonal_ma_name(model, j)] = initial_seasonal_ma[j]
     end
     if model.include_mean 
         initial_hyperparameters["mean"] = mean(y_diff)
@@ -522,7 +611,7 @@ function fill_model_system!(model::SARIMA)
 end
 
 function fill_model_filter!(filter::KalmanFilter, model::SARIMA)
-    SARIMA_exact_initalization!(filter, model)
+    SARIMA_exact_initialization!(filter, model)
     return nothing
 end
 
