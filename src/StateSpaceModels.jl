@@ -40,7 +40,7 @@ include("optimizers.jl")
 include("fit.jl")
 include("forecast.jl")
 
-include("visualization/forecasting.jl")
+include("visualization/forecast.jl")
 
 # Exported types and structs
 export ARIMA

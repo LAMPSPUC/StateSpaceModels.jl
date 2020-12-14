@@ -20,3 +20,6 @@ include("models/basicstructural.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/arima.jl")
 include("models/linear_regression.jl")
+
+# Visualization
+include("visualization/forecast.jl")

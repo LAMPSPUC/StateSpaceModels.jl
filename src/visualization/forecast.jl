@@ -4,7 +4,7 @@ RecipesBase.@recipe function f(model::StateSpaceModel, forec::Forecast)
     end
     dists = Vector{Distribution}(undef, length(forec.expected_value))
     for d in eachindex(dists)
-        dists[d] = StateSpaceModels.Distributions.Normal(forec.expected_value[d][1], sqrt(forec.covariance[d][1]))
+        dists[d] = Normal(forec.expected_value[d][1], sqrt(forec.covariance[d][1]))
     end
     n = length(model.system.y)
     forec_idx = collect(n + 1: n + length(forec.expected_value))
