@@ -50,7 +50,7 @@ Current features include:
   * Basic structural model (trend, slope, seasonal)
   * Linear trend model
   * Local level model
-  * ARIMA
+  * SARIMA
 * Completion of missing values
 * Diagnostics for the residuals of fitted models
 

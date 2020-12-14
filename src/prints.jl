@@ -33,7 +33,7 @@ function print_coef_table(io::IO, coef_table::CoefficientTable{Fl}) where Fl
 end
 
 function print_coef(coef_table::CoefficientTable{Fl}, offset::Int) where Fl
-    p_c = @sprintf("%.3f", coef_table.coef[offset])
+    p_c = @sprintf("%.4f", coef_table.coef[offset])
     p_std = if isnan(coef_table.std_err[offset])
         " - "
     else

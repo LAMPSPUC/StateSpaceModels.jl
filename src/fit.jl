@@ -11,7 +11,7 @@ hyperparameters and the corresponding log-likelihood are stored within the model
 function fit!(
     model::StateSpaceModel;
     filter::KalmanFilter=default_filter(model),
-    optimizer::Optimizer=Optimizer(Optim.LBFGS()),
+    optimizer::Optimizer=default_optimizer(model),
 )
     initial_unconstrained_hyperparameter = handle_optim_initial_hyperparameters(model)
     # TODO Should there be a try catch?
@@ -21,9 +21,14 @@ function fit!(
     opt = optimize(
         func, initial_unconstrained_hyperparameter, optimizer.method, optimizer.options
     )
-    opt_loglikelihood = -opt.minimum
+    # optim_loglike returns the mean loglike for numerical stability purposes
+    # the optimum loglike must be rescaled
+    opt_loglikelihood = -opt.minimum * size(model.system.y, 1)
     opt_hyperparameters = opt.minimizer
     update_model_hyperparameters!(model, opt_hyperparameters)
+    # TODO
+    # I leaned that this is not a good way to compute the covariance matrix of paarameters
+    # we should investigate other methods
     numerical_hessian = Optim.hessian!(func, opt_hyperparameters)
     std_err = diag(inv(numerical_hessian))
     fill_results!(model, opt_loglikelihood, std_err)

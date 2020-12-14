@@ -6,6 +6,8 @@ using Distributions
 using LinearAlgebra
 using ShiftedArrays
 using Statistics
+using Polynomials
+using MatrixEquations
 using Printf
 using Optim
 using RecipesBase
@@ -32,7 +34,7 @@ include("models/locallevelexplanatory.jl")
 include("models/locallineartrend.jl")
 include("models/basicstructural.jl")
 include("models/basicstructural_multivariate.jl")
-include("models/arima.jl")
+include("models/sarima.jl")
 include("models/linear_regression.jl")
 
 include("prints.jl")
@@ -43,7 +45,7 @@ include("forecast.jl")
 include("visualization/forecast.jl")
 
 # Exported types and structs
-export ARIMA
+export SARIMA
 export BasicStructural
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant
