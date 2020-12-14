@@ -1,6 +1,7 @@
 using CSV
 using DataFrames
 using LinearAlgebra
+using RecipesBase
 using StateSpaceModels
 using Statistics
 using Test

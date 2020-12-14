@@ -1,5 +1,3 @@
-using Plots
-
 @testset "Visualization" begin
     air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
     log_air_passengers = log.(air_passengers.passengers)
@@ -7,5 +5,6 @@ using Plots
     fit!(model)
     # forecasting
     forec = forecast(model, 12)
-    plot(model, forec)
+    rec = RecipesBase.apply_recipe(Dict{Symbol, Any}(), model, forec)
+    @test length(rec) == 4
 end
