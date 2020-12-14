@@ -1,6 +1,7 @@
 using CSV
 using DataFrames
 using LinearAlgebra
+using RecipesBase
 using StateSpaceModels
 using Statistics
 using Test
@@ -20,3 +21,6 @@ include("models/basicstructural.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/arima.jl")
 include("models/linear_regression.jl")
+
+# Visualization
+include("visualization/forecast.jl")
