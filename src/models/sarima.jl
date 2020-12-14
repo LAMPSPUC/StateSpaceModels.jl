@@ -514,10 +514,6 @@ function conditional_sum_of_squares(y_diff::Vector{Fl}, k_ar::Int, k_ma::Int) wh
     return params_ar, params_ma
 end
 
-function default_optimizer(model::SARIMA)
-    return Optimizer(Optim.NelderMead())
-end
-
 # Obligatory functions
 function default_filter(model::SARIMA)
     Fl = typeof_model_elements(model)

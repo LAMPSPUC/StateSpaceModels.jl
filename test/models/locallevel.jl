@@ -46,7 +46,7 @@
     @test !isempty(hyperparameters.minimizer_hyperparameter_position)
 
     @test loglike(model; filter=scalar_filter) ≈ -632.54421 atol = 1e-5 rtol = 1e-5
-    @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 atol = 1
+    @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 rtol = 1e-2
 
     # Estimate with Float32
     nile32 = Float32.(nile.flow)

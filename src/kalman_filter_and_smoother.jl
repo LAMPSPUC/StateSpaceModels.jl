@@ -10,7 +10,9 @@ function optim_loglike(
     reset_filter!(filter)
     update_model_hyperparameters!(model, unconstrained_hyperparameters)
     update_filter_hyperparameters!(filter, model)
-    return optim_kalman_filter(model.system, filter)
+    # A way to stabilize the objective function is to take the mean of the
+    # log like only for the optimizer
+    return optim_kalman_filter(model.system, filter) / size(model.system.y, 1)
 end
 
 function update_model_hyperparameters!(
@@ -32,7 +34,7 @@ function fill_model_filter!(::KalmanFilter, ::StateSpaceModel)
 end
 
 function loglike(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
-    return optim_loglike(model, filter, get_free_unconstrained_values(model))
+    return optim_loglike(model, filter, get_free_unconstrained_values(model)) * size(model.system.y, 1)
 end
 
 """

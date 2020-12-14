@@ -21,9 +21,14 @@ function fit!(
     opt = optimize(
         func, initial_unconstrained_hyperparameter, optimizer.method, optimizer.options
     )
-    opt_loglikelihood = -opt.minimum
+    # optim_loglike returns the mean loglike for numerical stability purposes
+    # the optimum loglike must be rescaled
+    opt_loglikelihood = -opt.minimum * size(model.system.y, 1)
     opt_hyperparameters = opt.minimizer
     update_model_hyperparameters!(model, opt_hyperparameters)
+    # TODO
+    # I leaned that this is not a good way to compute the covariance matrix of paarameters
+    # we should investigate other methods
     numerical_hessian = Optim.hessian!(func, opt_hyperparameters)
     std_err = diag(inv(numerical_hessian))
     fill_results!(model, opt_loglikelihood, std_err)

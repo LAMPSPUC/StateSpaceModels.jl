@@ -26,6 +26,6 @@ end
 
 # General to every StateSpaceModel, some of them haave trouble to converge 
 # or have numerical errors with LBFGS
-function default_optimizer(model::StateSpaceModel)
+function default_optimizer(::StateSpaceModel)
     return Optimizer(Optim.LBFGS())
 end
