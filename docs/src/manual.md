@@ -1,5 +1,14 @@
 # Manual
 
+## Quick Start Guide
+
+- models
+- fit
+- filter
+- smoother
+- forecast
+- plot
+
 ## Models
 
 The package provides a variaty of pre-defined models. If there is any model that you wish was in the package, feel free to open an issue or pull request.
@@ -33,12 +42,10 @@ LinearMultivariateTimeVariant
 
 ## Hyperparameters
 
-The model hyperparameters are constant (non-time-varying) parameters that are optimized when `fit!` is called.
-The package provides some useful getters and setters to accelerate experimentation with models.
+The model hyperparameters are constant (non-time-varying) parameters that are optimized when [`fit!`](@ref) is called. The package provides some useful getters and setters to accelerate experimentation with models.
 
 The getters are:
 ```@docs
-get_hyperparameters
 get_names
 ```
 
@@ -57,19 +64,39 @@ constrain_identity!
 unconstrain_identity!
 ```
 
-## Optim.jl interface
+## Fitting and Optimizers
 
-The optimizer to be used can be configured through an interface with [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl):
+StateSpaceModels.jl has an interface for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) algorithms. The models can be estimated using different algorithms and tunned to the user needs
 
 ```@docs
+fit!
 Optimizer
 ```
 
+## Visualization
+
+Some user friendly plot recipes are defined using [RecipesBase.jl](https://github.com/JuliaPlots/RecipesBase.jl). If you have any suggestions do not hesitate to post it as an issue.
+
+```@example
+using StateSpaceModels, CSV, DataFrames, Plots
+
+air_passengers = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
+log_air_passengers = log.(air_passengers.passengers)
+
+model = BasicStructural(log_air_passengers, 12)
+fit!(model)
+forec = forecast(model, 24)
+
+plot(model, forec; legend = :topleft)
+savefig("plot.png")
+
+nothing
+```
+![](plot.png)
+
 ## Datasets
 
-The package provides some datasets to illustrate the funtionalities and models. 
-These datasets are stored as csv files and the path to these files can be obtained through their names as seen below.
-In the examples we illustrate the datasets using [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) and [CSV.jl](https://github.com/JuliaData/CSV.jl)
+The package provides some datasets to illustrate the funtionalities and models. These datasets are stored as csv files and the path to these files can be obtained through their names as seen below. In the examples we illustrate the datasets using [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) and [CSV.jl](https://github.com/JuliaData/CSV.jl)
 
 ```@docs
 StateSpaceModels.AIR_PASSENGERS
