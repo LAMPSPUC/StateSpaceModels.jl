@@ -212,10 +212,9 @@ function update_T_terms!(model::SARIMA)
     # TODO increaase performance
     # We could preallocate this polynomial p3
     p3 = poly_mul(model.hyperparameters_auxiliary.ar_poly, model.hyperparameters_auxiliary.seasonal_ar_poly)
-    start_row = model.order.n_states_diff + 1
-    end_row = start_row + model.order.p + model.order.s * model.order.P - 1
-    col = model.order.n_states_diff + 1
-    model.system.T[start_row:end_row, col] = p3[2:end]
+    for i in model.order.n_states_diff + 1:model.order.n_states_diff + model.order.p + model.order.s * model.order.P
+        model.system.T[i, model.order.n_states_diff + 1] = p3[i - model.order.n_states_diff + 1]
+    end
     return nothing
 end
 
@@ -225,9 +224,9 @@ function update_R_terms!(model::SARIMA)
     # TODO increaase performance
     # We could preallocate this polynomial p3
     p3 = poly_mul(model.hyperparameters_auxiliary.ma_poly, model.hyperparameters_auxiliary.seasonal_ma_poly)
-    start_row = model.order.n_states_diff + 1
-    end_row = start_row + model.order.q + model.order.s * model.order.Q
-    model.system.R[start_row+1:end_row, 1] = p3[2:end]
+    for i in model.order.n_states_diff + 1:model.order.n_states_diff + model.order.q + model.order.s * model.order.Q
+        model.system.R[i + 1, model.order.n_states_diff] = p3[i - model.order.n_states_diff + 1]
+    end
     return nothing
 end
 
