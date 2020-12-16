@@ -1,4 +1,4 @@
-"""
+@doc raw"""
     fit!(
         model::StateSpaceModel;
         filter::KalmanFilter=default_filter(model),
@@ -6,7 +6,21 @@
     )
 
 Estimate the state-space model parameters via maximum likelihood. The resulting optimal
-hyperparameters and the corresponding log-likelihood are stored within the model.
+hyperparameters and the corresponding log-likelihood are stored within the model. You can
+choose the desired filter method (`UnivariateKalmanFilter`, `ScalarKalmanFilter`, etc.) and
+the `Optim.jl` optimization algortihm. 
+
+# Example
+```jldoctest
+julia> model = LocalLevel(rand(100))
+LocalLevel model
+julia> fit!(model)
+LocalLevel model
+julia> model = LocalLinearTrend(LinRange(1, 100, 100) + rand(100))
+LocalLinearTrend model
+julia> fit!(model; optimizer = Optimizer(StateSpaceModels.Optim.NelderMead()))
+LocalLinearTrend model
+```
 """
 function fit!(
     model::StateSpaceModel;

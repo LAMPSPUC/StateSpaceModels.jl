@@ -55,11 +55,37 @@ mutable struct SARIMAHyperParametersAuxiliary{Fl <: AbstractFloat}
     end
 end
 
-"""
-    SARIMA
+@doc raw"""
+    SARIMA(y::Vector{Fl}; order::Tuple{Int,Int,Int} = (1, 0, 0), 
+                          seasonal_order::Tuple{Int, Int, Int, Int} = (0, 0, 0, 0),
+                          include_mean::Bool = false) where Fl
 
-A SARIMA model (seasonal autoregressive integrated moving average) implemented within the state-space
+A SARIMA model (Seasonal AutoRegressive Integrated Moving Average) implemented within the state-space
 framework.
+
+The SARIMA model is specified ``(p, d, q) \times (P, D, Q, s)``. We can also consider a polynomial ``A(t)`` to 
+model a trend, here we only allow to add a constante term with the `include_mean` keyword argument.    
+```math
+\begin{gather*}
+    \begin{aligned}
+        \phi_p (L) \tilde \phi_P (L^s) \Delta^d \Delta_s^D y_t = A(t) + \theta_q (L) \tilde \theta_Q (L^s) \zeta_t
+    \end{aligned}
+\end{gather*}
+```
+In terms of a univariate structural model, this can be represented as
+```math
+\begin{gather*}
+    \begin{aligned}
+    y_t & = u_t + \eta_t \\
+    \phi_p (L) \tilde \phi_P (L^s) \Delta^d \Delta_s^D u_t & = A(t) + \theta_q (L) \tilde \theta_Q (L^s) \zeta_t
+    \end{aligned}
+\end{gather*}
+```
+
+See more on [Airline passengers](@ref)
+
+# References
+ * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. pp. 9
 """
 mutable struct SARIMA <: StateSpaceModel
     order::SARIMAOrder
@@ -212,10 +238,9 @@ function update_T_terms!(model::SARIMA)
     # TODO increaase performance
     # We could preallocate this polynomial p3
     p3 = poly_mul(model.hyperparameters_auxiliary.ar_poly, model.hyperparameters_auxiliary.seasonal_ar_poly)
-    start_row = model.order.n_states_diff + 1
-    end_row = start_row + model.order.p + model.order.s * model.order.P - 1
-    col = model.order.n_states_diff + 1
-    model.system.T[start_row:end_row, col] = p3[2:end]
+    for i in model.order.n_states_diff + 1:model.order.n_states_diff + model.order.p + model.order.s * model.order.P
+        model.system.T[i, model.order.n_states_diff + 1] = p3[i - model.order.n_states_diff + 1]
+    end
     return nothing
 end
 
@@ -225,9 +250,9 @@ function update_R_terms!(model::SARIMA)
     # TODO increaase performance
     # We could preallocate this polynomial p3
     p3 = poly_mul(model.hyperparameters_auxiliary.ma_poly, model.hyperparameters_auxiliary.seasonal_ma_poly)
-    start_row = model.order.n_states_diff + 1
-    end_row = start_row + model.order.q + model.order.s * model.order.Q
-    model.system.R[start_row+1:end_row, 1] = p3[2:end]
+    for i in model.order.n_states_diff + 1:model.order.n_states_diff + model.order.q + model.order.s * model.order.Q
+        model.system.R[i + 1] = p3[i - model.order.n_states_diff + 1]
+    end
     return nothing
 end
 

@@ -4,8 +4,7 @@ In this section we show examples of applications and use cases of the package.
 
 ## Nile river annual flow
 
-Here we will follow an example from Durbin & Koopman's book.
-We will use the [`LocalLevel`](@ref) model applied to the annual flow of the Nile river at the city of Aswan between 1871 and 1970.
+Here we will follow an example from Durbin & Koopman's book. We will use the [`LocalLevel`](@ref) model applied to the annual flow of the Nile river at the city of Aswan between 1871 and 1970.
 
 ```@setup nile
 using StateSpaceModels
@@ -17,7 +16,7 @@ First, we load the data:
 
 ```@example nile
 using CSV, DataFrames
-nile = CSV.read(StateSpaceModels.NILE, DataFrame)
+nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
 plt = plot(nile.year, nile.flow, label = "Nile river annual flow")
 ```
 
@@ -42,8 +41,7 @@ smoother_output = kalman_smoother(model)
 plot!(plt, nile.year, get_smoothed_state(smoother_output), label = "Smoothed level")
 ```
 
-StateSpaceModels.jl can also be used to obtain forecasts. 
-Here we forecast 10 steps ahead:
+StateSpaceModels.jl can also be used to obtain forecasts. Here we forecast 10 steps ahead:
 
 ```@example nile
 steps_ahead = 10
@@ -60,8 +58,7 @@ scenarios = simulate_scenarios(model, 10, 100)
 plot!(plt, dates, scenarios[:, 1, :], label = "", color = "grey", width = 0.2)
 ```
 
-The package also handles missing values automatically. 
-To that end, the package considers that any `NaN` entries in the observations are missing values.
+The package also handles missing values automatically. To that end, the package considers that any `NaN` entries in the observations are missing values.
 
 ```@example nile
 nile.flow[[collect(21:40); collect(61:80)]] .= NaN
@@ -86,7 +83,86 @@ plot!(plt, nile.year, get_smoothed_state(smoother_output), label = "Smoothed lev
 
 ## Airline passengers
 
-TODO
+We often write the model SARIMA model as an ARIMA ``(p,d,q) \times (P,D,Q,s)``, where the lowercase letters indicate the specification for the non-seasonal component, and the uppercase letters indicate the specification for the seasonal component; ``s`` is the periodicity of the seasons (e.g. it is often 4 for quarterly data or 12 for monthly data). The data process can be written generically as
+
+```math
+\begin{equation}
+    \phi_p (L) \tilde \phi_P (L^s) \Delta^d \Delta_s^D y_t = A(t) + \theta_q (L) \tilde \theta_Q (L^s) \epsilon_t
+\end{equation}
+```
+
+where
+ * ``\phi_p (L)`` is the non-seasonal autoregressive lag polynomial,
+ * ``\tilde \phi_P (L^s)`` is the seasonal autoregressive lag polynomial,
+ * ``\Delta^d \Delta_s^D y_t`` is the time series, differenced ``d`` times, and seasonally differenced ``D`` times.,
+ * ``A(t)`` is the trend polynomial (including the intercept),
+ * ``\theta_q (L)`` is the non-seasonal moving average lag polynomial,
+ * ``\tilde \theta_Q (L^s)`` is the seasonal moving average lag polynomial
+
+sometimes we rewrite this as:
+
+```math
+\begin{equation}
+    \phi_p (L) \tilde \phi_P (L^s) y_t^* = A(t) + \theta_q (L) \tilde \theta_Q (L^s) \epsilon_t
+\end{equation}
+```
+
+where ``y_t^* = \Delta^d \Delta_s^D y_t``. This emphasizes that just as in the simple case, after we take differences (here both non-seasonal and seasonal) to make the data stationary, the resulting model is just an ARMA model.
+
+As an example, consider the airline model ARIMA ``(2,1,0) \times (1,1,0,12)``. The data process can be written in the form above as:,
+
+```math
+\begin{equation}
+    (1 - \phi_1 L - \phi_2 L^2) (1 - \tilde \phi_1 L^{12}) \Delta \Delta_{12} y_t =  \epsilon_t
+\end{equation}
+```
+
+Here, we have:
+
+ * ``\phi_p (L) = (1 - \phi_1 L - \phi_2 L^2)``,
+ * ``\tilde \phi_P (L^s) = (1 - \phi_1 L^{12})``,
+ * ``d = 1, D = 1, s=12`` indicating that ``y_t^*`` is derived from ``y_t`` by taking first-differences and then taking 12-th differences.,
+ * ``A(t) = 0`` no trend,
+ * ``\theta_q (L) = \tilde \theta_Q (L^s) = 1`` (i.e. there is no moving average effect),
+
+It may still be confusing to see the two lag polynomials in front of the time-series variable, but notice that we can multiply the lag polynomials together to get the following model:
+
+```math
+\begin{equation}
+    (1 - \phi_1 L - \phi_2 L^2 - \tilde \phi_1 L^{12} + \phi_1 \tilde \phi_1 L^{13} + \phi_2 \tilde \phi_1 L^{14} ) y_t^* = \epsilon_t
+\end{equation}
+```
+
+which can be rewritten as:
+
+```math
+\begin{equation}
+    y_t^* = \phi_1 y_{t-1}^* + \phi_2 y_{t-2}^* + \tilde \phi_1 y_{t-12}^* - \phi_1 \tilde \phi_1 y_{t-13}^* - \phi_2 \tilde \phi_1 y_{t-14}^* + \epsilon_t
+\end{equation}
+```
+
+For the airline model ARIMA ``(2,1,0) \times (1,1,0,12)`` with an intercept, the command is:
+
+```@setup airline
+using StateSpaceModels, CSV, DataFrames
+using Plots
+```
+
+```@example airline
+using CSV, DataFrames
+air_passengers = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
+log_air_passengers = log.(air_passengers.passengers)
+model = SARIMA(log_air_passengers; order = (2, 1, 0), seasonal_order = (1, 1, 0, 12))
+fit!(model)
+results(model)
+```
+
+To make a forecast of 24 steps ahead of the model the command is:
+```@example airline
+forec = forecast(model, 24)
+plot(model, forec; legend = :topleft)
+```
+> The text from this example is based on Python`s [statsmodels](https://www.statsmodels.org/stable/examples/notebooks/generated/statespace_sarimax_stata.html) library.
 
 ## Finland road traffic fatalities
 
@@ -102,8 +178,8 @@ using Plots
 ```
 
 ```@example fatalities
-using CSV, DataFrames
-df = CSV.read(StateSpaceModels.VEHICLE_FATALITIES, DataFrame)
+using StateSpaceModels, Plots, CSV, DataFrames
+df = CSV.File(StateSpaceModels.VEHICLE_FATALITIES) |> DataFrame
 log_ff = log.(df.ff)
 plt = plot(df.date, log_ff, label = "Log of Finland road traffic fatalities")
 ```

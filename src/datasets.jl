@@ -20,7 +20,7 @@ const NILE = joinpath(dirname(@__DIR__()), "datasets", "nile.csv")
 The absolute path for the so called `AIR_PASSENGERS` dataset stored inside StateSpaceModels.jl.
 This dataset provides monthly totals of a US airline passengers from 1949 to 1960.
 
-See more on [Log of airline passengers](@ref)
+See more on [Airline passengers](@ref)
 
 # References
  * https://www.stata-press.com/data/r12/ts.html

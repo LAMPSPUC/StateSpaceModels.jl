@@ -10,7 +10,7 @@ makedocs(;
     modules=[StateSpaceModels],
     doctest=true,
     clean=true,
-    format=Documenter.HTML(mathengine=Documenter.MathJax()),
+    format=Documenter.HTML(mathengine=Documenter.MathJax2()),
     sitename="StateSpaceModels.jl",
     authors="Raphael Saavedra, Guilherme Bodin, and Mario Souto",
     pages=[

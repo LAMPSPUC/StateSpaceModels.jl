@@ -247,7 +247,7 @@ julia> get_names(model)
  "sigma2_η"
 
 julia> fix_hyperparameters!(model, Dict("sigma2_ε" => 100.0))
-StateSpaceModels.HyperParameters{Float64}(2, ["sigma2_ε", "sigma2_η"], Dict("sigma2_η" => 2,"sigma2_ε" => 1), Dict{Int64,String}(), [NaN, NaN], [NaN, NaN], Dict("sigma2_ε" => 100.0))
+StateSpaceModels.HyperParameters{Float64}(2, ["sigma2_ε", "sigma2_η"], Dict("sigma2_η"=>2,"sigma2_ε"=>1), Dict{Int64,String}(), [NaN, NaN], [NaN, NaN], Dict("sigma2_ε"=>100.0))
 ```
 """
 function fix_hyperparameters! end
