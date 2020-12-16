@@ -31,6 +31,10 @@ mutable struct HyperParameters{Fl<:AbstractFloat}
     end
 end
 
+function has_hyperparameter(::SS) where SS <: StateSpaceModel
+    return :hyperparameters in fieldnames(SS)
+end
+
 function register_unconstrained_values!(
     model::StateSpaceModel, unconstrained_values::Vector{Fl}
 ) where Fl
@@ -275,12 +279,12 @@ function fix_hyperparameters!(hyperparameters::HyperParameters{Fl}) where Fl
 end
 
 """
-    isfitted(model::StateSpaceModel) -> Bool
+    is_fitted(model::StateSpaceModel) -> Bool
 
 Verify if `model` is fitted, i.e., returns `false` if there is at least one `NaN` entry in
 the hyperparameters.
 """
-function isfitted(model::StateSpaceModel)
+function is_fitted(model::StateSpaceModel)
     c1 = any(isnan, model.hyperparameters.unconstrained_values)
     c2 = any(isnan, model.hyperparameters.constrained_values)
     if c1 || c2

@@ -1,4 +1,6 @@
 @doc raw"""
+    MultivariateBasicStructural(y::Matrix{Fl}, s::Int) where Fl
+
 An implementation of a non-homogeneous seemingly unrelated time series equations for basic structural
 state-space model consists of trend (local linear trend) and seasonal components.
 It is defined by:
@@ -12,6 +14,15 @@ It is defined by:
     \end{aligned}
 \end{gather*}
 ```
+
+# Example
+```jldoctest
+julia> model = MultivariateBasicStructural(rand(100, 2), 12)
+MultivariateBasicStructural model
+```
+
+# References
+ * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press.
 """
 mutable struct MultivariateBasicStructural <: StateSpaceModel
     hyperparameters::HyperParameters

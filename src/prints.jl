@@ -4,9 +4,9 @@ function Base.show(io::IO, results::Results{Fl}) where Fl
         println(io, "========================================================")
         println(io, "Number of observations:       ", results.num_observations)
         println(io, "Number of unknown parameters: ", results.num_hyperparameters)
-        println(io, "Log-likelihood:               ", @sprintf("%.2f", results.llk))
-        println(io, "AIC:                          ", @sprintf("%.2f", results.aic))
-        println(io, "BIC:                          ", @sprintf("%.2f", results.bic))
+        println(io, "Log-likelihood:               ", @sprintf("%.3f", results.llk))
+        println(io, "AIC:                          ", @sprintf("%.3f", results.aic))
+        println(io, "BIC:                          ", @sprintf("%.3f", results.bic))
         print_coef_table(io, results.coef_table)
     else
         # Up to discussion of what should be the behaviour

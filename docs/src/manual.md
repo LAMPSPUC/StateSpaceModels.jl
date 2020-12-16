@@ -42,16 +42,18 @@ LinearMultivariateTimeVariant
 
 ## Hyperparameters
 
-The model hyperparameters are constant (non-time-varying) parameters that are optimized when [`fit!`](@ref) is called. The package provides some useful getters and setters to accelerate experimentation with models.
+The model hyperparameters are constant (non-time-varying) parameters that are optimized when [`fit!`](@ref) is called. The package provides some useful functions to accelerate experimentation and custom model development.
 
 The getters are:
 ```@docs
 get_names
+number_hyperparameters
 ```
 
 The setters are:
 ```@docs
 fix_hyperparameters!
+set_initial_hyperparameters!
 ```
 
 Mappings:
@@ -64,6 +66,24 @@ constrain_identity!
 unconstrain_identity!
 ```
 
+## Filters and smoothers
+
+StateSpaceModels.jl lets user define in an easy manner a tailor made filter. TODO docs here
+
+```@docs
+UnivariateKalmanFilter
+ScalarKalmanFilter
+StateSpaceModels.FilterOutput
+get_innovations
+get_innovation_variance
+get_filtered_state
+get_filtered_state_variance
+get_predictive_state
+get_predictive_state_variance
+get_smoothed_state
+get_smoothed_state_variance
+```
+
 ## Fitting and Optimizers
 
 StateSpaceModels.jl has an interface for [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) algorithms. The models can be estimated using different algorithms and tunned to the user needs
@@ -71,6 +91,9 @@ StateSpaceModels.jl has an interface for [Optim.jl](https://github.com/JuliaNLSo
 ```@docs
 fit!
 Optimizer
+results
+has_fit_methods
+is_fitted
 ```
 
 ## Visualization

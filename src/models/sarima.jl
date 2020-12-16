@@ -82,10 +82,16 @@ In terms of a univariate structural model, this can be represented as
 \end{gather*}
 ```
 
+# Example
+```jldoctest
+julia> model = SARIMA(rand(100); order=(1,1,1), seasonal_order=(1,2,3,12))
+SARIMA(1, 1, 1)x(1, 2, 3, 12) model
+```
+
 See more on [Airline passengers](@ref)
 
 # References
- * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press. pp. 9
+ * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press.
 """
 mutable struct SARIMA <: StateSpaceModel
     order::SARIMAOrder

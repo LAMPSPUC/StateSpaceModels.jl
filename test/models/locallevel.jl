@@ -9,9 +9,9 @@
     @test_throws ErrorException get_innovations(model)
     @test_throws ErrorException get_innovation_variance(model)
     @test_throws ErrorException get_filtered_state(model)
-    @test_throws ErrorException get_filtered_variance(model)
+    @test_throws ErrorException get_filtered_state_variance(model)
     @test_throws ErrorException get_predictive_state(model)
-    @test_throws ErrorException get_predictive_variance(model)
+    @test_throws ErrorException get_predictive_state_variance(model)
     @test_throws ErrorException show(stdout, results(model))
 
     fit!(model)
@@ -23,9 +23,9 @@
     @test get_innovations(model) == get_innovations(filter)
     @test get_innovation_variance(model) == get_innovation_variance(filter)
     @test get_filtered_state(model) == get_filtered_state(filter)
-    @test get_filtered_variance(model) == get_filtered_variance(filter)
+    @test get_filtered_state_variance(model) == get_filtered_state_variance(filter)
     @test get_predictive_state(model) == get_predictive_state(filter)
-    @test get_predictive_variance(model) == get_predictive_variance(filter)
+    @test get_predictive_state_variance(model) == get_predictive_state_variance(filter)
 
     # Durbin Koopman 2012 section 2.2.5
     a1 = 0.0

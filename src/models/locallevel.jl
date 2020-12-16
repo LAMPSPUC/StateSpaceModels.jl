@@ -1,4 +1,6 @@
 @doc raw"""
+    LocalLevel(y::Vector{Fl}) where Fl
+
 The local level model is defined by:
 ```math
 \begin{gather*}

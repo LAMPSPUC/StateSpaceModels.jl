@@ -1,4 +1,6 @@
 @doc raw"""
+    BasicStructural(y::Vector{Fl}, s::Int) where Fl
+
 The basic structural state-space model consists of a trend (level + slope) and a seasonal
 component. It is defined by:
 ```math
@@ -11,6 +13,15 @@ component. It is defined by:
     \end{aligned}
 \end{gather*}
 ```
+
+# Example
+```jldoctest
+julia> model = BasicStructural(rand(100), 12)
+BasicStructural model
+```
+
+# References
+ * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press.
 """
 mutable struct BasicStructural <: StateSpaceModel
     hyperparameters::HyperParameters
