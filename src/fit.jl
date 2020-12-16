@@ -26,11 +26,11 @@ LocalLinearTrend model
 ```
 """
 function fit!(
-    model::SS;
+    model::StateSpaceModel;
     filter::KalmanFilter=default_filter(model),
     optimizer::Optimizer=default_optimizer(model),
-) where SS <: StateSpaceModel
-    @assert has_fit_methods(SS)
+)
+    @assert has_fit_methods(typeof(model))
     initial_unconstrained_hyperparameter = handle_optim_initial_hyperparameters(model)
     # TODO Should there be a try catch?
     func = TwiceDifferentiable(
