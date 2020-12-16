@@ -82,7 +82,7 @@ export get_predictive_state_variance
 export get_smoothed_state
 export get_smoothed_state_variance
 export has_fit_methods
-export is_fitted
+export isfitted
 export isunivariate
 export kalman_filter
 export kalman_smoother

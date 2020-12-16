@@ -93,7 +93,7 @@ fit!
 Optimizer
 results
 has_fit_methods
-is_fitted
+isfitted
 ```
 
 ## Visualization

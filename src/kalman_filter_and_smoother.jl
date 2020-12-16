@@ -74,7 +74,7 @@ mutable struct FilterOutput{Fl<:AbstractFloat}
 end
 
 function assert_possible_to_filter(model::StateSpaceModel)
-    if !has_hyperparameter(model) || is_fitted(model)
+    if !has_hyperparameter(model) || isfitted(model)
         return true
     end
     error("Model has not been estimated yet, please use `fit!`.")

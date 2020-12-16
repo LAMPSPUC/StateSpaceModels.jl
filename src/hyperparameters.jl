@@ -279,12 +279,12 @@ function fix_hyperparameters!(hyperparameters::HyperParameters{Fl}) where Fl
 end
 
 """
-    is_fitted(model::StateSpaceModel) -> Bool
+    isfitted(model::StateSpaceModel) -> Bool
 
 Verify if `model` is fitted, i.e., returns `false` if there is at least one `NaN` entry in
 the hyperparameters.
 """
-function is_fitted(model::StateSpaceModel)
+function isfitted(model::StateSpaceModel)
     c1 = any(isnan, model.hyperparameters.unconstrained_values)
     c2 = any(isnan, model.hyperparameters.constrained_values)
     if c1 || c2
