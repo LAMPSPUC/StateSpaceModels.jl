@@ -68,7 +68,7 @@ unconstrain_identity!
 
 ## Filters and smoothers
 
-StateSpaceModels.jl lets user define in an easy manner a tailor made filter. TODO docs here
+StateSpaceModels.jl lets users define tailor-made filters in an easy manner. TODO docs here
 
 ```@docs
 UnivariateKalmanFilter
