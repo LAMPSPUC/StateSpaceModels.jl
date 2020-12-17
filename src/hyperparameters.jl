@@ -186,7 +186,6 @@ function has_hyperparameter(str::Vector{String}, hyperparameters::HyperParameter
     return true
 end
 
-# TODO incomplete doctest?
 """
     set_initial_hyperparameters!(model::StateSpaceModel,
                                  initial_hyperparameters::Dict{String, <:Real})
@@ -195,7 +194,21 @@ Fill a model with user inputed initial points for hyperparameter optimzation.
 
 # Example
 ```jldoctest
-julia> model = LocalLevel(rand(100));
+julia> model = LocalLevel(rand(100))
+LocalLevel model
+
+julia> get_names(model)
+2-element Array{String,1}:
+ "sigma2_ε"
+ "sigma2_η"
+
+julia> set_initial_hyperparameters!(model, Dict("sigma2_η" => 100.0))
+LocalLevel model
+
+julia> model.hyperparameters.constrained_values
+2-element Array{Float64,1}:
+ NaN  
+ 100.0
 ```
 """
 function set_initial_hyperparameters!(
@@ -243,7 +256,8 @@ the model estimation.
 
 # Example
 ```jldoctest
-julia> model = LocalLevel(rand(100));
+julia> model = LocalLevel(rand(100))
+LocalLevel model
 
 julia> get_names(model)
 2-element Array{String,1}:
@@ -251,13 +265,18 @@ julia> get_names(model)
  "sigma2_η"
 
 julia> fix_hyperparameters!(model, Dict("sigma2_ε" => 100.0))
-StateSpaceModels.HyperParameters{Float64}(2, ["sigma2_ε", "sigma2_η"], Dict("sigma2_η"=>2,"sigma2_ε"=>1), Dict{Int64,String}(), [NaN, NaN], [NaN, NaN], Dict("sigma2_ε"=>100.0))
+LocalLevel model
+
+julia> model.hyperparameters.fixed_constrained_values
+Dict{String,Float64} with 1 entry:
+  "sigma2_ε" => 100.0
 ```
 """
 function fix_hyperparameters! end
 
 function fix_hyperparameters!(model::StateSpaceModel, fixed_hyperparameters::Dict)
-    return fix_hyperparameters!(model.hyperparameters, fixed_hyperparameters)
+    fix_hyperparameters!(model.hyperparameters, fixed_hyperparameters)
+    return model
 end
 
 function fix_hyperparameters!(
