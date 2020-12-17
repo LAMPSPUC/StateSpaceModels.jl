@@ -59,6 +59,10 @@
     fit!(model)
     @test_broken loglike(model) ≈ 240.821 atol = 1e-3 rtol = 1e-3
 
+    model = SARIMA(log_air_passengers; order = (0, 1, 1), seasonal_order = (0, 1, 1, 12))
+    fit!(model)
+    @test loglike(model) ≈ 244.686 atol = 1e-3 rtol = 1e-3
+
     model = SARIMA(log_air_passengers; order = (2, 1, 1))
     fit!(model)
     @test loglike(model) ≈ 129.732 atol = 1e-3 rtol = 1e-3
