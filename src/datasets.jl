@@ -3,7 +3,7 @@
 @doc raw"""
     NILE
 
-The absolute path for the so called `NILE` dataset stored inside StateSpaceModels.jl.
+The absolute path for the `NILE` dataset stored inside StateSpaceModels.jl.
 This dataset provides measurements of the annual flow of the Nile river at Aswan from 1871 to 1970,
 in ``10^8 m^3``.
 
@@ -17,7 +17,7 @@ const NILE = joinpath(dirname(@__DIR__()), "datasets", "nile.csv")
 @doc raw"""
     AIR_PASSENGERS
 
-The absolute path for the so called `AIR_PASSENGERS` dataset stored inside StateSpaceModels.jl.
+The absolute path for the `AIR_PASSENGERS` dataset stored inside StateSpaceModels.jl.
 This dataset provides monthly totals of a US airline passengers from 1949 to 1960.
 
 See more on [Airline passengers](@ref)
@@ -30,7 +30,7 @@ const AIR_PASSENGERS = joinpath(dirname(@__DIR__()), "datasets", "airpassengers.
 @doc raw"""
     INTERNET
 
-The absolute path for the so called `INTERNET` dataset stored inside StateSpaceModels.jl.
+The absolute path for the `INTERNET` dataset stored inside StateSpaceModels.jl.
 This dataset provides the number of users logged on to an Internet server each minute over 100 minutes.
 
 See more on SARIMA... under contruction
@@ -44,7 +44,7 @@ const INTERNET = joinpath(dirname(@__DIR__()), "datasets", "internet.csv")
 @doc raw"""
     WHOLESALE_PRICE_INDEX
 
-The absolute path for the so called `INTERNET` dataset stored inside StateSpaceModels.jl.
+The absolute path for the `INTERNET` dataset stored inside StateSpaceModels.jl.
 This dataset provides the number of users logged on to an Internet server each minute over 100 minutes.
 
 See more on SARIMA... under contruction
@@ -59,7 +59,7 @@ const WHOLESALE_PRICE_INDEX = joinpath(
 @doc raw"""
     VEHICLE_FATALITIES
 
-The absolute path for the so called `VEHICLE_FATALITIES` dataset stored inside StateSpaceModels.jl.
+The absolute path for the `VEHICLE_FATALITIES` dataset stored inside StateSpaceModels.jl.
 This dataset provides the number of annual road traffic fatalities in Norway and Finland.
 
 See more on [Finland road traffic fatalities](@ref)
@@ -76,7 +76,7 @@ const VEHICLE_FATALITIES = joinpath(
 @doc raw"""
     FRONT_REAR_SEAT_KSI
 
-The absolute path for the so called `FRONT_REAR_SEAT_KSI` dataset stored inside StateSpaceModels.jl.
+The absolute path for the `FRONT_REAR_SEAT_KSI` dataset stored inside StateSpaceModels.jl.
 This dataset provides the log of british people killed or serious injuried in road accidents accross
 UK.
 

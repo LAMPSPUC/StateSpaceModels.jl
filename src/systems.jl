@@ -7,15 +7,24 @@ linear models.
 abstract type StateSpaceSystem end
 
 @doc raw"""
-    LinearUnivariateTimeInvariant
+    LinearUnivariateTimeInvariant{Fl}(
+        y::Vector{Fl},
+        Z::Vector{Fl},
+        T::Matrix{Fl},
+        R::Matrix{Fl},
+        d::Fl,
+        c::Vector{Fl},
+        H::Fl,
+        Q::Matrix{Fl},
+    ) where Fl <: AbstractFloat
 
 Definition of the system matrices ``y, Z, d, T, c, R, H, Q`` for linear univariate time invariant state space models.
 
 ```math
 \begin{gather*}
     \begin{aligned}
-        y_{t} &=  Z\alpha_{t} + d + \varepsilon_{t} \quad \varepsilon_{t} \sim \mathcal{N}(0, H)\\
-        \alpha_{t+1} &= T\alpha_{t} + c + R\eta_{t} \quad \eta_{t} \sim \mathcal{N}(0, Q)\\
+        y_{t} &=  Z\alpha_{t} + d + \varepsilon_{t} \quad &\varepsilon_{t} \sim \mathcal{N}(0, H)\\
+        \alpha_{t+1} &= T\alpha_{t} + c + R\eta_{t} \quad &\eta_{t} \sim \mathcal{N}(0, Q)\\
     \end{aligned}
 \end{gather*}
 ```
@@ -31,7 +40,7 @@ where:
 * ``H`` is a scalar
 * ``Q`` is a ``r \times r`` matrix
 """
-mutable struct LinearUnivariateTimeInvariant{Fl<:Real} <: StateSpaceSystem
+mutable struct LinearUnivariateTimeInvariant{Fl<:AbstractFloat} <: StateSpaceSystem
     y::Vector{Fl}
     Z::Vector{Fl}
     T::Matrix{Fl}
@@ -50,7 +59,7 @@ mutable struct LinearUnivariateTimeInvariant{Fl<:Real} <: StateSpaceSystem
         c::Vector{Fl},
         H::Fl,
         Q::Matrix{Fl},
-    ) where Fl
+    ) where Fl <: AbstractFloat
         mz = length(Z)
         mt1, mt2 = size(T)
         mr, rr = size(R)
@@ -71,15 +80,24 @@ end
 num_states(system::LinearUnivariateTimeInvariant) = size(system.T, 1)
 
 @doc raw"""
-    LinearUnivariateTimeVariant
+    LinearUnivariateTimeVariant{Fl}(
+        y::Vector{Fl},
+        Z::Vector{Vector{Fl}},
+        T::Vector{Matrix{Fl}},
+        R::Vector{Matrix{Fl}},
+        d::Vector{Fl},
+        c::Vector{Vector{Fl}},
+        H::Vector{Fl},
+        Q::Vector{Matrix{Fl}},
+    ) where Fl <: AbstractFloat
 
 Definition of the system matrices ``y, Z, d, T, c, R, H, Q`` for linear univariate time variant state space models.
 
 ```math
 \begin{gather*}
     \begin{aligned}
-        y_{t} &=  Z_{t}\alpha_{t} + d_{t} + \varepsilon_{t} \quad \varepsilon_{t} \sim \mathcal{N}(0, H_{t})\\
-        \alpha_{t+1} &= T_{t}\alpha_{t} + c_{t} + R_{t}\eta_{t} \quad \eta_{t} \sim \mathcal{N}(0, Q_{t})\\
+        y_{t} &=  Z_{t}\alpha_{t} + d_{t} + \varepsilon_{t} \quad &\varepsilon_{t} \sim \mathcal{N}(0, H_{t})\\
+        \alpha_{t+1} &= T_{t}\alpha_{t} + c_{t} + R_{t}\eta_{t} \quad &\eta_{t} \sim \mathcal{N}(0, Q_{t})\\
     \end{aligned}
 \end{gather*}
 ```
@@ -95,7 +113,7 @@ where:
 * ``H_{t}`` is a scalar
 * ``Q_{t}`` is a ``r \times r`` matrix
 """
-mutable struct LinearUnivariateTimeVariant{Fl<:Real} <: StateSpaceSystem
+mutable struct LinearUnivariateTimeVariant{Fl<:AbstractFloat} <: StateSpaceSystem
     y::Vector{Fl}
     Z::Vector{Vector{Fl}}
     T::Vector{Matrix{Fl}}
@@ -114,7 +132,7 @@ mutable struct LinearUnivariateTimeVariant{Fl<:Real} <: StateSpaceSystem
         c::Vector{Vector{Fl}},
         H::Vector{Fl},
         Q::Vector{Matrix{Fl}},
-    ) where Fl
+    ) where Fl <: AbstractFloat
 
         # TODO assert dimensions
 

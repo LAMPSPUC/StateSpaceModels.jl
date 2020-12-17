@@ -6,6 +6,8 @@ struct RegressionHyperParametersAuxiliary
 end
 
 @doc raw"""
+    LinearRegression(X::Matrix{Fl}, y::Vector{Fl}) where Fl
+
 The linear regression state-space model is defined by:
 ```math
 \begin{gather*}
@@ -16,6 +18,12 @@ The linear regression state-space model is defined by:
         \beta_{n,t+1} &= \beta_{n,t}\\
     \end{aligned}
 \end{gather*}
+```
+
+# Example
+```jldoctest
+julia> model = LinearRegression(rand(100, 2), rand(100))
+LinearRegression model
 ```
 """
 mutable struct LinearRegression <: StateSpaceModel

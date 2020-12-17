@@ -1,9 +1,3 @@
-"""
-    UnivariateKalmanState{Fl <: AbstractFloat}
-
-A Kalman filter that is tailored to univariate systems, exploiting the fact that the
-dimension of the observations at any time period is 1.
-"""
 mutable struct UnivariateKalmanState{Fl<:AbstractFloat}
     v::Fl
     F::Fl
@@ -63,7 +57,15 @@ end
 
 # Univariate Kalman filter with the recursions as described
 # in Koopman's book TODO
-mutable struct UnivariateKalmanFilter{Fl<:Real} <: KalmanFilter
+"""
+    UnivariateKalmanFilter{Fl <: AbstractFloat}
+
+A Kalman filter that is tailored to univariate systems, exploiting the fact that the
+dimension of the observations at any time period is 1.
+
+# TODO equations and descriptions of a1 and P1
+"""
+mutable struct UnivariateKalmanFilter{Fl<:AbstractFloat} <: KalmanFilter
     steadystate_tol::Fl
     a1::Vector{Fl}
     P1::Matrix{Fl}

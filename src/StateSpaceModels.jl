@@ -27,6 +27,11 @@ include("filters/regression_kalman_filter.jl")
 
 include("smoothers/kalman_smoother.jl")
 
+include("optimizers.jl")
+include("fit.jl")
+include("prints.jl")
+include("forecast.jl")
+
 include("models/common.jl")
 include("models/locallevel.jl")
 include("models/locallevelcycle.jl")
@@ -36,11 +41,6 @@ include("models/basicstructural.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
 include("models/linear_regression.jl")
-
-include("prints.jl")
-include("optimizers.jl")
-include("fit.jl")
-include("forecast.jl")
 
 include("visualization/forecast.jl")
 
@@ -72,21 +72,22 @@ export forecast
 export forecast_expected_value
 export get_constrained_value
 export get_filtered_state
-export get_filtered_variance
+export get_filtered_state_variance
 export get_hyperparameters
 export get_innovations
 export get_innovation_variance
 export get_names
 export get_predictive_state
-export get_predictive_variance
+export get_predictive_state_variance
 export get_smoothed_state
-export get_smoothed_variance
+export get_smoothed_state_variance
 export has_fit_methods
 export isfitted
 export isunivariate
 export kalman_filter
 export kalman_smoother
 export loglike
+export number_hyperparameters
 export results
 export set_initial_hyperparameters!
 export simulate

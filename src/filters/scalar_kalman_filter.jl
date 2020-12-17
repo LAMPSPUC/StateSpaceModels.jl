@@ -1,8 +1,3 @@
-"""
-    ScalarKalmanState{Fl <: AbstractFloat}
-
-The state of a `ScalarKalmanFilter`.
-"""
 mutable struct ScalarKalmanState{Fl<:AbstractFloat}
     v::Fl
     F::Fl

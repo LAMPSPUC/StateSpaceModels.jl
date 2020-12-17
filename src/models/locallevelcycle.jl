@@ -1,12 +1,14 @@
 @doc raw"""
+    LocalLevelCycle(y::Vector{Fl}) where Fl
+
 The local level model with a cycle component is defined by:
 ```math
 \begin{gather*}
     \begin{aligned}
-        y_{t} &=  \mu_{t} + c_{t} + \varepsilon_{t} \quad \varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
-        \mu_{t+1} &= \mu_{t} + \eta_{t} \quad \eta_{t} \sim \mathcal{N}(0, \sigma^2_{\eta})\\
-        c_{t+1} &= c_{t} \cos(\lambda_c) + c_{t}^{*} \sin(\lambda_c) \quad \omega_{1,t} \sim \mathcal{N}(0, \sigma^2_{\omega_1})\\
-        c_{t+1}^{*} &= -c_{t} \sin(\lambda_c) + c_{t}^{*} \sin(\lambda_c) \quad \omega_{2,t} \sim \mathcal{N}(0, \sigma^2_{\omega_2})\\
+        y_{t} &=  \mu_{t} + c_{t} + \varepsilon_{t} \quad &\varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &= \mu_{t} + \eta_{t} \quad &\eta_{t} \sim \mathcal{N}(0, \sigma^2_{\eta})\\
+        c_{t+1} &= c_{t} \cos(\lambda_c) + c_{t}^{*} \sin(\lambda_c) \quad &\omega_{1,t} \sim \mathcal{N}(0, \sigma^2_{\omega_1})\\
+        c_{t+1}^{*} &= -c_{t} \sin(\lambda_c) + c_{t}^{*} \sin(\lambda_c) \quad &\omega_{2,t} \sim \mathcal{N}(0, \sigma^2_{\omega_2})\\
     \end{aligned}
 \end{gather*}
 ```

@@ -1,5 +1,5 @@
 RecipesBase.@recipe function f(model::StateSpaceModel, forec::Forecast)
-    if !isa(model.system.y, Vector)
+    if !isunivariate(model)
         error("This plot recipe currently works for univariate models only.")
     end
     dists = Vector{Distribution}(undef, length(forec.expected_value))

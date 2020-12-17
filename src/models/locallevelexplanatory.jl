@@ -1,4 +1,6 @@
 @doc raw"""
+    LocalLevelExplanatory(y::Vector{Fl}, X::Matrix{Fl}) where Fl
+
 A local level model with explanatory variables is defined by:
 ```math
 \begin{gather*}
@@ -10,6 +12,12 @@ A local level model with explanatory variables is defined by:
         \beta_{n,t+1} &= \beta_{n,t} &\tau_{n, t} \sim \mathcal{N}(0, \sigma^2_{\tau_{n}})\\\\
     \end{aligned}
 \end{gather*}
+```
+
+# Example
+```jldoctest
+julia> model = LocalLevelExplanatory(rand(100), rand(100, 1))
+LocalLevelExplanatory model
 ```
 """
 mutable struct LocalLevelExplanatory <: StateSpaceModel
