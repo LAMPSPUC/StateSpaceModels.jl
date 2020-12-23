@@ -49,7 +49,7 @@ Structure with the results of the Kalman filter:
 * `Ptt`: variance of filtered state
 * `Pinf`: diffuse part of the covariance
 """
-mutable struct FilterOutput{Fl<:AbstractFloat}
+struct FilterOutput{Fl<:AbstractFloat}
     v::Vector{Vector{Fl}}
     F::Vector{Matrix{Fl}}
     a::Vector{Vector{Fl}}
@@ -186,7 +186,7 @@ Structure with the results of the smoother:
 * `alpha`: smoothed state
 * `V`: variance of smoothed state
 """
-mutable struct SmootherOutput{Fl<:Real}
+struct SmootherOutput{Fl<:Real}
     alpha::Vector{Vector{Fl}}
     V::Vector{Matrix{Fl}}
 

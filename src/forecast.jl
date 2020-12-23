@@ -1,4 +1,4 @@
-mutable struct Forecast{Fl}
+struct Forecast{Fl}
     expected_value::Vector{Vector{Fl}}
     covariance::Vector{Matrix{Fl}}
 end
