@@ -4,6 +4,8 @@
     @test has_fit_methods(LocalLevelCycle)
     model = LocalLevelCycle(rj_temp)
     fit!(model)
+    # TODO check with other software maybe statsmodels
+    @test loglike(model) ≈ -617.92385 atol = 1e-5 rtol = 1e-5
 
     # forecasting
     forec = forecast(model, 52)

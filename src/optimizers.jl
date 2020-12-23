@@ -12,7 +12,7 @@ julia> using Optim
 julia> opt = Optimizer(Optim.LBFGS(), Optim.Options(show_trace = true));
 ```
 """
-mutable struct Optimizer
+struct Optimizer
     method::Optim.AbstractOptimizer
     options::Optim.Options
 end

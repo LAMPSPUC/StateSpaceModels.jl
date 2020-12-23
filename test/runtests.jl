@@ -21,6 +21,7 @@ include("models/locallevelexplanatory.jl")
 include("models/basicstructural.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
+include("models/unobserved_components.jl")
 include("models/linear_regression.jl")
 
 # Visualization
