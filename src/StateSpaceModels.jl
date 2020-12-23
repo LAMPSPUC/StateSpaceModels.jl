@@ -41,6 +41,7 @@ include("models/basicstructural.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
 include("models/linear_regression.jl")
+include("models/unobserved_components.jl")
 
 include("visualization/forecast.jl")
 
@@ -61,6 +62,7 @@ export Optimizer
 export ScalarKalmanFilter
 export StateSpaceModel
 export UnivariateKalmanFilter
+export UnobservedComponents
 
 # Exported functions
 export constrain_box!
