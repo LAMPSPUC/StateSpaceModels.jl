@@ -332,6 +332,9 @@ function initial_hyperparameters!(model::UnobservedComponents)
     end
     if model.has_cycle
         initial_hyperparameters["λ_cycle"] = Fl(2 * pi / 12)
+        if model.damped_cycle
+            initial_hyperparameters["ρ_cycle"] = Fl(0.7)
+        end
     end
     set_initial_hyperparameters!(model, initial_hyperparameters)
     return model
@@ -344,9 +347,9 @@ function constrain_hyperparameters!(model::UnobservedComponents)
     end
     if model.has_cycle
         # Durbin and Koopman (2012) comment possible values in their book pp. 48
-        constrain_box!(model, "λ_cycle", Fl(2 * pi / 1.5), Fl(2 * pi / 100))
+        constrain_box!(model, "λ_cycle", Fl(2 * pi / 100), Fl(2 * pi / 1.5))
         if model.damped_cycle
-            constrain_box!(model, "ρ_cycle", Fl(0.5), one(Fl))
+            constrain_box!(model, "ρ_cycle", zero(Fl), Fl(1.2))
         end
     end
     return model
@@ -359,9 +362,9 @@ function unconstrain_hyperparameters!(model::UnobservedComponents)
     end
     if model.has_cycle
         # Durbin and Koopman (2012) comment possible values in their book pp. 48
-        unconstrain_box!(model, "λ_cycle", Fl(2 * pi / 1.5), Fl(2 * pi / 100))
+        unconstrain_box!(model, "λ_cycle", Fl(2 * pi / 100), Fl(2 * pi / 1.5))
         if model.damped_cycle
-            unconstrain_box!(model, "ρ_cycle", Fl(0.3), one(Fl))
+            unconstrain_box!(model, "ρ_cycle", zero(Fl), Fl(1.2))
         end
     end
     return model

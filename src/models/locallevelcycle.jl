@@ -86,7 +86,7 @@ function constrain_hyperparameters!(model::LocalLevelCycle)
     constrain_variance!(model, "sigma2_ω1")
     constrain_variance!(model, "sigma2_ω2")
     # Durbin and Koopman (2012) comment possible values in their book pp. 48
-    constrain_box!(model, "λ_c", Fl(2 * pi / 1.5), Fl(2 * pi / 100))
+    constrain_box!(model, "λ_c", Fl(2 * pi / 100), Fl(2 * pi / 1.5))
     return model
 end
 
@@ -97,7 +97,7 @@ function unconstrain_hyperparameters!(model::LocalLevelCycle)
     unconstrain_variance!(model, "sigma2_ω1")
     unconstrain_variance!(model, "sigma2_ω2")
     # Durbin and Koopman (2012) comment possible values in their book pp. 48
-    unconstrain_box!(model, "λ_c", Fl(2 * pi / 1.5), Fl(2 * pi / 100))
+    unconstrain_box!(model, "λ_c", Fl(2 * pi / 100), Fl(2 * pi / 1.5))
     return model
 end
 

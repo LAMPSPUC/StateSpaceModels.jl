@@ -40,9 +40,4 @@
     @test minimum(alpha[:, 1]) <= 296
     @test maximum(alpha[:, 2]) >= 7.5
     @test minimum(alpha[:, 2]) <= -7.5
-    # TODO not working
-    # model = UnobservedComponents(rj_temp; trend = "local level", cycle = "stochastic damped")
-    # fit!(model)
-    # model.results
-    # @test loglike(model) ≈ -617.92385 atol = 1e-5 rtol = 1e-5
 end
