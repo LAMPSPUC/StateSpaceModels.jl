@@ -30,7 +30,7 @@
     model = UnobservedComponents(rj_temp; trend = "local level", cycle = "stochastic")
     fit!(model)
     # TODO check with other software maybe statsmodels
-    @test loglike(model) ≈ -617.92385 atol = 1e-5 rtol = 1e-5
+    @test loglike(model) ≈ -619.8679932 atol = 1e-5 rtol = 1e-5
     filt = kalman_filter(model)
     forec = forecast(model, 52)
     @test monotone_forecast_variance(forec)

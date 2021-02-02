@@ -74,7 +74,6 @@ function validate_cycle(cycle::String)
     else
         spl = split(cycle)
         # TODO better error messaage
-        # Maybe a no string can be also valid
         if length(spl) == 1
             @assert spl[1] in ["deterministic", "stochastic"]
             return true
@@ -108,12 +107,121 @@ function parse_cycle(cycle::String)
 end
 
 @doc raw"""
-# TODO
-- TREND
+    UnobservedComponents(
+        y::Vector{Fl}; 
+        trend::String = "local level",
+        seasonal::String = "no"
+        cycle::String = "no"
+    ) where Fl
 
-- SEASONAL
+An unobserved components model that can have trend/level, seasonal and cycle components. 
+Each component should be specified by strings, if the component is not desired in the model 
+a string with "no" can be passed as keyword argument. 
+    
+These models take the general form 
 
-- CYCLE
+```math
+\begin{gather*}
+    \begin{aligned}
+    y_t = \mu_t + \gamma_t + c_t + \varepsilon_t
+    \end{aligned}
+\end{gather*}
+```
+where ``y_t`` refers to the observation vector at time ``t``,
+``\mu_t`` refers to the trend component, ``\gamma_t`` refers to the
+seasonal component, ``c_t`` refers to the cycle, and
+``\varepsilon_t`` is the irregular. The modeling details of these
+components are given below.
+
+### **Trend**
+
+The trend component can be modeled in a lot of different ways, usually it is called level when
+there is no slope component. The modelling options can be expressed as in the example `trend = "local level"`.
+
+* Local Level
+string: `"local level"`
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_{t} &=  \mu_{t} + \varepsilon_{t} \quad \varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &= \mu_{t} + \eta_{t} \quad \eta_{t} \sim \mathcal{N}(0, \sigma^2_{\eta})\\
+    \end{aligned}
+\end{gather*}
+```
+
+* Random Walk
+string: `"random walk"`
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_{t} &=  \mu_{t}\\
+        \mu_{t+1} &= \mu_{t} + \eta_{t} \quad \eta_{t} \sim \mathcal{N}(0, \sigma^2_{\eta})\\
+    \end{aligned}
+\end{gather*}
+```
+
+* Local Linear Trend
+string: `"local linear trend"`
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_{t} &=  \mu_{t} + \gamma_{t} + \varepsilon_{t} \quad &\varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &= \mu_{t} + \nu_{t} + \xi_{t} \quad &\xi_{t} \sim \mathcal{N}(0, \sigma^2_{\xi})\\
+        \nu_{t+1} &= \nu_{t} + \zeta_{t} \quad &\zeta_{t} \sim \mathcal{N}(0, \sigma^2_{\zeta})\\
+    \end{aligned}
+\end{gather*}
+```
+
+* Smooth Trend
+string: `"smooth trend"`
+```math
+\begin{gather*}
+    \begin{aligned}
+        y_{t} &=  \mu_{t} + \gamma_{t} + \varepsilon_{t} \quad &\varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &= \mu_{t} + \nu_{t}\\
+        \nu_{t+1} &= \nu_{t} + \zeta_{t} \quad &\zeta_{t} \sim \mathcal{N}(0, \sigma^2_{\zeta})\\
+    \end{aligned}
+\end{gather*}
+```
+
+**Seasonal**
+
+The seasonal component is modeled as:
+
+```math
+\begin{gather*}
+    \begin{aligned}
+    \gamma_t = - \sum_{j=1}^{s-1} \gamma_{t+1-j} + \omega_t \quad \omega_t \sim N(0, \sigma^2_\omega)
+    \end{aligned}
+\end{gather*}
+```
+
+The periodicity (number of seasons) is s, and the defining character is
+that (without the error term), the seasonal components sum to zero across
+one complete cycle. The inclusion of an error term allows the seasonal
+effects to vary over time. The modelling options can be expressed in terms
+of `"deterministic"` or `"stochastic"` and the periodicity as a number in 
+the string, i.e., `seasonal = "stochastic 12"`.
+
+**Cycle**
+
+The cycle component is modeled as
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        c_{t+1} &= \rho_c \left(c_{t} \cos(\lambda_c) + c_{t}^{*} \sin(\lambda_c)\right) \quad & \tilde\omega_{t} \sim \mathcal{N}(0, \sigma^2_{\tilde\omega})\\
+        c_{t+1}^{*} &= \rho_c \left(-c_{t} \sin(\lambda_c) + c_{t}^{*} \sin(\lambda_c)\right) \quad &\tilde\omega^*_{t} \sim \mathcal{N}(0, \sigma^2_{\tilde\omega})\\
+    \end{aligned}
+\end{gather*}
+```
+
+The cyclical component is intended to capture cyclical effects at time frames much longer 
+than captured by the seasonal component. The parameter ``\lambda_c`` is the frequency of the cycle
+and it is estimated via maximum likelihood. The inclusion of error terms allows the cycle
+effects to vary over time. The modelling options can be expressed in terms
+of `"deterministic"` or `"stochastic"` and the damping effect as a string, i.e., 
+`cycle = "stochastic"`, `cycle = "deterministic"` or `cycle = "damped"`.
 
 # References
  * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press.
@@ -282,8 +390,7 @@ function build_names(has_irregular::Bool,
     if has_cycle
         push!(names, "λ_cycle")
         if stochastic_cycle
-            push!(names, "sigma2_cycle1")
-            push!(names, "sigma2_cycle2")
+            push!(names, "sigma2_cycle")
         end
         if damped_cycle
             push!(names, "ρ_cycle")
@@ -392,9 +499,9 @@ function fill_model_system!(model::UnobservedComponents)
         idx += 1
     end
     if model.stochastic_cycle
-        model.system.Q[diag_Q_idx[idx]] = get_constrained_value(model, "sigma2_cycle1")
+        model.system.Q[diag_Q_idx[idx]] = get_constrained_value(model, "sigma2_cycle")
         idx += 1
-        model.system.Q[diag_Q_idx[idx]] = get_constrained_value(model, "sigma2_cycle2")
+        model.system.Q[diag_Q_idx[idx]] = get_constrained_value(model, "sigma2_cycle")
         idx += 1
     end
 

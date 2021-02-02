@@ -2,18 +2,12 @@
 
 ## Quick Start Guide
 
-- models
-- fit
-- filter
-- smoother
-- forecast
-- plot
-
 ## Models
 
 The package provides a variaty of pre-defined models. If there is any model that you wish was in the package, feel free to open an issue or pull request.
 
 ```@docs
+UnobservedComponents
 SARIMA
 BasicStructural
 LinearRegression

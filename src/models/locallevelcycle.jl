@@ -7,8 +7,8 @@ The local level model with a cycle component is defined by:
     \begin{aligned}
         y_{t} &=  \mu_{t} + c_{t} + \varepsilon_{t} \quad &\varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
         \mu_{t+1} &= \mu_{t} + \eta_{t} \quad &\eta_{t} \sim \mathcal{N}(0, \sigma^2_{\eta})\\
-        c_{t+1} &= c_{t} \cos(\lambda_c) + c_{t}^{*} \sin(\lambda_c) \quad &\omega_{1,t} \sim \mathcal{N}(0, \sigma^2_{\omega_1})\\
-        c_{t+1}^{*} &= -c_{t} \sin(\lambda_c) + c_{t}^{*} \sin(\lambda_c) \quad &\omega_{2,t} \sim \mathcal{N}(0, \sigma^2_{\omega_2})\\
+        c_{t+1} &= c_{t} \cos(\lambda_c) + c_{t}^{*} \sin(\lambda_c)\ \quad & \tilde\omega_{t} \sim \mathcal{N}(0, \sigma^2_{\tilde\omega})\\
+        c_{t+1}^{*} &= -c_{t} \sin(\lambda_c) + c_{t}^{*} \sin(\lambda_c) \quad &\tilde\omega^*_{t} \sim \mathcal{N}(0, \sigma^2_{\tilde\omega})\\
     \end{aligned}
 \end{gather*}
 ```
@@ -47,7 +47,7 @@ mutable struct LocalLevelCycle <: StateSpaceModel
         system = LinearUnivariateTimeInvariant{Fl}(y, Z, T, R, d, c, H, Q)
 
         # Define hyperparameters names
-        names = ["sigma2_ε", "sigma2_η", "sigma2_ω1", "sigma2_ω2", "λ_c"]
+        names = ["sigma2_ε", "sigma2_η", "sigma2_ω", "λ_c"]
         hyperparameters = HyperParameters{Fl}(names)
 
         return new(hyperparameters, system, Results{Fl}())
@@ -69,8 +69,7 @@ function initial_hyperparameters!(model::LocalLevelCycle)
     initial_hyperparameters = Dict{String,Fl}(
         "sigma2_ε" => observed_variance,
         "sigma2_η" => observed_variance,
-        "sigma2_ω1" => one(Fl),
-        "sigma2_ω2" => one(Fl),
+        "sigma2_ω" => one(Fl),
         # Durbin and Koopman (2012) comment possible values
         # in their book pp. 48
         "λ_c" => Fl(2 * pi / 12),
@@ -83,8 +82,7 @@ function constrain_hyperparameters!(model::LocalLevelCycle)
     Fl = typeof_model_elements(model)
     constrain_variance!(model, "sigma2_ε")
     constrain_variance!(model, "sigma2_η")
-    constrain_variance!(model, "sigma2_ω1")
-    constrain_variance!(model, "sigma2_ω2")
+    constrain_variance!(model, "sigma2_ω")
     # Durbin and Koopman (2012) comment possible values in their book pp. 48
     constrain_box!(model, "λ_c", Fl(2 * pi / 100), Fl(2 * pi / 1.5))
     return model
@@ -94,8 +92,7 @@ function unconstrain_hyperparameters!(model::LocalLevelCycle)
     Fl = typeof_model_elements(model)
     unconstrain_variance!(model, "sigma2_ε")
     unconstrain_variance!(model, "sigma2_η")
-    unconstrain_variance!(model, "sigma2_ω1")
-    unconstrain_variance!(model, "sigma2_ω2")
+    unconstrain_variance!(model, "sigma2_ω")
     # Durbin and Koopman (2012) comment possible values in their book pp. 48
     unconstrain_box!(model, "λ_c", Fl(2 * pi / 100), Fl(2 * pi / 1.5))
     return model
@@ -104,8 +101,8 @@ end
 function fill_model_system!(model::LocalLevelCycle)
     model.system.H = get_constrained_value(model, "sigma2_ε")
     model.system.Q[1] = get_constrained_value(model, "sigma2_η")
-    model.system.Q[5] = get_constrained_value(model, "sigma2_ω1")
-    model.system.Q[9] = get_constrained_value(model, "sigma2_ω2")
+    model.system.Q[5] = get_constrained_value(model, "sigma2_ω")
+    model.system.Q[9] = get_constrained_value(model, "sigma2_ω")
     model.system.T[5] = cos(get_constrained_value(model, "λ_c"))
     model.system.T[6] = -sin(get_constrained_value(model, "λ_c"))
     model.system.T[8] = sin(get_constrained_value(model, "λ_c"))
