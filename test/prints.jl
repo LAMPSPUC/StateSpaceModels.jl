@@ -10,4 +10,6 @@
     # Specific show methods
     model = SARIMA(random_series)
     show(model)
+    #TODO test this show
+    println("")
 end

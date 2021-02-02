@@ -74,7 +74,6 @@ function validate_cycle(cycle::String)
     else
         spl = split(cycle)
         # TODO better error messaage
-        # Maybe a no string can be also valid
         if length(spl) == 1
             @assert spl[1] in ["deterministic", "stochastic"]
             return true
@@ -108,10 +107,12 @@ function parse_cycle(cycle::String)
 end
 
 @doc raw"""
-    UnobservedComponents(y::Vector{Fl}; 
-                         trend::String = "local level",
-                         seasonal::String = "no"
-                         cycle::String = "no") where Fl
+    UnobservedComponents(
+        y::Vector{Fl}; 
+        trend::String = "local level",
+        seasonal::String = "no"
+        cycle::String = "no"
+    ) where Fl
 
 An unobserved components model that can have trend/level, seasonal and cycle components. 
 Each component should be specified by strings, if the component is not desired in the model 
@@ -190,8 +191,7 @@ The seasonal component is modeled as:
 ```math
 \begin{gather*}
     \begin{aligned}
-    \gamma_t = - \sum_{j=1}^{s-1} \gamma_{t+1-j} + \omega_t \\
-    \omega_t \sim N(0, \sigma_\omega^2)
+    \gamma_t = - \sum_{j=1}^{s-1} \gamma_{t+1-j} + \omega_t \quad \omega_t \sim N(0, \sigma^2_\omega)
     \end{aligned}
 \end{gather*}
 ```
@@ -205,7 +205,23 @@ the string, i.e., `seasonal = "stochastic 12"`.
 
 **Cycle**
 
-TODO
+The cycle component is modeled as
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        c_{t+1} &= \rho_c \left(c_{t} \cos(\lambda_c) + c_{t}^{*} \sin(\lambda_c)\right) \quad & \tilde\omega_{t} \sim \mathcal{N}(0, \sigma^2_{\tilde\omega})\\
+        c_{t+1}^{*} &= \rho_c \left(-c_{t} \sin(\lambda_c) + c_{t}^{*} \sin(\lambda_c)\right) \quad &\tilde\omega^*_{t} \sim \mathcal{N}(0, \sigma^2_{\tilde\omega})\\
+    \end{aligned}
+\end{gather*}
+```
+
+The cyclical component is intended to capture cyclical effects at time frames much longer 
+than captured by the seasonal component. The parameter ``\lambda_c`` is the frequency of the cycle
+and it is estimated via maximum likelihood. The inclusion of error terms allows the cycle
+effects to vary over time. The modelling options can be expressed in terms
+of `"deterministic"` or `"stochastic"` and the damping effect as a string, i.e., 
+`cycle = "stochastic"`, `cycle = "deterministic"` or `cycle = "damped"`.
 
 # References
  * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press.
@@ -374,8 +390,7 @@ function build_names(has_irregular::Bool,
     if has_cycle
         push!(names, "λ_cycle")
         if stochastic_cycle
-            push!(names, "sigma2_cycle1")
-            push!(names, "sigma2_cycle2")
+            push!(names, "sigma2_cycle")
         end
         if damped_cycle
             push!(names, "ρ_cycle")
@@ -484,9 +499,9 @@ function fill_model_system!(model::UnobservedComponents)
         idx += 1
     end
     if model.stochastic_cycle
-        model.system.Q[diag_Q_idx[idx]] = get_constrained_value(model, "sigma2_cycle1")
+        model.system.Q[diag_Q_idx[idx]] = get_constrained_value(model, "sigma2_cycle")
         idx += 1
-        model.system.Q[diag_Q_idx[idx]] = get_constrained_value(model, "sigma2_cycle2")
+        model.system.Q[diag_Q_idx[idx]] = get_constrained_value(model, "sigma2_cycle")
         idx += 1
     end
 
