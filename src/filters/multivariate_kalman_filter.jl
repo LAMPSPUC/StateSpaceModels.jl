@@ -59,9 +59,6 @@ function save_kalman_state_in_filter_output!(
     return filter_output
 end
 
-"""
-TODO
-"""
 mutable struct MultivariateKalmanFilter{Fl<:Real} <: KalmanFilter
     steadystate_tol::Fl
     a1::Vector{Fl}
