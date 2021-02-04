@@ -47,7 +47,7 @@ RecipesBase.@recipe function f(model::StateSpaceModel, scenarios::Array{<:Abstra
     end
     n = length(model.system.y)
     n_scen = size(scenarios, 3)
-    forec_idx = collect(n + 1: n + length(forec.expected_value))
+    scenarios_idx = collect(n + 1: n + size(scenarios, 1))
     # Plot the series
     @series begin
         seriestype := :path
@@ -62,6 +62,6 @@ RecipesBase.@recipe function f(model::StateSpaceModel, scenarios::Array{<:Abstra
         seriescolor := "grey"
         linewidth := 0.2
         label := permutedims(labels)
-        return forec_idx, scenarios[:, 1, :]
+        return scenarios_idx, scenarios[:, 1, :]
     end
 end
