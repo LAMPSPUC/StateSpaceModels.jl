@@ -20,7 +20,7 @@ RecipesBase.@recipe function f(model::StateSpaceModel, forec::Forecast)
         seriescolor := "blue"
         return forec_idx, mean.(dists)
     end
-    # Plot the Conf Interval
+    # Plot the prediction interval
     @series begin
         seriestype := :path
         seriescolor := fillrange_color
@@ -38,5 +38,30 @@ RecipesBase.@recipe function f(model::StateSpaceModel, forec::Forecast)
         fillrange := quantile.(dists, 0.90)
         label := ""
         return forec_idx, quantile.(dists, 0.10)
+    end
+end
+
+RecipesBase.@recipe function f(model::StateSpaceModel, scenarios::Array{<:AbstractFloat, 3})
+    if !isunivariate(model)
+        error("This plot recipe currently works for univariate models only.")
+    end
+    n = length(model.system.y)
+    n_scen = size(scenarios, 3)
+    forec_idx = collect(n + 1: n + length(forec.expected_value))
+    # Plot the series
+    @series begin
+        seriestype := :path
+        seriescolor := "black"
+        return model.system.y
+    end
+    # Plot the scenarios
+    labels = ["" for s in 1:n_scen - 1]
+    pushfirst!(labels, "scenarios")
+    @series begin
+        seriestype := :path
+        seriescolor := "grey"
+        linewidth := 0.2
+        label := permutedims(labels)
+        return forec_idx, scenarios[:, 1, :]
     end
 end
