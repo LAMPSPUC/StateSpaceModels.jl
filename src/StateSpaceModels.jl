@@ -44,6 +44,7 @@ include("models/linear_regression.jl")
 include("models/unobserved_components.jl")
 
 include("visualization/forecast.jl")
+include("visualization/unobserved_components.jl")
 
 # Exported types and structs
 export SARIMA

@@ -223,6 +223,8 @@ effects to vary over time. The modelling options can be expressed in terms
 of `"deterministic"` or `"stochastic"` and the damping effect as a string, i.e., 
 `cycle = "stochastic"`, `cycle = "deterministic"` or `cycle = "damped"`.
 
+The UnobservedComponents model has some dedicated Plot Recipes, see [Visualization](@ref)
+
 # References
  * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press.
 """
@@ -280,6 +282,30 @@ mutable struct UnobservedComponents <: StateSpaceModel
                     has_cycle, stochastic_cycle, damped_cycle,
                     system, Results{Fl}())
     end
+end
+
+num_components(model::UnobservedComponents) = (model.has_trend + model.has_slope + model.has_seasonal +
+                                                model.has_cycle)
+function dict_components(model::UnobservedComponents)
+    dict_components = Dict{String, Int}()
+    i = 1
+    if model.has_trend
+        dict_components["Trend"] = i
+        i += 1
+    end
+    if model.has_slope
+        dict_components["Slope"] = i
+        i += 1
+    end
+    if model.has_seasonal
+        dict_components["Seasonal"] = i
+        i += model.seasonal_freq - 1
+    end
+    if model.has_cycle
+        dict_components["Cycle"] = i
+        i += model.has_cycle + 1
+    end
+    return dict_components
 end
 
 function build_Z(Fl::DataType,

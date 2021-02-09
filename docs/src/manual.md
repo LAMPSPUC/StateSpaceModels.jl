@@ -105,11 +105,27 @@ fit!(model)
 forec = forecast(model, 24)
 
 plot(model, forec; legend = :topleft)
-savefig("plot.png")
+savefig("plot_forec.png")
 
 nothing
 ```
-![](plot.png)
+![](plot_forec.png)
+
+```@example
+using StateSpaceModels, CSV, DataFrames, Plots
+
+finland_fatalities = CSV.read(StateSpaceModels.VEHICLE_FATALITIES, DataFrame)
+log_finland_fatalities = log.(finland_fatalities.ff)
+model = UnobservedComponents(log_finland_fatalities; trend = "local linear trend")
+fit!(model)
+ks = kalman_smoother(model)
+
+plot(model, ks)
+savefig("plot_ks.png")
+
+nothing
+```
+![](plot_ks.png)
 
 ## Datasets
 
