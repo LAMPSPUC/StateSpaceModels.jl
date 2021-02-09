@@ -26,3 +26,4 @@ include("models/linear_regression.jl")
 
 # Visualization
 include("visualization/forecast.jl")
+include("visualization/unobserved_components.jl")
