@@ -1,6 +1,8 @@
 function kalman_smoother!(
     smoother_output::SmootherOutput,
-    system::LinearUnivariateTimeInvariant,
+    system::Union{LinearUnivariateTimeInvariant,
+                  LinearUnivariateTimeVariant,
+                  LinearMultivariateTimeInvariant},
     filter_output::FilterOutput,
 )
     multivariate_system = to_multivariate_time_variant(system)

@@ -173,9 +173,11 @@ function kalman_filter(model::StateSpaceModel; filter::KalmanFilter=default_filt
     assert_possible_to_filter(model)
     filter_output = FilterOutput(model)
     reset_filter!(filter)
-    free_unconstrained_values = get_free_unconstrained_values(model)
-    update_model_hyperparameters!(model, free_unconstrained_values)
-    update_filter_hyperparameters!(filter, model)
+    if has_hyperparameter(model)
+        free_unconstrained_values = get_free_unconstrained_values(model)
+        update_model_hyperparameters!(model, free_unconstrained_values)
+        update_filter_hyperparameters!(filter, model)
+    end
     return kalman_filter!(filter_output, model.system, filter)
 end
 
