@@ -12,6 +12,8 @@ using Printf
 using Optim
 using RecipesBase
 
+using JuMP, Ipopt
+
 abstract type StateSpaceModel end
 
 include("datasets.jl")
@@ -24,6 +26,7 @@ include("filters/univariate_kalman_filter.jl")
 include("filters/multivariate_kalman_filter.jl")
 include("filters/scalar_kalman_filter.jl")
 include("filters/regression_kalman_filter.jl")
+include("filters/robust_kalman_filter.jl")
 
 include("smoothers/kalman_smoother.jl")
 
