@@ -31,6 +31,7 @@ include("optimizers.jl")
 include("fit.jl")
 include("prints.jl")
 include("forecast.jl")
+include("backtest.jl")
 
 include("models/common.jl")
 include("models/locallevel.jl")
@@ -45,6 +46,7 @@ include("models/unobserved_components.jl")
 
 include("visualization/forecast.jl")
 include("visualization/unobserved_components.jl")
+include("visualization/backtest.jl")
 
 # Exported types and structs
 export SARIMA
@@ -66,6 +68,7 @@ export UnivariateKalmanFilter
 export UnobservedComponents
 
 # Exported functions
+export backtest
 export constrain_box!
 export constrain_identity!
 export constrain_variance!
