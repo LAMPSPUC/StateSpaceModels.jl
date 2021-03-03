@@ -90,6 +90,18 @@ has_fit_methods
 isfitted
 ```
 
+## Forecasting and simulating
+
+StateSpaceModels.jl has functions to make forecasts of the predictive densities multiple steps ahead and to
+simulate scenarios based on those forecasts. The package also has a functions to benchmark the model forecasts 
+using backtest techniques.
+
+```@docs
+forecast
+simulate_scenarios
+backtest
+```
+
 ## Visualization
 
 Some user friendly plot recipes are defined using [RecipesBase.jl](https://github.com/JuliaPlots/RecipesBase.jl). If you have any suggestions do not hesitate to post it as an issue.

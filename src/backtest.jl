@@ -34,13 +34,17 @@ function evaluate_crps(y::Vector{Fl}, scenarios::Matrix{Fl}) where {Fl}
 end
 
 """
-# using CSV, DataFrames
-# air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
-# log_air_passengers = log.(air_passengers.passengers)
+    backtest(model::StateSpaceModel, y::Vector{Fl}, steps_ahead::Int, start_idx::Int;
+             n_scenarios::Int = 10_000,
+             filter::KalmanFilter=default_filter(model),
+             optimizer::Optimizer=default_optimizer(model)) where Fl
 
-# model = BasicStructural(log_air_passengers, 12)
-# b = backtest(model, log_air_passengers, 24, 50)
-# plot(b, "Local level model")
+Makes rolling window estimating and forecasting to benchmark the forecasting skill of the model
+in for different time periods and different lead times. The function returns a struct with the MAE
+and mean CRPS per lead time. See more on [Backtest the forecasts of a model](@ref)
+
+# References
+ * DTU course "31761 - Renewables in electricity markets" available on youtube https://www.youtube.com/watch?v=Ffo8XilZAZw&t=556s
 """
 function backtest(model::StateSpaceModel, y::Vector{Fl}, steps_ahead::Int, start_idx::Int;
                   n_scenarios::Int = 10_000,
