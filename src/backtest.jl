@@ -34,7 +34,7 @@ function evaluate_crps(y::Vector{Fl}, scenarios::Matrix{Fl}) where {Fl}
 end
 
 """
-    backtest(model::StateSpaceModel, y::Vector{Fl}, steps_ahead::Int, start_idx::Int;
+    backtest(model::StateSpaceModel, steps_ahead::Int, start_idx::Int;
              n_scenarios::Int = 10_000,
              filter::KalmanFilter=default_filter(model),
              optimizer::Optimizer=default_optimizer(model)) where Fl
@@ -46,16 +46,17 @@ and mean CRPS per lead time. See more on [Backtest the forecasts of a model](@re
 # References
  * DTU course "31761 - Renewables in electricity markets" available on youtube https://www.youtube.com/watch?v=Ffo8XilZAZw&t=556s
 """
-function backtest(model::StateSpaceModel, y::Vector{Fl}, steps_ahead::Int, start_idx::Int;
+function backtest(model::StateSpaceModel, steps_ahead::Int, start_idx::Int;
                   n_scenarios::Int = 10_000,
                   filter::KalmanFilter=default_filter(model),
-                  optimizer::Optimizer=default_optimizer(model)) where Fl
-    num_mle = length(y) - start_idx - steps_ahead
+                  optimizer::Optimizer=default_optimizer(model))
+    Fl = typeof_model_elements(model)
+    num_mle = length(model.system.y) - start_idx - steps_ahead
     b = Backtest{Fl}(num_mle, steps_ahead)
     for i in 1:num_mle
         println("Backtest: step $i of $num_mle")
-        y_to_fit = y[1:start_idx - 1 + i]
-        y_to_verify = y[start_idx + i:start_idx - 1 + i + steps_ahead]
+        y_to_fit = model.system.y[1:start_idx - 1 + i]
+        y_to_verify = model.system.y[start_idx + i:start_idx - 1 + i + steps_ahead]
         model_to_fit = reinstantiate(model, y_to_fit)
         fit!(model_to_fit; filter=filter, optimizer=optimizer)
         forec = forecast(model_to_fit, steps_ahead; filter=filter)
