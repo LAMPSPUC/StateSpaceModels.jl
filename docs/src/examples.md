@@ -193,6 +193,23 @@ smoother_output = kalman_smoother(model)
 plot(df.date, get_smoothed_state(smoother_output)[:, 2], label = "slope")
 ```
 
+## Backtest the forecasts of a model
 
+Often times users would like to compare the forecasting skill of different models. The function 
+[`backtest`](@ref) makes it easy to make a rolling window scheme of estimations and forecasts 
+that allow users to track each model forecasting skill per lead time. A simple plot recipe is
+implemented to help users to interpret the results easily.
 
+```@setup bt
+using StateSpaceModels, CSV, DataFrames
+using Plots
+```
 
+```@example bt
+using CSV, DataFrames
+air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
+log_air_passengers = log.(air_passengers.passengers)
+model = BasicStructural(log_air_passengers, 12)
+b = backtest(model, 24, 50)
+plot(b, "Basic structural model")
+```
