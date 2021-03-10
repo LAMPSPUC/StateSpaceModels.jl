@@ -118,7 +118,7 @@ function simulate_scenarios(
     filter::KalmanFilter=default_filter(model),
 )
     # Query the type of model elements
-    Fl = StateSpaceModels.typeof_model_elements(model)
+    Fl = typeof_model_elements(model)
     fo = kalman_filter(model)
     last_state = fo.a[end]
     num_series = size(model.system.y, 2)
