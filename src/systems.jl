@@ -305,9 +305,11 @@ function simulate(
     standard_η = randn(n + 1, size(sys.Q, 1))
 
     # The first state of the simulation is the update of a_0
-    alpha[1, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[1, :]
+    alpha[1, :] .= initial_state
+    y[1] = dot(sys.Z, initial_state) + sys.d + chol_H * standard_ε[1]
+    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[1, :]
     # Simulate scenarios
-    for t in 1:n
+    for t in 2:n
         y[t] = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
         alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
     end

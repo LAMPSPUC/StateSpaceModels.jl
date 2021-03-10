@@ -52,7 +52,7 @@ function forecast(
             expected_value[i] =
                 model.system.Z * fo.a[end - steps_ahead + i - 1] .+ model.system.d
         end
-        covariance[i] = fo.F[end - steps_ahead + i - 1]
+        covariance[i] = fo.F[end - steps_ahead + i]
     end
     return Forecast{Fl}(expected_value, covariance)
 end
@@ -97,7 +97,7 @@ function forecast(
                 model.system.Z[end - steps_ahead + i - 1] * fo.a[end - steps_ahead + i - 1] +
                 model.system.d[end - steps_ahead + i - 1]
         end
-        covariance[i] = fo.F[end - steps_ahead + i - 1]
+        covariance[i] = fo.F[end - steps_ahead + i]
     end
     return Forecast{Fl}(expected_value, covariance)
 end
@@ -118,9 +118,9 @@ function simulate_scenarios(
     filter::KalmanFilter=default_filter(model),
 )
     # Query the type of model elements
-    Fl = typeof_model_elements(model)
+    Fl = StateSpaceModels.typeof_model_elements(model)
     fo = kalman_filter(model)
-    last_state = fo.a[end - 1]
+    last_state = fo.a[end]
     num_series = size(model.system.y, 2)
 
     scenarios = Array{Fl,3}(undef, steps_ahead, num_series, n_scenarios)

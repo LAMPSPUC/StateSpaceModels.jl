@@ -15,6 +15,7 @@
     @test monotone_forecast_variance(forec)
 
     predicted_mean = [
+        5.933257,
         5.897660,
         5.862062,
         5.826465,
@@ -23,8 +24,7 @@
         5.719672,
         5.684074,
         5.648477,
-        5.612879,
-        5.577282,
+        5.612879
     ]
     @test maximum(abs.(predicted_mean .- vcat(forec.expected_value...))) < 1.5e-3
 end
