@@ -17,6 +17,12 @@
     fit!(model)
     @test loglike(model) ≈ -632.5376 atol = 1e-5 rtol = 1e-5
 
+    forec = forecast(model, 10)
+    @test monotone_forecast_variance(forec)
+    # simulating
+    scenarios = simulate_scenarios(model, 10, 100_000)
+    test_scenarios_adequacy_with_forecast(forec, scenarios)
+
     filter = kalman_filter(model)
 
     # Test that getter functions now work since model has been fitted
@@ -68,6 +74,7 @@
         @test filter.Ptt[t][1] > smoother.V[t][1] # by construction
     end
 
+    # Forecasting of series with missing values
     # forecasting
     forec = forecast(model, 10)
     @test monotone_forecast_variance(forec)

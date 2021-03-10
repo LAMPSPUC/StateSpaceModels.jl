@@ -12,6 +12,7 @@
     @test monotone_forecast_variance(forec)
     # Prediction from Pyhton statsmodels
     predicted_mean = [
+        -1.11949821,
         -0.72809028,
         -0.47352952,
         -0.30797034,
@@ -20,12 +21,11 @@
         -0.08472164,
         -0.05510058,
         -0.03583588,
-        -0.02330665,
-        -0.01515799,
+        -0.02330665
     ]
     @test predicted_mean ≈ vcat(forec.expected_value...) atol = 1e-3
     # simualting
-    scenarios = simulate_scenarios(model, 10, 100_000)
+    scenarios = simulate_scenarios(model, 10, 30_000)
     # Values are very close to 0.0 so we test with absolute tolerance
     # It attains 1e-3 when we make 10M simulations, which is too much
     # computation for a rather simple test.

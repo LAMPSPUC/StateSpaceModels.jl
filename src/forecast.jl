@@ -46,11 +46,11 @@ function forecast(
     for i in 1:steps_ahead
         if isunivariate(model)
             expected_value[i] = [
-                dot(model.system.Z, fo.a[end - steps_ahead + i]) + model.system.d
+                dot(model.system.Z, fo.a[end - steps_ahead + i - 1]) + model.system.d
             ]
         else
             expected_value[i] =
-                model.system.Z * fo.a[end - steps_ahead + i] .+ model.system.d
+                model.system.Z * fo.a[end - steps_ahead + i - 1] .+ model.system.d
         end
         covariance[i] = fo.F[end - steps_ahead + i]
     end
@@ -89,13 +89,13 @@ function forecast(
     for i in 1:steps_ahead
         if isunivariate(model)
             expected_value[i] = [
-                dot(model.system.Z[end - steps_ahead + i], fo.a[end - steps_ahead + i]) +
-                model.system.d[end - steps_ahead + i],
+                dot(model.system.Z[end - steps_ahead + i - 1], fo.a[end - steps_ahead + i - 1]) +
+                model.system.d[end - steps_ahead + i - 1],
             ]
         else
             expected_value[i] =
-                model.system.Z[end - steps_ahead + i] * fo.a[end - steps_ahead + i] +
-                model.system.d[end - steps_ahead + i]
+                model.system.Z[end - steps_ahead + i - 1] * fo.a[end - steps_ahead + i - 1] +
+                model.system.d[end - steps_ahead + i - 1]
         end
         covariance[i] = fo.F[end - steps_ahead + i]
     end
