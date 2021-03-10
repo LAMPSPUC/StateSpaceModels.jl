@@ -25,11 +25,11 @@
     ]
     @test predicted_mean ≈ vcat(forec.expected_value...) atol = 1e-3
     # simualting
-    @time scenarios = simulate_scenarios(model, 10, 30_000)
+    scenarios = simulate_scenarios(model, 10, 30_000)
     # Values are very close to 0.0 so we test with absolute tolerance
     # It attains 1e-3 when we make 10M simulations, which is too much
     # computation for a rather simple test.
-    test_scenarios_adequacy_with_forecast(forec, scenarios; atol=5e-2)
+    test_scenarios_adequacy_with_forecast(forec, scenarios; atol=1e-1)
 
     missing_obs = [6, 16, 26, 36, 46, 56, 66, 72, 73, 74, 75, 76, 86, 96]
     missing_dinternet = copy(dinternet)
