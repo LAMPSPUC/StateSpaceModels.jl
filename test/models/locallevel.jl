@@ -20,7 +20,7 @@
     forec = forecast(model, 10)
     @test monotone_forecast_variance(forec)
     # simulating
-    scenarios = simulate_scenarios(model, 10, 10_000)
+    scenarios = simulate_scenarios(model, 10, 100_000)
     test_scenarios_adequacy_with_forecast(forec, scenarios)
 
     filter = kalman_filter(model)
