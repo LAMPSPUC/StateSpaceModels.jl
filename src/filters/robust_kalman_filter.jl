@@ -11,7 +11,9 @@ mutable struct RobustKalmanState{Fl<:AbstractFloat}
     P_to_check_steady_state::Matrix{Fl}
     ZP::Vector{Fl}
     TPtt::Matrix{Fl}
-    function RobustKalmanState(a1::Vector{Fl}, P1::Matrix{Fl}) where Fl
+    lambda_o::Fl
+    lambda_m::Fl
+    function RobustKalmanState(a1::Vector{Fl}, P1::Matrix{Fl}, lambda_o::Fl, lambda_m::Fl) where Fl
         m = length(a1)
         P_to_check_steady_state = zeros(Fl, m, m)
         ZP = zeros(Fl, m)
@@ -29,6 +31,8 @@ mutable struct RobustKalmanState{Fl<:AbstractFloat}
             P_to_check_steady_state,
             ZP,
             TPtt,
+            lambda_o,
+            lambda_m
         )
     end
 end
@@ -77,8 +81,10 @@ mutable struct RobustKalmanFilter{Fl<:AbstractFloat} <: KalmanFilter
         P1::Matrix{Fl},
         skip_llk_instants::Int=length(a1),
         steadystate_tol::Fl=Fl(1e-5),
+        lambda_o::Fl = zero(Fl),
+        lambda_m::Fl = zero(Fl)
     ) where Fl
-        kalman_state = RobustKalmanState(copy(a1), copy(P1))
+        kalman_state = RobustKalmanState(copy(a1), copy(P1), lambda_o, lambda_m)
         return new{Fl}(steadystate_tol, a1, P1, skip_llk_instants, kalman_state)
     end
 end
@@ -135,18 +141,24 @@ function update_att!(kalman_state::RobustKalmanState{Fl}, Z::Vector{Fl}, T::Matr
     a = kalman_state.a
     n = size(P, 1)
     r = size(R, 2)
-    model = Model(Ipopt.Optimizer)
-    # (Z, T, R, P, a, H, y) = ([1.0], [1.0], [1.0], [287.789], [726.05], 0.13625874134975896, 456.0)
+    model = Model(OSQP.Optimizer)
+    # (Z, T, R, P, a, H, y) = ([1.0], [1.0][:, :], [1.0][:, :], [287.789][:, :], [726.05], 0.13625874134975896, 456.0)
+    # lambda_o = 0.5
     JuMP.set_silent(model)
     @variable(model, x[1:n])
+    @variable(model, aux >= 0)
+    @variable(model, o)
     @variable(model, vt)
     @variable(model, wt[1:r])
     Rwt = R * wt
-    @constraint(model, Z' * x + vt == y)
+    @constraint(model, Z' * x + vt + o == y)
     @constraint(model, T * a + Rwt .== x)
-    @objective(model, Min, vt' * inv(H) * vt + Rwt' * inv(P) * Rwt)
+    @constraint(model, aux >= o)
+    @constraint(model, aux >= -o)
+    @objective(model, Min, vt' * inv(H) * vt + Rwt' * inv(P) * Rwt + kalman_state.lambda_o * aux)
     
     optimize!(model)
+
     if (termination_status(model) != MOI.OPTIMAL) && (termination_status(model) != MOI.ALMOST_OPTIMAL) &&
         (termination_status(model) != MOI.LOCALLY_SOLVED)
         @show Z, T, R, P, a, H, y
