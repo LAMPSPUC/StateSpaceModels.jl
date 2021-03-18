@@ -17,7 +17,7 @@ plot!(att)
 include("/Users/guilhermebodin/Documents/StateSpaceModels.jl/src/StateSpaceModels.jl")
 nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
 nile.flow[50] += 2000
-lambda_os = [0.0, 1e-7, 1e-6, 1e-5]
+lambda_os = [0.0, 1e-7, 1e-6, 1e-5, 1.0]
 llks = []
 kfs = []
 models = []
@@ -31,8 +31,9 @@ for lambda_o in lambda_os
     P1 = Fl(1e6) .* Matrix{Fl}(I, n_states, n_states)
     lambda_m = zero(Fl)
     filt = StateSpaceModels.RobustKalmanFilter(a1, P1, n_states, steadystate_tol, lambda_o, lambda_m)
+    @show filt.kalman_state.lambda_o
     StateSpaceModels.fit!(model; filter = filt, optimizer = StateSpaceModels.Optimizer(Optim.LBFGS(), Optim.Options(; g_tol = 1e-6, show_trace = true)))
-    kf = StateSpaceModels.kalman_filter(m; filter = filt)
+    kf = StateSpaceModels.kalman_filter(model; filter = filt)
     push!(llks, StateSpaceModels.loglike(model; filter = filt))
     push!(models, model)
     push!(kfs, kf)
