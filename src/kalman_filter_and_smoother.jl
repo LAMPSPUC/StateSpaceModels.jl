@@ -57,6 +57,7 @@ struct FilterOutput{Fl<:AbstractFloat}
     P::Vector{Matrix{Fl}}
     Ptt::Vector{Matrix{Fl}}
     Pinf::Vector{Matrix{Fl}}
+    o::Vector{Vector{Fl}}
 
     function FilterOutput(model::StateSpaceModel)
         Fl = typeof_model_elements(model)
@@ -69,7 +70,8 @@ struct FilterOutput{Fl<:AbstractFloat}
         P = Vector{Matrix{Fl}}(undef, n + 1)
         Ptt = Vector{Matrix{Fl}}(undef, n)
         Pinf = Vector{Matrix{Fl}}(undef, n)
-        return new{Fl}(v, F, a, att, P, Ptt, Pinf)
+        o = Vector{Vector{Fl}}(undef, n)
+        return new{Fl}(v, F, a, att, P, Ptt, Pinf, o)
     end
 end
 

@@ -3,6 +3,7 @@ mutable struct RobustKalmanState{Fl<:AbstractFloat}
     F::Fl
     att::Vector{Fl}
     a::Vector{Fl}
+    o::Fl
     Ptt::Matrix{Fl}
     P::Matrix{Fl}
     llk::Fl
@@ -24,6 +25,7 @@ mutable struct RobustKalmanState{Fl<:AbstractFloat}
             zero(Fl),
             zeros(Fl, m),
             a1,
+            zero(Fl),
             zeros(Fl, m, m),
             P1,
             zero(Fl),
@@ -56,6 +58,7 @@ function save_kalman_state_in_filter_output!(
     filter_output.Ptt[t] = copy(kalman_state.Ptt)
     # There is no diffuse part in RobustKalmanState
     filter_output.Pinf[t] = copy(fill(zero(Fl), size(kalman_state.Ptt)))
+    filter_output.o[t] = copy(fill(kalman_state.o, 1))
     return filter_output
 end
 
@@ -166,6 +169,7 @@ function update_att!(kalman_state::RobustKalmanState{Fl}, Z::Vector{Fl}, T::Matr
         error("Model is not optimal")
     end
     kalman_state.att .= value.(x)
+    kalman_state.o = value(o_plus) - value(o_minus)
     return kalman_state
 end
 
