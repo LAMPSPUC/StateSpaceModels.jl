@@ -155,10 +155,8 @@ function update_att!(kalman_state::RobustKalmanState{Fl}, Z::Vector{Fl}, T::Matr
     @variable(model, wt[1:r])
     Rwt = R * wt
     @constraint(model, Z' * x + vt + (o_plus - o_minus) == y)
-    @constraint(model, Z' * x + vt == y)
     @constraint(model, T * a + Rwt .== x)
     @objective(model, Min, vt' * inv(H) * vt + Rwt' * inv(P) * Rwt + kalman_state.lambda_o * (o_plus + o_minus))
-    # @objective(model, Min, vt' * inv(H) * vt + Rwt' * inv(P) * Rwt)
     
     optimize!(model)
 

@@ -17,7 +17,7 @@ plot!(att)
 include("/Users/guilhermebodin/Documents/StateSpaceModels.jl/src/StateSpaceModels.jl")
 nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
 nile.flow[50] += 2000
-lambda_os = [0.0, 1e-7, 1e-6, 1e-5, 1.0]
+lambda_os = [0.0, 1e-5, 1e-3, 1, 10]
 llks = []
 kfs = []
 models = []
