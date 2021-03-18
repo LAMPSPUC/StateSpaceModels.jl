@@ -12,7 +12,7 @@ using Printf
 using Optim
 using RecipesBase
 
-using JuMP, OSQP
+using JuMP, Ipopt
 
 abstract type StateSpaceModel end
 

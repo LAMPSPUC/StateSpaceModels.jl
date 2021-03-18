@@ -141,21 +141,21 @@ function update_att!(kalman_state::RobustKalmanState{Fl}, Z::Vector{Fl}, T::Matr
     a = kalman_state.a
     n = size(P, 1)
     r = size(R, 2)
-    model = Model(OSQP.Optimizer)
+    model = Model(Ipopt.Optimizer)
     # (Z, T, R, P, a, H, y) = ([1.0], [1.0][:, :], [1.0][:, :], [287.789][:, :], [726.05], 0.13625874134975896, 456.0)
     # lambda_o = 0.5
     JuMP.set_silent(model)
     @variable(model, x[1:n])
-    @variable(model, aux >= 0)
-    @variable(model, o)
+    @variable(model, o_plus >= 0)
+    @variable(model, o_minus >= 0)
     @variable(model, vt)
     @variable(model, wt[1:r])
     Rwt = R * wt
-    @constraint(model, Z' * x + vt + o == y)
+    @constraint(model, Z' * x + vt + (o_plus - o_minus) == y)
+    @constraint(model, Z' * x + vt == y)
     @constraint(model, T * a + Rwt .== x)
-    @constraint(model, aux >= o)
-    @constraint(model, aux >= -o)
-    @objective(model, Min, vt' * inv(H) * vt + Rwt' * inv(P) * Rwt + kalman_state.lambda_o * aux)
+    @objective(model, Min, vt' * inv(H) * vt + Rwt' * inv(P) * Rwt + kalman_state.lambda_o * (o_plus + o_minus))
+    # @objective(model, Min, vt' * inv(H) * vt + Rwt' * inv(P) * Rwt)
     
     optimize!(model)
 
