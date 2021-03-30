@@ -1,5 +1,5 @@
 @testset "LocalLevel" begin
-    nile = CSV.read(StateSpaceModels.NILE, DataFrame)
+    nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
 
     @test has_fit_methods(LocalLevel)
 

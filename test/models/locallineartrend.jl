@@ -1,6 +1,6 @@
 @testset "Local Linear Trend Model" begin
-    finland_fatalities = CSV.read(StateSpaceModels.VEHICLE_FATALITIES, DataFrame).ff
-    log_finland_fatalities = log.(finland_fatalities)
+    finland_fatalities = CSV.File(StateSpaceModels.VEHICLE_FATALITIES) |> DataFrame
+    log_finland_fatalities = log.(finland_fatalities.ff)
 
     @test has_fit_methods(LocalLinearTrend)
     # Based on

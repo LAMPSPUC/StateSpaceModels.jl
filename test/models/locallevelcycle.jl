@@ -1,8 +1,8 @@
 @testset "Local Level With Cycle Model" begin
-    rj_temp = CSV.read(StateSpaceModels.RJ_TEMPERATURE, DataFrame).Values
+    rj_temp = CSV.File(StateSpaceModels.RJ_TEMPERATURE) |> DataFrame
 
     @test has_fit_methods(LocalLevelCycle)
-    model = LocalLevelCycle(rj_temp)
+    model = LocalLevelCycle(rj_temp.Values)
     fit!(model)
     # TODO check with other software maybe statsmodels
     @test loglike(model) ≈ -619.8679932 atol = 1e-5 rtol = 1e-5

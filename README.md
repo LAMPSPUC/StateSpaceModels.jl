@@ -20,7 +20,7 @@ Pkg.add("StateSpaceModels")
 
 using StateSpaceModels
 
-y = rand(100)
+y = randn(100)
 
 model = LocalLevel(y)
 
