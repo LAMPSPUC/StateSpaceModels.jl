@@ -69,7 +69,7 @@ UnivariateKalmanFilter
 ScalarKalmanFilter
 StateSpaceModels.FilterOutput
 get_innovations
-get_innovation_variance
+get_innovations_variance
 get_filtered_state
 get_filtered_state_variance
 get_predictive_state

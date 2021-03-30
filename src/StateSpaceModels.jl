@@ -11,6 +11,7 @@ using MatrixEquations
 using Printf
 using Optim
 using RecipesBase
+using StatsBase
 
 abstract type StateSpaceModel end
 
@@ -47,6 +48,7 @@ include("models/unobserved_components.jl")
 include("visualization/forecast.jl")
 include("visualization/unobserved_components.jl")
 include("visualization/backtest.jl")
+include("visualization/diagnostics.jl")
 
 # Exported types and structs
 export SARIMA
@@ -81,7 +83,7 @@ export get_filtered_state
 export get_filtered_state_variance
 export get_hyperparameters
 export get_innovations
-export get_innovation_variance
+export get_innovations_variance
 export get_names
 export get_predictive_state
 export get_predictive_state_variance
