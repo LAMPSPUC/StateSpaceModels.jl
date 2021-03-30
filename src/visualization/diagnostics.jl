@@ -1,6 +1,6 @@
 @userplot PlotDiagnostics
 @recipe function f(diagnostics::PlotDiagnostics)
-    kf = diagnostics.args[1]
+    kf = diagnostics.args
     v = get_innovations(kf)
     F = get_innovations_variance(kf)
     @assert size(v, 2) == 1 # Must be univariate
