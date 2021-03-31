@@ -33,8 +33,6 @@ const AIR_PASSENGERS = joinpath(dirname(@__DIR__()), "datasets", "airpassengers.
 The absolute path for the `INTERNET` dataset stored inside StateSpaceModels.jl.
 This dataset provides the number of users logged on to an Internet server each minute over 100 minutes.
 
-See more on SARIMA... under contruction
-
 # References
  * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods:
     Second Edition." Oxford University Press. (Chapter 9)
@@ -44,13 +42,7 @@ const INTERNET = joinpath(dirname(@__DIR__()), "datasets", "internet.csv")
 @doc raw"""
     WHOLESALE_PRICE_INDEX
 
-The absolute path for the `INTERNET` dataset stored inside StateSpaceModels.jl.
-This dataset provides the number of users logged on to an Internet server each minute over 100 minutes.
-
-See more on SARIMA... under contruction
-
-# References
- * https://www.stata.com/manuals13/tsSARIMA.pdf
+TODO
 """
 const WHOLESALE_PRICE_INDEX = joinpath(
     dirname(@__DIR__()), "datasets", "wholesalepriceindex.csv"
@@ -90,7 +82,7 @@ const FRONT_REAR_SEAT_KSI = joinpath(dirname(@__DIR__()), "datasets", "front_rea
 @doc raw"""
     RJ_TEMPERATURE
 
-Weekly mean temperature in Rio de Janeiro in Kelvin.
+Weekly mean temperature in Rio de Janeiro in Kelvin (K).
 """
 const RJ_TEMPERATURE = joinpath(dirname(@__DIR__()), "datasets", "rj_temperature.csv")
 
