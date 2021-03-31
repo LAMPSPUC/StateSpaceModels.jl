@@ -1,5 +1,5 @@
 @testset "LocalLevel" begin
-    nile = CSV.read(StateSpaceModels.NILE, DataFrame)
+    nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
 
     @test has_fit_methods(LocalLevel)
 
@@ -7,7 +7,7 @@
 
     # Test that getter functions throw error for model that hasn't been fitted yet
     @test_throws ErrorException get_innovations(model)
-    @test_throws ErrorException get_innovation_variance(model)
+    @test_throws ErrorException get_innovations_variance(model)
     @test_throws ErrorException get_filtered_state(model)
     @test_throws ErrorException get_filtered_state_variance(model)
     @test_throws ErrorException get_predictive_state(model)
@@ -27,7 +27,7 @@
 
     # Test that getter functions now work since model has been fitted
     @test get_innovations(model) == get_innovations(filter)
-    @test get_innovation_variance(model) == get_innovation_variance(filter)
+    @test get_innovations_variance(model) == get_innovations_variance(filter)
     @test get_filtered_state(model) == get_filtered_state(filter)
     @test get_filtered_state_variance(model) == get_filtered_state_variance(filter)
     @test get_predictive_state(model) == get_predictive_state(filter)

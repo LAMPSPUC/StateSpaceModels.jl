@@ -1,6 +1,6 @@
 @testset "Basic Structural Model" begin
     # Univariate
-    air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
+    air_passengers = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
     log_air_passengers = log.(air_passengers.passengers)
 
     @test has_fit_methods(BasicStructural)

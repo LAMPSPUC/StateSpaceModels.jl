@@ -1,4 +1,4 @@
-RecipesBase.@recipe function f(b::Backtest, name::String)
+@recipe function f(b::Backtest, name::String)
     xguide := "lead times"
     @series begin
         seriestype := :path

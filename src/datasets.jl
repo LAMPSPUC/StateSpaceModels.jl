@@ -88,7 +88,9 @@ UK.
 const FRONT_REAR_SEAT_KSI = joinpath(dirname(@__DIR__()), "datasets", "front_rear_seat.csv")
 
 @doc raw"""
-TODO
+    RJ_TEMPERATURE
+
+Weekly mean temperature in Rio de Janeiro in Kelvin.
 """
 const RJ_TEMPERATURE = joinpath(dirname(@__DIR__()), "datasets", "rj_temperature.csv")
 

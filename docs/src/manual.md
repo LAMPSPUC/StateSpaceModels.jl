@@ -2,6 +2,42 @@
 
 ## Quick Start Guide
 
+Although StateSpaceModels.jl has a lot of functionalities, different models and interfaces 
+users usuallly just want to fit a model and analyse the residuals, components and make some forecasts.
+The following code is a quick start to perform these tasks
+
+```julia
+import Pkg
+
+Pkg.add("StateSpaceModels")
+
+using StateSpaceModels
+
+y = randn(100)
+
+model = LocalLevel(y)
+
+fit!(model)
+
+results(model)
+
+forec = forecast(model, 10)
+
+kf = kalman_filter(model)
+
+v = get_innovations(kf)
+
+ks = kalman_smoother(model)
+
+alpha = get_smoothed_state(ks)
+
+using Plots
+
+plot(model, forec)
+
+plotdiagnostics(kf)
+```
+
 ## Models
 
 The package provides a variaty of pre-defined models. If there is any model that you wish was in the package, feel free to open an issue or pull request.
@@ -69,7 +105,7 @@ UnivariateKalmanFilter
 ScalarKalmanFilter
 StateSpaceModels.FilterOutput
 get_innovations
-get_innovation_variance
+get_innovations_variance
 get_filtered_state
 get_filtered_state_variance
 get_predictive_state
@@ -126,7 +162,7 @@ nothing
 ```@example
 using StateSpaceModels, CSV, DataFrames, Plots
 
-finland_fatalities = CSV.read(StateSpaceModels.VEHICLE_FATALITIES, DataFrame)
+finland_fatalities = CSV.File(StateSpaceModels.VEHICLE_FATALITIES) |> DataFrame
 log_finland_fatalities = log.(finland_fatalities.ff)
 model = UnobservedComponents(log_finland_fatalities; trend = "local linear trend")
 fit!(model)
@@ -138,6 +174,21 @@ savefig("plot_ks.png")
 nothing
 ```
 ![](plot_ks.png)
+
+```@example
+using StateSpaceModels, CSV, DataFrames, Plots
+
+finland_fatalities = CSV.File(StateSpaceModels.NILE) |> DataFrame
+model = UnobservedComponents(nile; trend = "local level", cycle = "stochastic")
+fit!(model)
+kf = kalman_filter(model)
+
+plotdiagnostics(kf)
+savefig("plot_diagnostics.png")
+
+nothing
+```
+![](plot_diagnostics.png)
 
 ## Datasets
 

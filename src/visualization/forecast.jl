@@ -1,4 +1,4 @@
-RecipesBase.@recipe function f(model::StateSpaceModel, forec::Forecast)
+@recipe function f(model::StateSpaceModel, forec::Forecast)
     if !isunivariate(model)
         error("This plot recipe currently works for univariate models only.")
     end

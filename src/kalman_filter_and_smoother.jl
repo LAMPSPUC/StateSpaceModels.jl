@@ -95,17 +95,17 @@ function get_innovations(model::StateSpaceModel; filter::KalmanFilter=default_fi
 end
 
 """
-    get_innovation_variance
+    get_innovations_variance
 
 Returns the variance `F` of innovations obtained with the Kalman filter.
 """
-function get_innovation_variance end
+function get_innovations_variance end
 
-get_innovation_variance(filter_output::FilterOutput) = cat(filter_output.F...; dims=3)
+get_innovations_variance(filter_output::FilterOutput) = cat(filter_output.F...; dims=3)
 
-function get_innovation_variance(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
+function get_innovations_variance(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
-    return get_innovation_variance(kalman_filter(model; filter=filter))
+    return get_innovations_variance(kalman_filter(model; filter=filter))
 end
 
 """

@@ -1,4 +1,4 @@
-RecipesBase.@recipe function f(model::UnobservedComponents, kf::FilterOutput{<:AbstractFloat})
+@recipe function f(model::UnobservedComponents, kf::FilterOutput{<:AbstractFloat})
     if !isunivariate(model)
         error("This plot recipe currently works for univariate models only.")
     end
@@ -20,7 +20,7 @@ RecipesBase.@recipe function f(model::UnobservedComponents, kf::FilterOutput{<:A
     end
 end
 
-RecipesBase.@recipe function f(model::UnobservedComponents, ks::SmootherOutput{<:AbstractFloat})
+@recipe function f(model::UnobservedComponents, ks::SmootherOutput{<:AbstractFloat})
     if !isunivariate(model)
         error("This plot recipe currently works for univariate models only.")
     end

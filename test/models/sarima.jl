@@ -1,5 +1,5 @@
 @testset "SARIMA" begin
-    internet = CSV.read(StateSpaceModels.INTERNET, DataFrame)
+    internet = CSV.File(StateSpaceModels.INTERNET) |> DataFrame
     dinternet = internet.dinternet[2:end]
     @test has_fit_methods(SARIMA)
 
@@ -39,21 +39,21 @@
     fit!(model)
     @test loglike(model) ≈ -225.770 atol = 1e-5 rtol = 1e-5
 
-    wpi = CSV.read(StateSpaceModels.WHOLESALE_PRICE_INDEX, DataFrame).wpi
-    model = SARIMA(wpi; order = (1, 1, 1))
+    wholesale = CSV.File(StateSpaceModels.WHOLESALE_PRICE_INDEX) |> DataFrame
+    model = SARIMA(wholesale.wpi; order = (1, 1, 1))
     fit!(model)
     @test loglike(model) ≈ -137.246818 atol = 1e-5 rtol = 1e-5
 
-    uschange_consumption = CSV.read(StateSpaceModels.US_CHANGE, DataFrame).Consumption
-    model = SARIMA(uschange_consumption; order = (1, 0, 3), include_mean = true)
+    uschange_consumption = CSV.File(StateSpaceModels.US_CHANGE) |> DataFrame
+    model = SARIMA(uschange_consumption.Consumption; order = (1, 0, 3), include_mean = true)
     fit!(model)
     @test loglike(model) ≈ -164.8 atol = 1e-1 rtol = 1e-1
 
-    model = SARIMA(uschange_consumption; order = (3, 0, 0), include_mean = true)
+    model = SARIMA(uschange_consumption.Consumption; order = (3, 0, 0), include_mean = true)
     fit!(model)
     @test loglike(model) ≈ -165.2 atol = 1e-1 rtol = 1e-1
     
-    air_passengers = CSV.read(StateSpaceModels.AIR_PASSENGERS, DataFrame)
+    air_passengers = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
     log_air_passengers = log.(air_passengers.passengers)
     model = SARIMA(log_air_passengers; order = (2, 1, 0), seasonal_order = (1, 1, 0, 12))
     fit!(model)
