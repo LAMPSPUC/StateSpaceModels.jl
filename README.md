@@ -50,6 +50,7 @@ Current features include:
   * Exponential Smoothing (ETS, all the linear ones)
   * Unobserved components (local level, basic structural, ...)
   * SARIMA
+  * Linear regression
 * Completion of missing values
 * Diagnostics for the residuals of fitted models
 * Visualization recipes
