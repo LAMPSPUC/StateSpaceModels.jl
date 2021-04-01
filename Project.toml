@@ -1,13 +1,14 @@
 name = "StateSpaceModels"
 uuid = "99342f36-827c-5390-97c9-d7f9ee765c78"
 authors = ["raphaelsaavedra <raphael.saavedra93@gmail.com>, guilhermebodin <guilherme.b.moraes@gmail.com>, mariohsouto"]
-version = "0.5.8"
+version = "0.5.9"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MatrixEquations = "99c1a7ee-ab34-5fd5-8076-27c950a045f4"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
@@ -19,6 +20,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Distributions = "0.23, 0.24"
 MatrixEquations = "1"
 Optim = "0.20, 0.21, 0.22, 1.2"
+OrderedCollections = "1"
 Polynomials = "1"
 RecipesBase = "1"
 ShiftedArrays = "1"

@@ -47,12 +47,12 @@ Current features include:
 * Forecasting and Monte Carlo simulation
 * User-defined models (user specifies the state-space system)
 * Several predefined models, including:
-  * Basic structural model (trend, slope, seasonal)
-  * Linear trend model
-  * Local level model
+  * Exponential Smoothing (ETS, all the linear ones)
+  * Unobserved components (local level, basic structural, ...)
   * SARIMA
 * Completion of missing values
 * Diagnostics for the residuals of fitted models
+* Visualization recipes
 
 ## Contributing
 

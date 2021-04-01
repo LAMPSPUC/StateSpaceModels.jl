@@ -48,7 +48,7 @@ function fit!(
     # I leaned that this is not a good way to compute the covariance matrix of paarameters
     # we should investigate other methods
     numerical_hessian = Optim.hessian!(func, opt_hyperparameters)
-    std_err = diag(inv(numerical_hessian))
+    std_err = diag(pinv(numerical_hessian))
     fill_results!(model, opt_loglikelihood, std_err)
     return model
 end

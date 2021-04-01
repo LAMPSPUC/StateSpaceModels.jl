@@ -23,9 +23,10 @@ include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
 include("models/unobserved_components.jl")
 include("models/linear_regression.jl")
+include("models/exponential_smoothing.jl")
 
 # Visualization
 include("visualization/forecast.jl")
-include("visualization/unobserved_components.jl")
+include("visualization/components.jl")
 include("visualization/backtest.jl")
 include("visualization/diagnostics.jl")

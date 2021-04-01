@@ -226,7 +226,9 @@ of `"deterministic"` or `"stochastic"` and the damping effect as a string, i.e.,
 The UnobservedComponents model has some dedicated Plot Recipes, see [Visualization](@ref)
 
 # References
- * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press.
+ * Durbin, James, & Siem Jan Koopman.
+   Time Series Analysis by State Space Methods: Second Edition. 
+   Oxford University Press, 2012
 """
 mutable struct UnobservedComponents <: StateSpaceModel
     hyperparameters::HyperParameters
@@ -287,7 +289,7 @@ end
 num_components(model::UnobservedComponents) = (model.has_trend + model.has_slope + model.has_seasonal +
                                                 model.has_cycle)
 function dict_components(model::UnobservedComponents)
-    dict_components = Dict{String, Int}()
+    dict_components = OrderedDict{String, Int}()
     i = 1
     if model.has_trend
         dict_components["Trend"] = i
