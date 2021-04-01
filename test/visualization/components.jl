@@ -7,9 +7,9 @@
     ks = kalman_smoother(model)
 
     rec = RecipesBase.apply_recipe(Dict{Symbol, Any}(), model, kf)
-    @test length(rec) == 3
+    @test length(rec) == 4
     rec = RecipesBase.apply_recipe(Dict{Symbol, Any}(), model, ks)
-    @test length(rec) == 3
+    @test length(rec) == 4
 
     finland_fatalities = CSV.File(StateSpaceModels.VEHICLE_FATALITIES) |> DataFrame
     log_finland_fatalities = log.(finland_fatalities.ff)
@@ -17,7 +17,7 @@
     fit!(model)
 
     rec = RecipesBase.apply_recipe(Dict{Symbol, Any}(), model, kf)
-    @test length(rec) == 2
+    @test length(rec) == 3
     rec = RecipesBase.apply_recipe(Dict{Symbol, Any}(), model, ks)
-    @test length(rec) == 2
+    @test length(rec) == 3
 end

@@ -56,9 +56,12 @@ mutable struct SARIMAHyperParametersAuxiliary{Fl <: AbstractFloat}
 end
 
 @doc raw"""
-    SARIMA(y::Vector{Fl}; order::Tuple{Int,Int,Int} = (1, 0, 0), 
-                          seasonal_order::Tuple{Int, Int, Int, Int} = (0, 0, 0, 0),
-                          include_mean::Bool = false) where Fl
+    SARIMA(
+        y::Vector{Fl}; 
+        order::Tuple{Int,Int,Int} = (1, 0, 0), 
+        seasonal_order::Tuple{Int, Int, Int, Int} = (0, 0, 0, 0),
+        include_mean::Bool = false
+    ) where Fl
 
 A SARIMA model (Seasonal AutoRegressive Integrated Moving Average) implemented within the state-space
 framework.
@@ -91,7 +94,9 @@ SARIMA(1, 1, 1)x(1, 2, 3, 12) model
 See more on [Airline passengers](@ref)
 
 # References
- * Durbin, James, & Siem Jan Koopman. (2012). "Time Series Analysis by State Space Methods: Second Edition." Oxford University Press.
+ * Durbin, James, & Siem Jan Koopman.
+   Time Series Analysis by State Space Methods: Second Edition. 
+   Oxford University Press, 2012
 """
 mutable struct SARIMA <: StateSpaceModel
     order::SARIMAOrder

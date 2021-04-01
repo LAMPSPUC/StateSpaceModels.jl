@@ -10,6 +10,7 @@ using Polynomials
 using MatrixEquations
 using Printf
 using Optim
+using OrderedCollections
 using RecipesBase
 using StatsBase
 
@@ -44,15 +45,16 @@ include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
 include("models/linear_regression.jl")
 include("models/unobserved_components.jl")
+include("models/exponential_smoothing.jl")
 
 include("visualization/forecast.jl")
-include("visualization/unobserved_components.jl")
+include("visualization/components.jl")
 include("visualization/backtest.jl")
 include("visualization/diagnostics.jl")
 
 # Exported types and structs
-export SARIMA
 export BasicStructural
+export ExponentialSmoothing
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant
 export LinearRegression
@@ -64,6 +66,7 @@ export LocalLevelExplanatory
 export LocalLinearTrend
 export MultivariateBasicStructural
 export Optimizer
+export SARIMA
 export ScalarKalmanFilter
 export StateSpaceModel
 export UnivariateKalmanFilter

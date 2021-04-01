@@ -44,6 +44,7 @@ The package provides a variaty of pre-defined models. If there is any model that
 
 ```@docs
 UnobservedComponents
+ExponentialSmoothing
 SARIMA
 BasicStructural
 LinearRegression
