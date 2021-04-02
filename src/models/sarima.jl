@@ -657,14 +657,12 @@ end
 
 has_exogenous(::SARIMA) = false
 
-function Base.show(io::IO, model::SARIMA)
+function model_name(model::SARIMA)
     p, d, q = model.order.p, model.order.d, model.order.q
     P, D, Q, s = model.order.P, model.order.D, model.order.Q, model.order.s
     str = "SARIMA($p, $d, $q)x($P, $D, $Q, $s)"
     if model.include_mean 
         str *= " with non-zero mean"
     end
-    str *= " model"
-    print(io, str)
-    return nothing
+    return str
 end
