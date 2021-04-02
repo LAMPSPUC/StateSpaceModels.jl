@@ -266,15 +266,13 @@ function reinstantiate(model::ExponentialSmoothing, y::Vector{Fl}) where Fl
             )
 end
 
-function Base.show(io::IO, model::ExponentialSmoothing)
+function model_name(model::ExponentialSmoothing)
     E = "A"
     T = model.trend ? 
         model.damped_trend ? "Ad" : "A" :
         "N"
     S = model.seasonal > 0 ? "A" : "N"
-    str = "ETS($E,$T,$S)"
-    print(io, str)
-    return nothing
+    return "ETS($E,$T,$S)"
 end
 
 function dict_components(model::ExponentialSmoothing)

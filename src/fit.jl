@@ -106,6 +106,7 @@ function Base.isempty(coef_table::CoefficientTable)
 end
 
 mutable struct Results{Fl<:AbstractFloat}
+    model_name::String
     coef_table::CoefficientTable{Fl}
     llk::Fl
     aic::Fl
@@ -115,7 +116,7 @@ mutable struct Results{Fl<:AbstractFloat}
 end
 
 function Results{Fl}() where Fl
-    return Results{Fl}(CoefficientTable{Fl}(), Fl(NaN), Fl(NaN), Fl(NaN), 0, 0)
+    return Results{Fl}("", CoefficientTable{Fl}(), Fl(NaN), Fl(NaN), Fl(NaN), 0, 0)
 end
 
 """
@@ -138,6 +139,7 @@ function fill_results!(model::StateSpaceModel, llk::Fl, std_err::Vector{Fl}) whe
     num_hyperparameters = number_free_hyperparameters(model)
     coef_table = build_coef_table(model, std_err)
     # Fill results
+    model.results.model_name = model_name(model)
     model.results.coef_table = coef_table
     model.results.llk = llk
     model.results.aic = AIC(num_hyperparameters, llk)

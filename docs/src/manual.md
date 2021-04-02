@@ -154,11 +154,7 @@ fit!(model)
 forec = forecast(model, 24)
 
 plot(model, forec; legend = :topleft)
-savefig("plot_forec.png")
-
-nothing
 ```
-![](plot_forec.png)
 
 ```@example
 using StateSpaceModels, CSV, DataFrames, Plots
@@ -170,11 +166,7 @@ fit!(model)
 ks = kalman_smoother(model)
 
 plot(model, ks)
-savefig("plot_ks.png")
-
-nothing
 ```
-![](plot_ks.png)
 
 ```@example
 using StateSpaceModels, CSV, DataFrames, Plots
@@ -185,11 +177,7 @@ fit!(model)
 kf = kalman_filter(model)
 
 plotdiagnostics(kf)
-savefig("plot_diagnostics.png")
-
-nothing
 ```
-![](plot_diagnostics.png)
 
 ## Datasets
 
