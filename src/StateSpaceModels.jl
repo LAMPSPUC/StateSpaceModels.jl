@@ -73,6 +73,7 @@ export UnivariateKalmanFilter
 export UnobservedComponents
 
 # Exported functions
+export auto_ets
 export backtest
 export constrain_box!
 export constrain_identity!

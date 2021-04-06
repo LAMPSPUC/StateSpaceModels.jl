@@ -7,6 +7,7 @@ function Base.show(io::IO, results::Results{Fl}) where Fl
         println(io, "Number of unknown parameters: ", results.num_hyperparameters)
         println(io, "Log-likelihood:               ", pretty_number(results.llk))
         println(io, "AIC:                          ", pretty_number(results.aic))
+        println(io, "AICc:                         ", pretty_number(results.aicc))
         println(io, "BIC:                          ", pretty_number(results.bic))
         print_coef_table(io, results.coef_table)
     else

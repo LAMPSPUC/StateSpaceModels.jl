@@ -55,6 +55,17 @@ LocalLinearTrend
 MultivariateBasicStructural
 ```
 
+## Automatic forecasting
+
+Some models have various parameters and modelling options. The package provides simple functions that
+search through different parameters to obtain the best fit for your data without a deeper understanding.
+The search procedures can be published in scientific papers or purely heuristic designed by the developers.
+In any case if the documentation explains the procedures and indicates if there are any references.
+
+```
+auto_ets
+```
+
 ### Implementing a custom model
 
 Users are able to implement any custom user-defined model.
