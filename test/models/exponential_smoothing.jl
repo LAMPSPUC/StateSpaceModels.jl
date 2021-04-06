@@ -35,4 +35,16 @@
     @test loglike(model) ≈ 275.313 atol = 1e-3 rtol = 1e-3
     forec = forecast(model, 10)
     @test monotone_forecast_variance(forec)
+
+    # Automatic ETS
+    model = auto_ets(nile.flow)
+    @test model.trend == false
+
+    model = auto_ets(log_finland_fatalities)
+    @test model.trend == true
+    @test model.damped_trend == false
+
+    model = auto_ets(log_air_passengers; seasonal = 12)
+    @test model.trend == true
+    @test model.damped_trend == false
 end

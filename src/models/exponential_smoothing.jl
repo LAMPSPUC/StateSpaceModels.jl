@@ -289,3 +289,57 @@ function dict_components(model::ExponentialSmoothing)
     end
     return dict_components
 end
+
+@doc raw"""
+    auto_ets(y::Vector{Fl}; seasonal::Int = 0) where Fl
+
+Automatically fits the best [`ExponentialSmoothing`](@ref) model according to the best AIC 
+between the models:
+ * ETS(A, N, N)
+ * ETS(A, A, N)
+ * ETS(A, Ad, N)
+
+If the user provides the time series seasonality it will search between the models
+ * ETS(A, N, A)
+ * ETS(A, A, A)
+ * ETS(A, Ad, A)
+
+# References
+ * Hyndman, Robin John; Athanasopoulos, George. 
+ Forecasting: Principles and Practice. 
+ 2nd ed. OTexts, 2018.
+"""
+function auto_ets(y::Vector{Fl}; seasonal::Int = 0) where Fl
+    models = StateSpaceModel[]
+    models_aic = Fl[]
+    @assert seasonal != 1
+    if seasonal == 0
+        m1 = ExponentialSmoothing(y; trend = false, damped_trend = false)
+        fit!(m1)
+        push!(models, m1)
+        push!(models_aic, m1.results.aic)
+        m2 = ExponentialSmoothing(y; trend = true, damped_trend = false)
+        fit!(m2)
+        push!(models, m2)
+        push!(models_aic, m2.results.aic)
+        m3 = ExponentialSmoothing(y; trend = true, damped_trend = true)
+        fit!(m3)
+        push!(models, m3)
+        push!(models_aic, m3.results.aic)
+    else
+        m1 = ExponentialSmoothing(y; trend = false, damped_trend = false, seasonal = seasonal)
+        fit!(m1)
+        push!(models, m1)
+        push!(models_aic, m1.results.aic)
+        m2 = ExponentialSmoothing(y; trend = true, damped_trend = false, seasonal = seasonal)
+        fit!(m2)
+        push!(models, m2)
+        push!(models_aic, m2.results.aic)
+        m3 = ExponentialSmoothing(y; trend = true, damped_trend = true, seasonal = seasonal)
+        fit!(m3)
+        push!(models, m3)
+        push!(models_aic, m3.results.aic)
+    end
+    best_aic_idx = findmin(models_aic)[2] # index of the best BIC
+    return models[best_aic_idx]
+end

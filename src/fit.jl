@@ -110,13 +110,14 @@ mutable struct Results{Fl<:AbstractFloat}
     coef_table::CoefficientTable{Fl}
     llk::Fl
     aic::Fl
+    aicc::Fl
     bic::Fl
     num_observations::Int
     num_hyperparameters::Int
 end
 
 function Results{Fl}() where Fl
-    return Results{Fl}("", CoefficientTable{Fl}(), Fl(NaN), Fl(NaN), Fl(NaN), 0, 0)
+    return Results{Fl}("", CoefficientTable{Fl}(), Fl(NaN), Fl(NaN), Fl(NaN), Fl(NaN), 0, 0)
 end
 
 """
@@ -129,6 +130,7 @@ function Base.isempty(results::Results)
     return isempty(results.coef_table) &&
            isnan(results.llk) &&
            isnan(results.aic) &&
+           isnan(results.aicc) &&
            isnan(results.bic) &&
            iszero(results.num_observations) &&
            iszero(results.num_hyperparameters)
@@ -143,18 +145,23 @@ function fill_results!(model::StateSpaceModel, llk::Fl, std_err::Vector{Fl}) whe
     model.results.coef_table = coef_table
     model.results.llk = llk
     model.results.aic = AIC(num_hyperparameters, llk)
+    model.results.aicc = AICc(n_obs, num_hyperparameters, llk)
     model.results.bic = BIC(n_obs, num_hyperparameters, llk)
     model.results.num_observations = n_obs
     model.results.num_hyperparameters = num_hyperparameters
     return model
 end
 
-function AIC(n_free_hyperparameters::Int, llk::Fl) where Fl
-    return Fl(2 * n_free_hyperparameters - 2 * llk)
+function AIC(k::Int, llk::Fl) where Fl
+    return convert(Fl, 2 * k - 2 * llk)
 end
 
-function BIC(n::Int, n_free_hyperparameters::Int, llk::Fl) where Fl
-    return Fl(log(n) * n_free_hyperparameters - 2 * llk)
+function AICc(n::Int, k::Int, llk::Fl) where Fl
+    return convert(Fl, AIC(k, llk) + (2 * k * (k + 1) / (n - k - 1)))
+end
+
+function BIC(n::Int, k::Int, llk::Fl) where Fl
+    return convert(Fl, log(n) * k - 2 * llk)
 end
 
 function build_coef_table(model::StateSpaceModel, std_err::Vector{Fl}) where Fl
