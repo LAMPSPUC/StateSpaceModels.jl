@@ -41,7 +41,7 @@ mutable struct ExponentialSmoothing <: StateSpaceModel
                                   damped_trend::Bool = false,
                                   seasonal::Int = 0
                                   ) where Fl
-        @assert seasonal != 1
+        @assert seasonal != 1 "seasonal must be different than 1"
         if damped_trend
             @assert trend
         end
@@ -312,34 +312,19 @@ If the user provides the time series seasonality it will search between the mode
 function auto_ets(y::Vector{Fl}; seasonal::Int = 0) where Fl
     models = StateSpaceModel[]
     models_aic = Fl[]
-    @assert seasonal != 1
-    if seasonal == 0
-        m1 = ExponentialSmoothing(y; trend = false, damped_trend = false)
-        fit!(m1)
-        push!(models, m1)
-        push!(models_aic, m1.results.aic)
-        m2 = ExponentialSmoothing(y; trend = true, damped_trend = false)
-        fit!(m2)
-        push!(models, m2)
-        push!(models_aic, m2.results.aic)
-        m3 = ExponentialSmoothing(y; trend = true, damped_trend = true)
-        fit!(m3)
-        push!(models, m3)
-        push!(models_aic, m3.results.aic)
-    else
-        m1 = ExponentialSmoothing(y; trend = false, damped_trend = false, seasonal = seasonal)
-        fit!(m1)
-        push!(models, m1)
-        push!(models_aic, m1.results.aic)
-        m2 = ExponentialSmoothing(y; trend = true, damped_trend = false, seasonal = seasonal)
-        fit!(m2)
-        push!(models, m2)
-        push!(models_aic, m2.results.aic)
-        m3 = ExponentialSmoothing(y; trend = true, damped_trend = true, seasonal = seasonal)
-        fit!(m3)
-        push!(models, m3)
-        push!(models_aic, m3.results.aic)
-    end
+    @assert seasonal != 1 "seasonal must be different than 1"
+    m1 = ExponentialSmoothing(y; trend = false, damped_trend = false, seasonal = seasonal)
+    fit!(m1)
+    push!(models, m1)
+    push!(models_aic, m1.results.aic)
+    m2 = ExponentialSmoothing(y; trend = true, damped_trend = false, seasonal = seasonal)
+    fit!(m2)
+    push!(models, m2)
+    push!(models_aic, m2.results.aic)
+    m3 = ExponentialSmoothing(y; trend = true, damped_trend = true, seasonal = seasonal)
+    fit!(m3)
+    push!(models, m3)
+    push!(models_aic, m3.results.aic)
     best_aic_idx = findmin(models_aic)[2] # index of the best BIC
     return models[best_aic_idx]
 end
