@@ -504,10 +504,28 @@ function unconstrain_mean!(model::SARIMA)
     return nothing
 end
 
-function roots_in_unit_circle(p::Vector{Fl}) where Fl
-    poly = Polynomial([reverse(p); one(Fl)])
-    return all(abs.(roots(poly)) .< 1)
+function ar_polinomial(p::Vector{Fl}) where Fl
+    return Polynomial([one(Fl); -p])
 end
+
+function ma_polinomial(q::Vector{Fl}) where Fl
+    return Polynomial([one(Fl); q])
+end
+
+function roots_of_inverse_polinomial(poly::Polynomial)
+    return roots(poly).^-1
+end
+
+function assert_stationarity(p::Vector{Fl}) where Fl
+    poly = ar_polinomial(p)
+    return all(abs.(roots_of_inverse_polinomial(poly)) .< 1)
+end
+
+function assert_invertibility(q::Vector{Fl}) where Fl
+    poly = ma_polinomial(q)
+    return all(abs.(roots_of_inverse_polinomial(poly)) .< 1)
+end
+
 function conditional_sum_of_squares(y_diff::Vector{Fl}, k_ar::Int, k_ma::Int) where Fl
     if (k_ar == 0) && (k_ma == 0)
         return (Fl[], Fl[])
@@ -570,22 +588,22 @@ function initial_hyperparameters!(model::SARIMA)
     y_diff = filter(!isnan, y_diff)
     # Non-seasonal ARMA
     (initial_ar, initial_ma) = conditional_sum_of_squares(y_diff, model.order.p, model.order.q)
-    if !roots_in_unit_circle(-initial_ar)
+    if !assert_stationarity(initial_ar)
         @warn("Conditional sum of squares estimated initial_ar out of the unit circle, using zero as starting params")
         initial_ar .= zero(Fl)
     end
-    if !roots_in_unit_circle(initial_ma)
+    if !assert_invertibility(initial_ma)
         @warn("Conditional sum of squares estimated initial_ma out of the unit circle, using zero as starting params")
         initial_ma .= zero(Fl)
     end
     # Seasonal ARMA
     (initial_seasonal_ar, 
     initial_seasonal_ma) = conditional_sum_of_squares(y_diff, model.order.P, model.order.Q)
-    if !roots_in_unit_circle(-initial_seasonal_ar)
+    if !assert_stationarity(initial_seasonal_ar)
         @warn("Conditional sum of squares estimated initial_seasonal_ar out of the unit circle, using zero as starting params")
         initial_seasonal_ar .= zero(Fl)
     end
-    if !roots_in_unit_circle(initial_seasonal_ma)
+    if !assert_invertibility(initial_seasonal_ma)
         @warn("Conditional sum of squares estimated initial_seasonal_ma out of the unit circle, using zero as starting params")
         initial_seasonal_ma .= zero(Fl)
     end
