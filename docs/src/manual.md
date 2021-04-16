@@ -55,6 +55,15 @@ LocalLinearTrend
 MultivariateBasicStructural
 ```
 
+## Naive models
+
+Naive models are not state space models but are good benchmarks for forecasting, for this reason we implemented them here.
+
+```@docs
+Naive
+SeasonalNaives
+```
+
 ## Automatic forecasting
 
 Some models have various parameters and modelling options. The package provides simple functions that

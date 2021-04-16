@@ -1,10 +1,8 @@
 @userplot PlotDiagnostics
 @recipe function f(diagnostics::PlotDiagnostics)
-    kf = diagnostics.args
-    v = get_innovations(kf)
-    F = get_innovations_variance(kf)
-    @assert size(v, 2) == 1 # Must be univariate
-    standard_residuals = v[:, 1] ./ sqrt.(F[1, 1, :])
+    @assert length(diagnostics.args) == 1
+    standard_residuals = get_standard_residuals(diagnostics.args[1])
+    @assert size(standard_residuals, 2) == 1
     n = length(standard_residuals)
     layout := (2, 2)
     acf = autocor(standard_residuals)[2:end]

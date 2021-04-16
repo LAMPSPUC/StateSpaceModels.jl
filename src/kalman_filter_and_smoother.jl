@@ -80,6 +80,14 @@ function assert_possible_to_filter(model::StateSpaceModel)
     error("Model has not been estimated yet, please use `fit!`.")
 end
 
+get_standard_residuals(fo::FilterOutput) = get_standard_innovations(fo)
+function get_standard_innovations(fo::FilterOutput)
+    v = get_innovations(fo)
+    F = get_innovations_variance(fo)
+    @assert size(v, 2) == 1 # Must be univariate
+    return v[:, 1] ./ sqrt.(F[1, 1, :])
+end
+
 """
     get_innovations
 
