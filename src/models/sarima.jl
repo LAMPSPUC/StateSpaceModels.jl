@@ -361,14 +361,6 @@ function SARIMA_exact_initialization!(kalman_state,
     return nothing
 end
 
-function lagmat(y::Vector{Fl}, k::Int) where Fl
-    X = Matrix{Fl}(undef, length(y) - k, k)
-    for i in 1:k
-        X[:, i] = lag(y, i)[k + 1:end]
-    end
-    return X
-end
-
 function concatenate_on_bottom(X1::Matrix{Fl}, X2::Matrix{Fl}) where Fl
     n = min(size(X1, 1), size(X2, 1))
     return hcat(X1[end-n+1:end, :], X2[end-n+1:end, :])

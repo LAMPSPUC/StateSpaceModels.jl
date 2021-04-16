@@ -46,6 +46,7 @@ The package provides a variaty of pre-defined models. If there is any model that
 UnobservedComponents
 ExponentialSmoothing
 SARIMA
+DAR
 BasicStructural
 LinearRegression
 LocalLevel

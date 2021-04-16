@@ -134,7 +134,16 @@ mutable struct LinearUnivariateTimeVariant{Fl<:AbstractFloat} <: StateSpaceSyste
         Q::Vector{Matrix{Fl}},
     ) where Fl <: AbstractFloat
 
-        # TODO assert dimensions
+        @assert ( length(y) == length(Z) == length(T) == length(R) ==
+                  length(d) == length(c) == length(H) == length(Q) )
+
+        mz = length(Z[1])
+        mt1, mt2 = size(T[1])
+        mr, rr = size(R[1])
+        mc = length(c[1])
+        rq1, rq2 = size(Q[1])
+        @assert (mz == mt1 == mt2 == mr == mc)
+        @assert (rr == rq1 == rq2)
 
         return new{Fl}(y, Z, T, R, d, c, H, Q)
     end

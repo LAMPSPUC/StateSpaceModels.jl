@@ -46,6 +46,7 @@ include("models/sarima.jl")
 include("models/linear_regression.jl")
 include("models/unobserved_components.jl")
 include("models/exponential_smoothing.jl")
+include("models/dar.jl")
 
 include("visualization/forecast.jl")
 include("visualization/components.jl")
@@ -54,6 +55,7 @@ include("visualization/diagnostics.jl")
 
 # Exported types and structs
 export BasicStructural
+export DAR
 export ExponentialSmoothing
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant

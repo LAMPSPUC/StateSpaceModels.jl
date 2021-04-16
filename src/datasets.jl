@@ -98,3 +98,14 @@ Federal Reserve Bank of St Louis.
  * Hyndman, Rob J., Athanasopoulos, George. "Forecasting: Principles and Practice"
 """
 const US_CHANGE = joinpath(dirname(@__DIR__()), "datasets", "uschange.csv")
+
+@doc raw"""
+    SUNSPOTS_YEAR
+
+Yearly numbers of sunspots from 1700 to 1988 (rounded to one digit).
+Federal Reserve Bank of St Louis.
+
+# References
+ * H. Tong (1996) Non-Linear Time Series. Clarendon Press, Oxford, p. 471.
+"""
+const SUNSPOTS_YEAR = joinpath(dirname(@__DIR__()), "datasets", "sunspot_year.csv")
