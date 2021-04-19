@@ -37,7 +37,7 @@ mutable struct LocalLevelExplanatory <: StateSpaceModel
         # Define system matrices
         Z = [vcat(ones(Fl, 1), X[t, :]) for t in 1:num_observations]
         T = [Matrix{Fl}(I, m, m) for _ in 1:num_observations]
-        R = [ones(Fl, 1, 1) for _ in 1:num_observations]
+        R = [vcat(one(Fl), zeros(Fl, m-1, 1)) for _ in 1:num_observations]
         d = [zero(Fl) for _ in 1:num_observations]
         c = [zeros(m) for _ in 1:num_observations]
         H = [one(Fl) for _ in 1:num_observations]
