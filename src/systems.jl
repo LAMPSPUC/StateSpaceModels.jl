@@ -6,6 +6,8 @@ linear models.
 """
 abstract type StateSpaceSystem end
 
+num_series(sys::StateSpaceSystem) = size(sys.y, 2)
+
 @doc raw"""
     LinearUnivariateTimeInvariant{Fl}(
         y::Vector{Fl},
@@ -280,6 +282,20 @@ end
 function to_multivariate_time_variant(system::LinearUnivariateTimeInvariant)
     univariate_time_variant = to_univariate_time_variant(system)
     return to_multivariate_time_variant(univariate_time_variant)
+end
+
+# LinearMultivariateTimeInvariant to (LinearMultivariateTimeVariant)
+function to_multivariate_time_variant(system::LinearMultivariateTimeInvariant{Fl}) where Fl
+    n = length(system.y)
+    y = system.y
+    Z = repeat_system_matrice_n_times(system.Z, n)
+    T = repeat_system_matrice_n_times(system.T, n)
+    R = repeat_system_matrice_n_times(system.R, n)
+    d = repeat_system_matrice_n_times(system.d, n)
+    c = repeat_system_matrice_n_times(system.c, n)
+    H = repeat_system_matrice_n_times(system.H, n)
+    Q = repeat_system_matrice_n_times(system.Q, n)
+    return LinearMultivariateTimeVariant{Fl}(y, Z, T, R, d, c, H, Q)
 end
 
 # LinearUnivariateTimeVariant to (LinearMultivariateTimeVariant)
