@@ -48,29 +48,37 @@ function fit!(model::Naive)
     return model
 end
 
-function forecast(model::Naive, steps_ahead::Int)
+function forecast(model::Naive, steps_ahead::Int; bootstrap::Bool = false)
     @assert isfitted(model)
     Fl = eltype(model.y)
     expected_value = Vector{Vector{Fl}}(undef, steps_ahead)
     covariance = Vector{Matrix{Fl}}(undef, steps_ahead)
-    for i in 1:steps_ahead
-        expected_value[i] = [model.y[end]]
-        covariance[i] = [model.sigma2 * i][:, :]
+    if bootstrap
+        scenarios = simulate_scenarios(model, steps_ahead, 10_000)
+        for i in 1:steps_ahead
+            expected_value[i] = [mean(scenarios[i, 1, :])]
+            covariance[i] = [var(scenarios[i, 1, :])][:, :]
+        end
+    else
+        for i in 1:steps_ahead
+            expected_value[i] = [model.y[end]]
+            covariance[i] = [model.sigma2 * i][:, :]
+        end
     end
     return Forecast{Fl}(expected_value, covariance)
 end
 
 function simulate_scenarios(model::Naive, steps_ahead::Int, n_scenarios::Int)
     Fl = typeof_model_elements(model)
-    scenarios = Array{Fl, 3}(undef, steps_ahead, num_series, n_scenarios)
+    scenarios = Array{Fl, 3}(undef, steps_ahead, 1, n_scenarios)
     for s in 1:n_scenarios, i in 1:steps_ahead
-        if i == 1
-            scenarios[i, 1, s] = model.y[end] + rand(model.residuals)
-        else
-            scenarios[i, 1, s] = scenarios[i-1, 1, s] + rand(model.residuals)
-        end
+        scenarios[i, 1, s] = model.y[end] + rand(model.residuals)
     end
     return scenarios
+end
+
+function reinstantiate(::Naive, y::Vector{<:Real})
+    return Naive(y)
 end
 
 @doc raw"""
@@ -96,44 +104,62 @@ mutable struct SeasonalNaive <: NaiveModel
 end
 
 function fit!(model::SeasonalNaive)
-    residuals = model.y[seasonal+1:end] - model.y[1:end-seasonal]
+    residuals = model.y[model.seasonal+1:end] - model.y[1:end-model.seasonal]
     model.residuals = residuals
     model.sigma2 = var(residuals)
     model.fitted = true
     return model
 end
 
-function forecast(model::SeasonalNaive, steps_ahead::Int)
+function forecast(model::SeasonalNaive, steps_ahead::Int; bootstrap::Bool = false)
     @assert isfitted(model)
     Fl = eltype(model.y)
     expected_value = Vector{Vector{Fl}}(undef, steps_ahead)
     covariance = Vector{Matrix{Fl}}(undef, steps_ahead)
-    for i in 1:steps_ahead
-        expected_value[i] = [model.y[end - seasonal + i]]
-        covariance[i] = [model.sigma2 * (floor(Int, (i - 1)/model.seasonal) + 1)][:, :]
+    if bootstrap
+        scenarios = simulate_scenarios(model, steps_ahead, 10_000)
+        for i in 1:steps_ahead
+            expected_value[i] = [mean(scenarios[i, 1, :])]
+            covariance[i] = [var(scenarios[i, 1, :])][:, :]
+        end
+    else
+        for i in 1:steps_ahead
+            if i in 1:model.seasonal
+                expected_value[i] = [model.y[end - model.seasonal + i]]
+            else
+                expected_value[i] = copy(expected_value[i - model.seasonal])
+            end
+            covariance[i] = [model.sigma2 * (fld(i - 1, model.seasonal) + 1)][:, :]
+        end
     end
     return Forecast{Fl}(expected_value, covariance)
 end
 
 function simulate_scenarios(model::SeasonalNaive, steps_ahead::Int, n_scenarios::Int)
     Fl = typeof_model_elements(model)
-    scenarios = Array{Fl, 3}(undef, steps_ahead, num_series, n_scenarios)
-    #TODO
+    scenarios = Array{Fl, 3}(undef, steps_ahead, 1, n_scenarios)
+    for s in 1:n_scenarios, i in 1:steps_ahead
+        scenarios[i, 1, s] = model.y[end - model.seasonal + i] + rand(model.residuals)
+    end
     return scenarios
+end
+
+function reinstantiate(model::SeasonalNaive, y::Vector{<:Real})
+    return SeasonalNaive(y, model.seasonal)
 end
 
 function backtest(model::NaiveModel, steps_ahead::Int, start_idx::Int;
                   n_scenarios::Int = 10_000)
     Fl = typeof_model_elements(model)
-    num_fits = length(model.system.y) - start_idx - steps_ahead
-    b = Backtest{Fl}(num_mle, steps_ahead)
-    for i in 1:num_mle
-        println("Backtest: step $i of $num_mle")
-        y_to_fit = model.system.y[1:start_idx - 1 + i]
-        y_to_verify = model.system.y[start_idx + i:start_idx - 1 + i + steps_ahead]
+    num_fits = length(model.y) - start_idx - steps_ahead
+    b = Backtest{Fl}(num_fits, steps_ahead)
+    for i in 1:num_fits
+        println("Backtest: step $i of $num_fits")
+        y_to_fit = model.y[1:start_idx - 1 + i]
+        y_to_verify = model.y[start_idx + i:start_idx - 1 + i + steps_ahead]
         model_to_fit = reinstantiate(model, y_to_fit)
         fit!(model_to_fit)
-        forec = forecast(model_to_fit, steps_ahead; filter=filter)
+        forec = forecast(model_to_fit, steps_ahead)
         scenarios = simulate_scenarios(model_to_fit, steps_ahead, n_scenarios)
         expected_value_vector = forecast_expected_value(forec)[:]
         abs_errors = evaluate_abs_error(y_to_verify, expected_value_vector)
