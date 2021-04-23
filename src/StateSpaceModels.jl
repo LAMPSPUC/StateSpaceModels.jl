@@ -41,6 +41,7 @@ include("models/locallevelcycle.jl")
 include("models/locallevelexplanatory.jl")
 include("models/locallineartrend.jl")
 include("models/basicstructural.jl")
+include("models/basicstructural_explanatory.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
 include("models/linear_regression.jl")
@@ -55,6 +56,7 @@ include("visualization/diagnostics.jl")
 
 # Exported types and structs
 export BasicStructural
+export BasicStructuralExplanatory
 export DAR
 export ExponentialSmoothing
 export LinearMultivariateTimeInvariant
