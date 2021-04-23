@@ -344,3 +344,35 @@ function simulate(
     end
     return y
 end
+
+function simulate(
+    sys::LinearMultivariateTimeInvariant{Fl},
+    initial_state::Vector{Fl},
+    n::Int;
+    return_simulated_states::Bool=false,
+) where Fl
+    p = size(sys.y, 2)
+    m = size(sys.T, 1)
+    y = Matrix{Fl}(undef, n, p)
+    alpha = Matrix{Fl}(undef, n + 1, m)
+    # Sampling errors
+    chol_H = cholesky(sys.H)
+    chol_Q = cholesky(sys.Q)
+    standard_ε = randn(n, size(sys.H, 1))
+    standard_η = randn(n + 1, size(sys.Q, 1))
+
+    # The first state of the simulation is the update of a_0
+    alpha[1, :] .= initial_state
+    y[1, :] = sys.Z * initial_state + sys.d + chol_H.L * standard_ε[1, :]
+    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[1, :]
+    # Simulate scenarios
+    for t in 2:n
+        y[t, :] = sys.Z * alpha[t, :] + sys.d + chol_H.L * standard_ε[t, :]
+        alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
+    end
+
+    if return_simulated_states
+        return y, alpha[1:n, :]
+    end
+    return y
+end
