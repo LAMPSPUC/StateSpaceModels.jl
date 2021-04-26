@@ -18,4 +18,6 @@
     @test_throws AssertionError simulate_scenarios(model, 10, 1000, ones(5, 2))
     scenarios = simulate_scenarios(model, 10, 1000, ones(10, 2))
     test_scenarios_adequacy_with_forecast(forec, scenarios)
+    scenarios = simulate_scenarios(model, 10, 500, ones(10, 2, 500))
+    test_scenarios_adequacy_with_forecast(forec, scenarios)
 end

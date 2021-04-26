@@ -167,6 +167,27 @@ function simulate_scenarios(
     return scenarios
 end
 
+function simulate_scenarios(
+    model::BasicStructuralExplanatory,
+    steps_ahead::Int,
+    n_scenarios::Int,
+    new_exogenous::Array{Fl, 3};
+    filter::KalmanFilter=default_filter(model),
+) where Fl
+    @assert steps_ahead == size(new_exogenous, 1) "new_exogenous must have the same dimension of steps_ahead"
+    @assert n_scenarios == size(new_exogenous, 3) "new_exogenous must have the same number of scenarios of n_scenarios"
+    # Query the type of model elements
+    fo = kalman_filter(model)
+    last_state = fo.a[end]
+    num_series = size(model.system.y, 2)
+
+    scenarios = Array{Fl,3}(undef, steps_ahead, num_series, n_scenarios)
+    for s in 1:n_scenarios
+        scenarios[:, :, s] = simulate(model, last_state, steps_ahead, new_exogenous[:, :, s])
+    end
+    return scenarios
+end
+
 function simulate(
     model::BasicStructuralExplanatory,
     initial_state::Vector{Fl},
