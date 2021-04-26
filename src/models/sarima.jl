@@ -676,3 +676,66 @@ function model_name(model::SARIMA)
     end
     return str
 end
+
+# autoarima functions
+
+"""
+    Explicar certin
+"""
+function autoarima(y::Vector{Fl};
+                   frequency::Int = NaN,
+                   d::Int = NaN,
+                   D::Int = NaN,
+                   max_p::Int = 5,
+                   max_q::Int = 5,
+                   max_P::Int = 2,
+                   max_Q::Int = 2,
+                   max_d::Int = 2,
+                   max_D::Int = 1,
+                   start_p::Int = 2,
+                   start_d::Int = 2,
+                   start_P::Int = 1,
+                   start_D::Int = 1,
+                   stationary::Bool = false,
+                   seasonal::Bool = false,
+                   ic::String = "aic",
+                   stepwise::Bool = true,
+                   nmodels::Int = 94, #From R
+                   trace::Bool = true,
+                #    approximation,
+                #    method,
+                   truncate = nothing, #must be Int
+                #    xreg,
+                   test::String = "kpss",
+                   test_args = nothing,
+                #    seasonal_test,
+                #    seasonal_test_args,
+                    allowdrift = true,
+                    allowmean = true
+                    # lambda = NULL,
+                    # biasadj = FALSE,
+                    # parallel = FALSE,
+                    # num.cores = 2,         
+                   ) where Fl
+    
+    # Asserts para verificar se ic e test são algum dos implementados
+
+    # Definir D
+
+    # Definir d
+
+    # if stepwise == true
+        # Definir o primeiro current model
+
+        # Criação do conjunto de modelos baseado no current model
+        
+        # Estimar os modelos do conjunto
+
+        # Atualizar o current model
+        
+    # elseif stepwise == false
+        # Escolher ordem na força bruta dentre todos os
+        # parâmetros permitidos
+    # end
+
+end
