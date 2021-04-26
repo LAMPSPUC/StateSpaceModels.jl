@@ -48,6 +48,7 @@ ExponentialSmoothing
 SARIMA
 DAR
 BasicStructural
+BasicStructuralExplanatory
 LinearRegression
 LocalLevel
 LocalLevelCycle
