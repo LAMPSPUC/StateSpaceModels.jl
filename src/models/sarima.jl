@@ -678,14 +678,166 @@ function model_name(model::SARIMA)
 end
 
 # autoarima functions
+abstract type UnitRootTests end
+
+struct KPSS <: UnitRootTests end
+struct ADF <: UnitRootTests end
+
+
+function assert_ic(ic::Symbol)
+    @assert ic in [:AIC, :AICc, :BIC]
+    return 
+end
+
+function assert_test(test::Symbol)
+    @assert test in [:KPSS, :ADF]
+    return
+end
+
+function assert_non_negativity(order::Int)
+    @assert order >= 0
+    return
+end
+
+function assert_frequency(frequency, seasonal::Bool)
+    if seasonal 
+        @assert frequency > 0
+    end
+    return
+end
+
+function assert_parameters(frequency,
+                            d,
+                            D,
+                            max_p::Int,
+                            max_q::Int,
+                            max_P::Int,
+                            max_Q::Int,
+                            max_d::Int,
+                            max_D::Int,
+                            start_p::Int,
+                            start_q::Int,
+                            start_P::Int,
+                            start_Q::Int,
+                            seasonal::Bool,
+                            ic::Symbol,
+                            test::Symbol,
+                            )
+    assert_frequency(frequency, seasonal)
+    isnan(d) ? nothing : assert_non_negativity(d)
+    isnan(D) ? nothing : assert_non_negativity(D)
+    assert_non_negativity(max_p)
+    assert_non_negativity(max_q)
+    assert_non_negativity(max_P)
+    assert_non_negativity(max_Q)
+    assert_non_negativity(max_d)
+    assert_non_negativity(max_D)
+    assert_non_negativity(start_p)
+    assert_non_negativity(start_q)
+    assert_non_negativity(start_P)
+    assert_non_negativity(start_Q)
+    assert_test(test)
+    assert_ic(ic)
+
+    return 
+end
+
+function handle_seasonal_integration_order(y::Vector{Float64}, max_D::Int, D)
+    
+    return !isnan(D) ? D : handle_seasonal_integration_order(y, max_D)
+end
+
+function handle_seasonal_integration_order(y::Vector{Float64}, max_D::Int)
+    #todo 
+    
+    return 0
+end
+
+function handle_seasonal_diff(y::Vector{Float64}, frequency::Int)
+    
+    return y[frequency + 1:end] .- y[1:end - frequency]
+end
+
+function handle_test_args(test_args::Dict)
+    if isempty(test_args)
+        test_args[:null] = :level
+        test_args[:lags] = true
+    end
+
+    return test_args
+end
+
+# function handle_test_args(test_args::Dict, y::Vector{Float64})
+#     if isempty(test_args)
+#         test_args[:null] = :constant
+#         test_args[:lags] = trunc(Int64, (length(y) - 1)^(1/3))
+#     end
+#     return test_args
+# end
+
+function handle_integration_order(y::Vector{Float64}, max_d::Int, D::Int, frequency, test_args::Dict, ::Type{KPSS})
+    test_parms = handle_test_args(test_args)
+    seasonal_diff_y = D > 0 ? handle_seasonal_diff(y, frequency) : y
+    p_value = KPSSTest(seasonal_diff_y; null = test_parms[:null], lags = test_parms[:lags])
+    d = 0
+    
+    while p_value <= 0.01 && d < max_d
+       seasonal_diff_y = diff(seasonal_diff_y)
+       p_value = KPSSTest(seasonal_diff_y; null = test_parms[:null], lags = test_parms[:lags])   
+       d += 1
+    end
+    
+    return d
+end
+
+function handle_integration_order(y::Vector{Float64}, max_d::Int, D::Int, frequency, test_args::Dict, test::Symbol)
+    unit_root_type = handle_unit_root_type(test)
+    return handle_integration_order(y, max_d, D, frequency, test_args, unit_root_type)
+end
+
+# function handle_integration_order(y::Vector{Float64}, max_d::Int, D::Int, frequency::Int, test_args::Dict, ::Type{ADF})
+#     test_parms = handle_test_args(test_args, y)
+#     seasonal_diff_y = D > 0 ? handle_seasonal_diff(y, frequency) : y
+#     p_value = ADFTest(y, test_parms[:null], test_parms[:lags])
+#     d = 0
+    
+#     while p_value > 0.1 && d < max_d
+#        seasonal_diff_y = diff(seasonal_diff_y)
+#        p_value = ADFTest(seasonal_diff_y, test_parms[:null], test_parms[:lags])   
+#        d += 1
+#     end
+    
+#     return d
+# end
+
+function handle_unit_root_type(test::Symbol)
+    return test == :KPSS ? KPSS : ADF
+end
+
+mutable struct AutoARIMAParameters
+    frequency::Int
+    d::Int
+    D::Int
+    max_p::Int
+    max_q::Int
+    max_P::Int
+    max_Q::Int
+    max_d::Int
+    max_D::Int
+    stationary::Bool
+    ic::Symbol               
+    nmodels::Int
+    trace::Bool
+    allow_intercept::Bool
+end
 
 """
     Explicar certin
 """
 function autoarima(y::Vector{Fl};
-                   frequency::Int = NaN,
-                   d::Int = NaN,
-                   D::Int = NaN,
+                   frequency = NaN,
+                   d = NaN,
+                   D = NaN,
                    max_p::Int = 5,
                    max_q::Int = 5,
                    max_P::Int = 2,
@@ -693,37 +845,42 @@ function autoarima(y::Vector{Fl};
                    max_d::Int = 2,
                    max_D::Int = 1,
                    start_p::Int = 2,
-                   start_d::Int = 2,
+                   start_q::Int = 2,
                    start_P::Int = 1,
-                   start_D::Int = 1,
+                   start_Q::Int = 1,
                    stationary::Bool = false,
                    seasonal::Bool = false,
-                   ic::String = "aic",
+                   ic::Symbol = :AIC,
                    stepwise::Bool = true,
                    nmodels::Int = 94, #From R
                    trace::Bool = true,
-                #    approximation,
-                #    method,
+                   # approximation,
+                   # method,
                    truncate = nothing, #must be Int
-                #    xreg,
-                   test::String = "kpss",
-                   test_args = nothing,
-                #    seasonal_test,
-                #    seasonal_test_args,
-                    allowdrift = true,
-                    allowmean = true
-                    # lambda = NULL,
-                    # biasadj = FALSE,
-                    # parallel = FALSE,
-                    # num.cores = 2,         
+                   # xreg,
+                   test::Symbol = :KPSS,
+                   test_args::Dict = Dict(),
+                   # seasonal_test,
+                   # seasonal_test_args,
+                   allowdrift = true,
+                   allowmean = true
+                   # lambda = NULL,
+                   # biasadj = FALSE,
+                   # parallel = FALSE,
+                   # num.cores = 2,         
                    ) where Fl
     
     # Asserts para verificar se ic e test são algum dos implementados
-
+    assert_parameters(
+        frequency, d, D,
+        max_p, max_q, max_P, max_Q, max_d, max_D, 
+        start_p, start_q, start_P, start_Q, seasonal,
+        ic, test
+    )
     # Definir D
-
+    D = seasonal ? handle_seasonal_integration_order(y, max_D, D) : 0
     # Definir d
-
+    d = handle_integration_order(y, max_d, D, frequency, test_args, test)
     # if stepwise == true
         # Definir o primeiro current model
 
@@ -737,5 +894,5 @@ function autoarima(y::Vector{Fl};
         # Escolher ordem na força bruta dentre todos os
         # parâmetros permitidos
     # end
-
+    return D, d
 end
