@@ -69,9 +69,8 @@ function default_filter(model::BasicStructuralExplanatory)
     Fl = typeof_model_elements(model)
     steadystate_tol = Fl(1e-5)
     a1 = zeros(Fl, num_states(model))
-    P1 = zeros(Fl, num_states(model), num_states(model))
-    P1[1:13, 1:13] = Fl(1e6) .* Matrix{Fl}(I, 13, 13)
-    return UnivariateKalmanFilter(a1, P1, 13, steadystate_tol)
+    P1 = Fl(1e6) .* Matrix{Fl}(I, num_states(model), num_states(model))
+    return UnivariateKalmanFilter(a1, P1, num_states(model), steadystate_tol)
 end
 
 function initial_hyperparameters!(model::BasicStructuralExplanatory)
@@ -126,14 +125,6 @@ function fill_model_system!(model::BasicStructuralExplanatory)
     end
     return model
 end
-
-function fill_model_filter!(filter::KalmanFilter, model::BasicStructuralExplanatory)
-    for i in axes(model.exogenous, 2)
-        filter.kalman_state.a[i + 13] = get_constrained_value(model, get_beta_name(model, i))
-    end
-    return filter
-end
-
 
 function fill_H_in_time(model::BasicStructuralExplanatory, H::Fl) where Fl
     return fill_system_matrice_with_value_in_time(model.system.H, H)
