@@ -51,6 +51,7 @@ Current features include:
   * Unobserved components (local level, basic structural, ...)
   * SARIMA
   * Linear regression
+  * Naive models
 * Completion of missing values
 * Diagnostics for the residuals of fitted models
 * Visualization recipes
