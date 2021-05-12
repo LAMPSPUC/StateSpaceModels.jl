@@ -47,6 +47,7 @@ include("models/sarima.jl")
 include("models/linear_regression.jl")
 include("models/unobserved_components.jl")
 include("models/exponential_smoothing.jl")
+include("models/naive_models.jl")
 include("models/dar.jl")
 
 include("visualization/forecast.jl")
@@ -56,6 +57,7 @@ include("visualization/diagnostics.jl")
 
 # Exported types and structs
 export BasicStructural
+export ExperimentalSeasonalNaive
 export BasicStructuralExplanatory
 export DAR
 export ExponentialSmoothing
@@ -69,9 +71,11 @@ export LocalLevelCycle
 export LocalLevelExplanatory
 export LocalLinearTrend
 export MultivariateBasicStructural
+export Naive
 export Optimizer
 export SARIMA
 export ScalarKalmanFilter
+export SeasonalNaive
 export StateSpaceModel
 export UnivariateKalmanFilter
 export UnobservedComponents

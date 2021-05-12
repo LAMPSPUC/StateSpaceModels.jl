@@ -1,4 +1,5 @@
-@recipe function f(model::StateSpaceModel, forec::Forecast)
+@recipe function f(model::Union{StateSpaceModel, NaiveModel},
+                   forec::Forecast)
     if !isunivariate(model)
         error("This plot recipe currently works for univariate models only.")
     end
@@ -6,14 +7,14 @@
     for d in eachindex(dists)
         dists[d] = Normal(forec.expected_value[d][1], sqrt(forec.covariance[d][1]))
     end
-    n = length(model.system.y)
+    n = length_observations(model)
     forec_idx = collect(n + 1: n + length(forec.expected_value))
     fillrange_color = :steelblue
     # Plot the series
     @series begin
         seriestype := :path
         seriescolor := "black"
-        return model.system.y
+        return observations(model)
     end
     # Plot the forecast
     @series begin
@@ -41,18 +42,19 @@
     end
 end
 
-RecipesBase.@recipe function f(model::StateSpaceModel, scenarios::Array{<:AbstractFloat, 3})
+RecipesBase.@recipe function f(model::Union{StateSpaceModel, NaiveModel},
+                               scenarios::Array{<:AbstractFloat, 3})
     if !isunivariate(model)
         error("This plot recipe currently works for univariate models only.")
     end
-    n = length(model.system.y)
+    n = length_observations(model)
     n_scen = size(scenarios, 3)
     scenarios_idx = collect(n + 1: n + size(scenarios, 1))
     # Plot the series
     @series begin
         seriestype := :path
         seriescolor := "black"
-        return model.system.y
+        return observations(model)
     end
     # Plot the scenarios
     labels = ["" for s in 1:n_scen - 1]
