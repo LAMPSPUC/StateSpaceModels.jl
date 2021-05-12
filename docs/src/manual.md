@@ -61,7 +61,8 @@ Naive models are not state space models but are good benchmarks for forecasting,
 
 ```@docs
 Naive
-SeasonalNaives
+SeasonalNaive
+ExperimentalSeasonalNaive
 ```
 
 ## Automatic forecasting
