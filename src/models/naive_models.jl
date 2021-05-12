@@ -22,7 +22,10 @@ end
 @doc raw"""
     Naive(y::Vector{<:Real})
 
-# TODO
+A naive model where the h step ahead forecast is 
+```math
+y_{T+h|T} = y_T
+```
 
 # References
  * Hyndman, Rob J., Athanasopoulos, George. "Forecasting: Principles and Practice"
@@ -84,7 +87,11 @@ end
 @doc raw"""
     SeasonalNaive(y::Vector{<:Real}, seasoanl::Int)
 
-# TODO
+A seasonal naive model where the h step ahead forecast is 
+```math
+y_{T+h|T} = y_{T + h - m(k+1)}
+```
+where m is the seasonal period and k is the integer part of (h-1)/m.
 
 # References
  * Hyndman, Rob J., Athanasopoulos, George. "Forecasting: Principles and Practice"
@@ -139,13 +146,84 @@ function simulate_scenarios(model::SeasonalNaive, steps_ahead::Int, n_scenarios:
     Fl = typeof_model_elements(model)
     scenarios = Array{Fl, 3}(undef, steps_ahead, 1, n_scenarios)
     for s in 1:n_scenarios, i in 1:steps_ahead
-        scenarios[i, 1, s] = model.y[end - model.seasonal + i] + rand(model.residuals)
+        scenarios[i, 1, s] = model.y[end - model.seasonal + mod(i, model.seasonal)] + rand(model.residuals)
     end
     return scenarios
 end
 
 function reinstantiate(model::SeasonalNaive, y::Vector{<:Real})
     return SeasonalNaive(y, model.seasonal)
+end
+
+@doc raw"""
+    ExperimentalSeasonalNaive(y::Vector{<:Real}, seasonal::Int; S::Int = 10_000)
+
+A seasonal naive model where the h step ahead forecast is the mean of the simulation 
+of S scenarios 
+```math
+y_{T+h|T} = y_{T + h - m(k+1)} + \varepsilon_t
+```
+where m is the seasonal period, k is the integer part of (h-1)/m and ``\varepsilon_t`` is
+a sampled error. 
+
+We call it experimental because so far we could not find a good reference and implementation.
+If you know something please post it as an issue.
+"""
+mutable struct ExperimentalSeasonalNaive <: NaiveModel
+    y::Vector{<:Real}
+    residuals::Vector{<:Real}
+    seasonal::Int
+    sigma2::Real
+    fitted::Bool
+    S::Int
+
+    function ExperimentalSeasonalNaive(y::Vector{<:Real}, seasonal::Int; S::Int = 10_000)
+        Fl = eltype(y)
+        n = length(y)
+        return new(y, zeros(Fl, n), seasonal, zero(Fl), false, S)
+    end
+end
+
+function fit!(model::ExperimentalSeasonalNaive)
+    residuals = model.y[model.seasonal+1:end] - model.y[1:end-model.seasonal]
+    model.residuals = residuals
+    model.sigma2 = var(residuals)
+    model.fitted = true
+    return model
+end
+
+function forecast(model::ExperimentalSeasonalNaive, steps_ahead::Int)
+    @assert isfitted(model)
+    Fl = eltype(model.y)
+    expected_value = Vector{Vector{Fl}}(undef, steps_ahead)
+    covariance = Vector{Matrix{Fl}}(undef, steps_ahead)
+    scenarios = simulate_scenarios(model, steps_ahead, model.S)
+    for i in 1:steps_ahead
+        expected_value[i] = [mean(scenarios[i, 1, :])]
+        covariance[i] = [var(scenarios[i, 1, :])][:, :]
+    end
+    return Forecast{Fl}(expected_value, covariance)
+end
+
+function simulate_scenarios(model::ExperimentalSeasonalNaive, steps_ahead::Int, n_scenarios::Int)
+    Fl = typeof_model_elements(model)
+    scenarios = Array{Fl, 3}(undef, steps_ahead, 1, n_scenarios)
+    for i in 1:steps_ahead
+        if i <= model.seasonal
+            for s in 1:n_scenarios
+                scenarios[i, 1, s] = model.y[end - model.seasonal + i] + rand(model.residuals)
+            end
+        else
+            for s in 1:n_scenarios
+                scenarios[i, 1, s] = scenarios[i - model.seasonal, 1, s] + rand(model.residuals)
+            end
+        end
+    end
+    return scenarios
+end
+
+function reinstantiate(model::ExperimentalSeasonalNaive, y::Vector{<:Real})
+    return ExperimentalSeasonalNaive(y, model.seasonal; S = model.S)
 end
 
 function backtest(model::NaiveModel, steps_ahead::Int, start_idx::Int;

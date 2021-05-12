@@ -55,6 +55,7 @@ include("visualization/diagnostics.jl")
 
 # Exported types and structs
 export BasicStructural
+export ExperimentalSeasonalNaive
 export ExponentialSmoothing
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant
@@ -66,9 +67,11 @@ export LocalLevelCycle
 export LocalLevelExplanatory
 export LocalLinearTrend
 export MultivariateBasicStructural
+export Naive
 export Optimizer
 export SARIMA
 export ScalarKalmanFilter
+export SeasonalNaive
 export StateSpaceModel
 export UnivariateKalmanFilter
 export UnobservedComponents

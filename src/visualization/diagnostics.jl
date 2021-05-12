@@ -1,7 +1,6 @@
 @userplot PlotDiagnostics
 @recipe function f(diagnostics::PlotDiagnostics)
-    @assert length(diagnostics.args) == 1
-    standard_residuals = get_standard_residuals(diagnostics.args[1])
+    standard_residuals = get_standard_residuals(diagnostics.args)
     @assert size(standard_residuals, 2) == 1
     n = length(standard_residuals)
     layout := (2, 2)
