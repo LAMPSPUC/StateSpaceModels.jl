@@ -221,7 +221,7 @@ than captured by the seasonal component. The parameter ``\lambda_c`` is the freq
 and it is estimated via maximum likelihood. The inclusion of error terms allows the cycle
 effects to vary over time. The modelling options can be expressed in terms
 of `"deterministic"` or `"stochastic"` and the damping effect as a string, i.e., 
-`cycle = "stochastic"`, `cycle = "deterministic"` or `cycle = "damped"`.
+`cycle = "stochastic"`, `cycle = "deterministic"` or `cycle = "stochastic damped"`.
 
 The UnobservedComponents model has some dedicated Plot Recipes, see [Visualization](@ref)
 

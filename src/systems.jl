@@ -6,6 +6,8 @@ linear models.
 """
 abstract type StateSpaceSystem end
 
+num_series(sys::StateSpaceSystem) = size(sys.y, 2)
+
 @doc raw"""
     LinearUnivariateTimeInvariant{Fl}(
         y::Vector{Fl},
@@ -134,7 +136,16 @@ mutable struct LinearUnivariateTimeVariant{Fl<:AbstractFloat} <: StateSpaceSyste
         Q::Vector{Matrix{Fl}},
     ) where Fl <: AbstractFloat
 
-        # TODO assert dimensions
+        @assert ( length(y) == length(Z) == length(T) == length(R) ==
+                  length(d) == length(c) == length(H) == length(Q) )
+
+        mz = length(Z[1])
+        mt1, mt2 = size(T[1])
+        mr, rr = size(R[1])
+        mc = length(c[1])
+        rq1, rq2 = size(Q[1])
+        @assert (mz == mt1 == mt2 == mr == mc)
+        @assert (rr == rq1 == rq2)
 
         return new{Fl}(y, Z, T, R, d, c, H, Q)
     end
@@ -273,6 +284,20 @@ function to_multivariate_time_variant(system::LinearUnivariateTimeInvariant)
     return to_multivariate_time_variant(univariate_time_variant)
 end
 
+# LinearMultivariateTimeInvariant to (LinearMultivariateTimeVariant)
+function to_multivariate_time_variant(system::LinearMultivariateTimeInvariant{Fl}) where Fl
+    n = length(system.y)
+    y = system.y
+    Z = repeat_system_matrice_n_times(system.Z, n)
+    T = repeat_system_matrice_n_times(system.T, n)
+    R = repeat_system_matrice_n_times(system.R, n)
+    d = repeat_system_matrice_n_times(system.d, n)
+    c = repeat_system_matrice_n_times(system.c, n)
+    H = repeat_system_matrice_n_times(system.H, n)
+    Q = repeat_system_matrice_n_times(system.Q, n)
+    return LinearMultivariateTimeVariant{Fl}(y, Z, T, R, d, c, H, Q)
+end
+
 # LinearUnivariateTimeVariant to (LinearMultivariateTimeVariant)
 function to_multivariate_time_variant(system::LinearUnivariateTimeVariant{Fl}) where Fl
     y = system.y[:, :]
@@ -311,6 +336,38 @@ function simulate(
     # Simulate scenarios
     for t in 2:n
         y[t] = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
+        alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
+    end
+
+    if return_simulated_states
+        return y, alpha[1:n, :]
+    end
+    return y
+end
+
+function simulate(
+    sys::LinearMultivariateTimeInvariant{Fl},
+    initial_state::Vector{Fl},
+    n::Int;
+    return_simulated_states::Bool=false,
+) where Fl
+    p = size(sys.y, 2)
+    m = size(sys.T, 1)
+    y = Matrix{Fl}(undef, n, p)
+    alpha = Matrix{Fl}(undef, n + 1, m)
+    # Sampling errors
+    chol_H = cholesky(sys.H)
+    chol_Q = cholesky(sys.Q)
+    standard_ε = randn(n, size(sys.H, 1))
+    standard_η = randn(n + 1, size(sys.Q, 1))
+
+    # The first state of the simulation is the update of a_0
+    alpha[1, :] .= initial_state
+    y[1, :] = sys.Z * initial_state + sys.d + chol_H.L * standard_ε[1, :]
+    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[1, :]
+    # Simulate scenarios
+    for t in 2:n
+        y[t, :] = sys.Z * alpha[t, :] + sys.d + chol_H.L * standard_ε[t, :]
         alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
     end
 

@@ -41,12 +41,14 @@ include("models/locallevelcycle.jl")
 include("models/locallevelexplanatory.jl")
 include("models/locallineartrend.jl")
 include("models/basicstructural.jl")
+include("models/basicstructural_explanatory.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
 include("models/linear_regression.jl")
 include("models/unobserved_components.jl")
 include("models/exponential_smoothing.jl")
 include("models/naive_models.jl")
+include("models/dar.jl")
 
 include("visualization/forecast.jl")
 include("visualization/components.jl")
@@ -56,6 +58,8 @@ include("visualization/diagnostics.jl")
 # Exported types and structs
 export BasicStructural
 export ExperimentalSeasonalNaive
+export BasicStructuralExplanatory
+export DAR
 export ExponentialSmoothing
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant

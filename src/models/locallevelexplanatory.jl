@@ -37,7 +37,7 @@ mutable struct LocalLevelExplanatory <: StateSpaceModel
         # Define system matrices
         Z = [vcat(ones(Fl, 1), X[t, :]) for t in 1:num_observations]
         T = [Matrix{Fl}(I, m, m) for _ in 1:num_observations]
-        R = [ones(Fl, 1, 1) for _ in 1:num_observations]
+        R = [vcat(one(Fl), zeros(Fl, m-1, 1)) for _ in 1:num_observations]
         d = [zero(Fl) for _ in 1:num_observations]
         c = [zeros(m) for _ in 1:num_observations]
         H = [one(Fl) for _ in 1:num_observations]
@@ -57,9 +57,7 @@ end
 function default_filter(model::LocalLevelExplanatory)
     Fl = typeof_model_elements(model)
     a1 = zeros(Fl, num_states(model)) 
-    # P1 is identity on sigma \eta and 0 otherwise.
-    P1 = zeros(Fl, num_states(model), num_states(model))
-    P1[1] = Fl(1e6)
+    P1 = Fl(1e6) .* Matrix{Fl}(I, num_states(model), num_states(model))
     steadystate_tol = Fl(1e-5)
     return UnivariateKalmanFilter(a1, P1, num_states(model), steadystate_tol)
 end
@@ -108,13 +106,6 @@ function fill_model_system!(model::LocalLevelExplanatory)
         model.system.Q[t][1] = get_constrained_value(model, "sigma2_η")
     end
     return model
-end
-
-function fill_model_filter!(filter::KalmanFilter, model::LocalLevelExplanatory)
-    for i in axes(model.exogenous, 2)
-        filter.kalman_state.a[i + 1] = get_constrained_value(model, get_beta_name(model, i))
-    end
-    return filter
 end
 
 function fill_H_in_time(model::LocalLevelExplanatory, H::Fl) where Fl
