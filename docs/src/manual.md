@@ -154,12 +154,12 @@ isfitted
 
 StateSpaceModels.jl has functions to make forecasts of the predictive densities multiple steps ahead and to
 simulate scenarios based on those forecasts. The package also has a functions to benchmark the model forecasts 
-using backtest techniques.
+using cross_validation techniques.
 
 ```@docs
 forecast
 simulate_scenarios
-backtest
+cross_validation
 ```
 
 ## Visualization

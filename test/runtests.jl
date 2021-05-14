@@ -31,5 +31,5 @@ include("models/dar.jl")
 # Visualization
 include("visualization/forecast.jl")
 include("visualization/components.jl")
-include("visualization/backtest.jl")
+include("visualization/cross_validation.jl")
 include("visualization/diagnostics.jl")
