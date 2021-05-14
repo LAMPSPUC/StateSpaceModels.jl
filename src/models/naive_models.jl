@@ -12,7 +12,7 @@ typeof_model_elements(model::NaiveModel) = eltype(model.y)
 
 function assert_zero_missing_values(model::NaiveModel)
     for i in 1:length(model.y)
-        if isnan(y[i])
+        if isnan(model.y[i])
             return error("model $(typeof(model)) does not support missing values.)")
         end
     end
@@ -44,6 +44,7 @@ mutable struct Naive <: NaiveModel
 end
 
 function fit!(model::Naive)
+    assert_zero_missing_values(model)
     residuals = model.y[2:end] - model.y[1:end-1]
     model.residuals = residuals
     model.sigma2 = var(residuals)
@@ -111,6 +112,7 @@ mutable struct SeasonalNaive <: NaiveModel
 end
 
 function fit!(model::SeasonalNaive)
+    assert_zero_missing_values(model)
     residuals = model.y[model.seasonal+1:end] - model.y[1:end-model.seasonal]
     model.residuals = residuals
     model.sigma2 = var(residuals)
@@ -185,6 +187,7 @@ mutable struct ExperimentalSeasonalNaive <: NaiveModel
 end
 
 function fit!(model::ExperimentalSeasonalNaive)
+    assert_zero_missing_values(model)
     residuals = model.y[model.seasonal+1:end] - model.y[1:end-model.seasonal]
     model.residuals = residuals
     model.sigma2 = var(residuals)
