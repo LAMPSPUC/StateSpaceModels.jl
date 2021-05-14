@@ -226,13 +226,13 @@ function reinstantiate(model::ExperimentalSeasonalNaive, y::Vector{<:Real})
     return ExperimentalSeasonalNaive(y, model.seasonal; S = model.S)
 end
 
-function backtest(model::NaiveModel, steps_ahead::Int, start_idx::Int;
+function cross_validation(model::NaiveModel, steps_ahead::Int, start_idx::Int;
                   n_scenarios::Int = 10_000)
     Fl = typeof_model_elements(model)
     num_fits = length(model.y) - start_idx - steps_ahead
-    b = Backtest{Fl}(num_fits, steps_ahead)
+    b = CrossValidation{Fl}(num_fits, steps_ahead)
     for i in 1:num_fits
-        println("Backtest: step $i of $num_fits")
+        println("CrossValidation: step $i of $num_fits")
         y_to_fit = model.y[1:start_idx - 1 + i]
         y_to_verify = model.y[start_idx + i:start_idx - 1 + i + steps_ahead]
         model_to_fit = reinstantiate(model, y_to_fit)

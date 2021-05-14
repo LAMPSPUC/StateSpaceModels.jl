@@ -33,7 +33,7 @@ include("optimizers.jl")
 include("fit.jl")
 include("prints.jl")
 include("forecast.jl")
-include("backtest.jl")
+include("cross_validation.jl")
 
 include("models/common.jl")
 include("models/locallevel.jl")
@@ -52,7 +52,7 @@ include("models/dar.jl")
 
 include("visualization/forecast.jl")
 include("visualization/components.jl")
-include("visualization/backtest.jl")
+include("visualization/cross_validation.jl")
 include("visualization/diagnostics.jl")
 
 # Exported types and structs
@@ -82,7 +82,7 @@ export UnobservedComponents
 
 # Exported functions
 export auto_ets
-export backtest
+export cross_validation
 export constrain_box!
 export constrain_identity!
 export constrain_variance!

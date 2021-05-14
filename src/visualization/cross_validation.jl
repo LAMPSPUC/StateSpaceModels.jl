@@ -1,15 +1,15 @@
-@recipe function f(b::Backtest, name::String)
+@recipe function f(cv::CrossValidation, name::String)
     xguide := "lead times"
     @series begin
         seriestype := :path
         label := "MAE " * name
         marker := :circle
-        b.mae
+        cv.mae
     end
     @series begin
         seriestype := :path
         label := "Mean CRPS " * name
         marker := :circle
-        b.mean_crps
+        cv.mean_crps
     end
 end
