@@ -20,4 +20,7 @@ makedocs(;
     ],
 )
 
-deploydocs(repo="github.com/LAMPSPUC/StateSpaceModels.jl.git")
+deploydocs(
+        repo="github.com/LAMPSPUC/StateSpaceModels.jl.git",
+        push_preview = true
+    )
