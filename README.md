@@ -56,6 +56,57 @@ Current features include:
 * Diagnostics for the residuals of fitted models
 * Visualization recipes
 
+## Quick Examples
+
+### Fitting and forecasting
+Quick example of different models fit and forecast for the air passengers time-series
+
+```julia
+using CSV
+using DataFrames
+using Plots
+using StateSpaceModels
+
+airp = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
+log_air_passengers = log.(airp.passengers)
+steps_ahead = 30
+
+# SARIMA
+model_sarima = SARIMA(log_air_passengers; order = (0, 1, 1), seasonal_order = (0, 1, 1, 12))
+fit!(model_sarima)
+forec_sarima = forecast(model_sarima, steps_ahead)
+
+# Unobserved Components
+model_uc = UnobservedComponents(log_air_passengers; trend = "local linear trend", seasonal = "stochastic 12")
+fit!(model_uc)
+forec_uc = forecast(model_uc, steps_ahead)
+
+# Exponential Smoothing
+model_ets = ExponentialSmoothing(log_air_passengers; trend = true, seasonal = 12)
+fit!(model_ets)
+forec_ets = forecast(model_ets, steps_ahead)
+
+# Naive model
+model_naive = SeasonalNaive(log_air_passengers, 12)
+fit!(model_naive)
+forec_naive = forecast(model_naive, steps_ahead)
+
+plt_sarima = plot(model_sarima, forec_sarima; title = "SARIMA", label = "");
+plt_uc = plot(model_uc, forec_uc; title = "Unobserved components", label = "");
+plt_ets = plot(model_ets, forec_ets; title = "Exponential smoothing", label = "");
+plt_naive = plot(model_ets, forec_naive; title = "Seasonal Naive", label = "");
+
+plot(plt_sarima, plt_uc, plt_ets, plt_naive; layout = (2, 2), size = (500, 500))
+```
+![quick_example_airp](./docs/assets/quick_example_airp.png)
+
+### Automatic forecasting
+Quick examples on automatic forecasting. When performing automatic forecasting 
+users should provide the seasonal period if there is one.
+```julia
+model = auto_ets(log_air_passengers; seasonal = 12)
+```
+
 ## Contributing
 
 * PRs such as adding new models and fixing bugs are very welcome!
