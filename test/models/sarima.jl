@@ -94,4 +94,8 @@
     model = SARIMA(log_air_passengers; order = (2, 0, 0), seasonal_order = (0, 1, 0, 12))
     fit!(model)
     @test loglike(model) ≈ 228.502 atol = 1e-3 rtol = 1e-3
+
+    # Automatic ARIMA
+    # test auto_arima
+    # with_logger(NullLogger()) do; StateSpaceModels.auto_arima(y) end
 end

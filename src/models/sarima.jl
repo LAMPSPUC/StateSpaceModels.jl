@@ -676,3 +676,165 @@ function model_name(model::SARIMA)
     end
     return str
 end
+
+function repeated_kpss_test(y::Vector{Fl}) where Fl
+    # TODO
+    return 0
+end
+function canova_hansen_test(y::Vector{Fl}) where Fl
+    # TODO
+    return 0
+end
+
+function choose_best_model!(candidate_models::Vector{SARIMA}, information_criteria::String)
+    if information_criteria == "aicc"
+        _, indmin = findmin(map(AICc, candidate_models))
+    elseif information_criteria == "aic"
+        _, indmin = findmin(map(AIC, candidate_models))
+    elseif information_criteria == "bic"
+        _, indmin = findmin(map(BIC, candidate_models))
+    end
+
+    idx_to_delete = trues(length(candidate_models))
+    idx_to_delete[indmin] = false
+    deleteat!(candidate_models, idx_to_delete)
+    return
+end
+
+function fit_candidate_models!(candidate_models::Vector{SARIMA})
+    non_converged_models = Int[]
+    for (i, model) in enumerate(candidate_models)
+        try 
+            fit!(model)
+        catch
+            push!(non_converged_models, i)
+        end
+    end
+    deleteat!(candidate_models, non_converged_models)
+    return
+end
+
+function fill_visited_models!(visited_models::Vector{NamedTuple}, candidate_models::Vector{SARIMA})
+    for model in candidate_models
+        push!(visited_models, 
+              (p = model.order.p, d = model.order.d, q = model.order.q,
+               P = model.order.P, D = model.order.D, Q = model.order.Q,
+               include_mean = model.include_mean))
+    end
+    return
+end
+
+function save_current_best_model!(current_best_model::Vector{NamedTuple}, model::SARIMA)
+    if !isempty(current_best_model)
+        pop!(current_best_model)
+    end
+    push!(current_best_model, 
+           (p = model.order.p, d = model.order.d, q = model.order.q,
+            P = model.order.P, D = model.order.D, Q = model.order.Q,
+            include_mean = model.include_mean))
+    return
+end
+
+function is_visited(model::SARIMA, visited_models::Vector{NamedTuple})
+    for visited_model in visited_models
+        params = collect(visited_model)
+        if ((model.order.p == params[1]) && 
+           (model.order.d == params[2]) &&
+           (model.order.q == params[3]) &&
+           (model.order.P == params[4]) &&
+           (model.order.D == params[5]) &&
+           (model.order.Q == params[6]) &&
+           (model.include_mean == params[7]))
+           return true
+        end
+    end
+    return false
+end
+
+function add_new_p_q_models!(candidate_models::Vector{SARIMA}, max_p::Int, max_q::Int, 
+                             visited_models::Vector{NamedTuple})
+    best_model = candidate_models[1]
+    for p in -1:1, q in -1:1
+        new_p = best_model.order.p + p
+        new_q = best_model.order.q + q
+        if (0 <= new_p <= max_p) && (0 <= new_q <= max_q)
+            model = SARIMA(
+                        observations(best_model); 
+                        order = (new_p, best_model.order.d, new_q),
+                        seasonal_order = (best_model.order.P, best_model.order.D, best_model.order.Q, best_model.order.s)
+                    )
+            if !is_visited(model, visited_models)
+                push!(candidate_models, model)
+            end
+        end
+    end
+    return candidate_models
+end
+
+function auto_arima(y::Vector{Fl};
+                   seasonal::Int = 0,
+                   max_p::Int = 5,
+                   max_q::Int = 5,
+                   max_P::Int = 2,
+                   max_Q::Int = 2,
+                   max_d::Int = 2,
+                   max_D::Int = 1,
+                   start_p::Int = 2,
+                   start_q::Int = 2,
+                   start_P::Int = 1,
+                   start_Q::Int = 1,
+                   information_criteria::String = "aicc",
+                   allowmean::Bool = true     
+                   ) where Fl
+    
+    # Assert parameters
+    @assert seasonal >= 0
+    @assert max_p > 0
+    @assert max_q > 0
+    @assert max_d > 0
+    @assert max_P > 0
+    @assert max_D > 0
+    @assert max_Q > 0
+    @assert start_p >= 0
+    @assert start_q >= 0
+    @assert start_P >= 0
+    @assert start_Q >= 0
+    @assert information_criteria in ["aic", "aicc", "bic"]
+
+    d = repeated_kpss_test(y)
+    D = canova_hansen_test(y)
+
+    candidate_models = SARIMA[]
+    visited_models = NamedTuple[]
+    current_best_model = NamedTuple[]
+
+    # fit the first four models
+    if seasonal == 0
+        push!(candidate_models, SARIMA(y; order = (2, d, 2)))
+        push!(candidate_models, SARIMA(y; order = (0, d, 0)))
+        push!(candidate_models, SARIMA(y; order = (1, d, 0)))
+        push!(candidate_models, SARIMA(y; order = (0, d, 1)))
+    else
+        #TODO
+    end
+
+    fit_candidate_models!(candidate_models)
+    fill_visited_models!(visited_models, candidate_models)
+    choose_best_model!(candidate_models, information_criteria)
+    save_current_best_model!(current_best_model, candidate_models[1])
+
+    while true
+        # Add new model
+        add_new_p_q_models!(candidate_models, max_p, max_q, visited_models)
+        # Fit models and evaluate convergence
+        fit_candidate_models!(candidate_models)
+        fill_visited_models!(visited_models, candidate_models)
+        choose_best_model!(candidate_models, information_criteria)
+        if is_visited(candidate_models[1], current_best_model) # The best from this round
+            break # converged
+        end
+        save_current_best_model!(current_best_model, candidate_models[1])
+    end
+
+    return candidate_models[1]
+end

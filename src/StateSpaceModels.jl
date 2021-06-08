@@ -81,6 +81,7 @@ export UnivariateKalmanFilter
 export UnobservedComponents
 
 # Exported functions
+export auto_arima
 export auto_ets
 export cross_validation
 export constrain_box!

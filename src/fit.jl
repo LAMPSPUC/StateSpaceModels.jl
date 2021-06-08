@@ -30,6 +30,7 @@ function fit!(
     filter::KalmanFilter=default_filter(model),
     optimizer::Optimizer=default_optimizer(model),
 )
+    isfitted(model) && return model
     @assert has_fit_methods(typeof(model))
     initial_unconstrained_hyperparameter = handle_optim_initial_hyperparameters(model)
     # TODO Should there be a try catch?
@@ -163,6 +164,10 @@ end
 function BIC(n::Int, k::Int, llk::Fl) where Fl
     return convert(Fl, log(n) * k - 2 * llk)
 end
+
+AIC(model::StateSpaceModel) = model.results.aic
+AICc(model::StateSpaceModel) = model.results.aicc
+BICc(model::StateSpaceModel) = model.results.bic
 
 function build_coef_table(model::StateSpaceModel, std_err::Vector{Fl}) where Fl
     all_coef = get_constrained_values(model)
