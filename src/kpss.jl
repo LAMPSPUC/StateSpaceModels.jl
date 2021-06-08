@@ -79,5 +79,5 @@ function kpss_test(y::Vector{Fl}; null::Symbol = :level, lags::Bool = true) wher
 
     @assert null in [:trend, :level]
     
-    return null == :trend ? KPSSTest_trend(y, lags) : KPSSTest_level(y, lags)
+    return null == :trend ? kpss_test_trend(y, lags) : kpss_test_level(y, lags)
 end
