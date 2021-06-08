@@ -677,10 +677,21 @@ function model_name(model::SARIMA)
     return str
 end
 
-function repeated_kpss_test(y::Vector{Fl}) where Fl
-    # TODO
-    return 0
+function repeated_kpss_test(y::Vector{Fl}, max_d::Int64) where Fl
+    # TODO handle seasonal diff from d
+    seasonal_diff_y = y
+    p_value = KPSSTest(seasonal_diff_y)
+    d = 0
+    
+    while p_value <= 0.01 && d < max_d
+       seasonal_diff_y = diff(seasonal_diff_y)
+       p_value = KPSSTest(seasonal_diff_y) 
+       d += 1
+    end
+    
+    return d
 end
+
 function canova_hansen_test(y::Vector{Fl}) where Fl
     # TODO
     return 0
@@ -801,7 +812,7 @@ function auto_arima(y::Vector{Fl};
     @assert start_Q >= 0
     @assert information_criteria in ["aic", "aicc", "bic"]
 
-    d = repeated_kpss_test(y)
+    d = repeated_kpss_test(y, max_d)
     D = canova_hansen_test(y)
 
     candidate_models = SARIMA[]

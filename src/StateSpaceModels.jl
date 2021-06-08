@@ -21,6 +21,7 @@ include("datasets.jl")
 include("hyperparameters.jl")
 include("systems.jl")
 include("kalman_filter_and_smoother.jl")
+include("kpss.jl")
 
 include("filters/univariate_kalman_filter.jl")
 include("filters/multivariate_kalman_filter.jl")
@@ -34,6 +35,7 @@ include("fit.jl")
 include("prints.jl")
 include("forecast.jl")
 include("cross_validation.jl")
+
 
 include("models/common.jl")
 include("models/locallevel.jl")
