@@ -680,12 +680,12 @@ end
 function repeated_kpss_test(y::Vector{Fl}, max_d::Int64) where Fl
     # TODO handle seasonal diff from d
     seasonal_diff_y = y
-    p_value = KPSSTest(seasonal_diff_y)
+    p_value = kpss_test(seasonal_diff_y)
     d = 0
     
     while p_value <= 0.01 && d < max_d
        seasonal_diff_y = diff(seasonal_diff_y)
-       p_value = KPSSTest(seasonal_diff_y) 
+       p_value = kpss_test(seasonal_diff_y) 
        d += 1
     end
     

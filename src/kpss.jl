@@ -28,7 +28,7 @@ function p_value_from_η(η::Float64, crit_vals::Vector{Float64})
     return p_value
 end
 
-function KPSSTest_trend(y::Vector{Fl}, lags::Bool) where Fl
+function kpss_test_trend(y::Vector{Fl}, lags::Bool) where Fl
     η = calc_η_trend(y, lags)
     crit_vals = [0.216, 0.176, 0.146, 0.119]
     p_value = p_value_from_η(η, crit_vals)
@@ -36,7 +36,7 @@ function KPSSTest_trend(y::Vector{Fl}, lags::Bool) where Fl
     return p_value
 end
 
-function KPSSTest_level(y::Vector{Fl}, lags::Bool) where Fl
+function kpss_test_level(y::Vector{Fl}, lags::Bool) where Fl
     η = calc_η_level(y, lags)
     crit_vals = [0.739, 0.574, 0.463, 0.347]
     p_value = p_value_from_η(η, crit_vals)
@@ -68,7 +68,7 @@ function calc_η_level(y::Vector{Fl}, lags::Bool) where Fl
 end
 
 
-function KPSSTest(y::Vector{Fl}; null::Symbol = :level, lags::Bool = true) where Fl
+function kpss_test(y::Vector{Fl}; null::Symbol = :level, lags::Bool = true) where Fl
     # Denis Kwiatkowski
     # Peter C.B. Phillips
     # Peter Schmidt and Yongcheol Shin
