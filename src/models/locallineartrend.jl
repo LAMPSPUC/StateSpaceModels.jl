@@ -13,7 +13,7 @@ The linear trend model is defined by:
 # Example
 ```jldoctest
 julia> model = LocalLinearTrend(rand(100))
-LocalLinearTrend model
+LocalLinearTrend
 ```
 
 See more on [Finland road traffic fatalities](@ref)

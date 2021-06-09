@@ -16,7 +16,7 @@ The local level model with a cycle component is defined by:
 # Example
 ```jldoctest
 julia> model = LocalLevelCycle(rand(100))
-LocalLevelCycle model
+LocalLevelCycle
 ```
 
 See more on TODO RJ_TEMPERATURE
