@@ -706,13 +706,13 @@ function choose_best_model!(
                         show_trace::Bool
                     )
     if information_criteria == "aicc"
-        metrics = map(AICc, candidate_models)
+        metrics = map(aicc, candidate_models)
         metric, indmin = findmin(metrics)
     elseif information_criteria == "aic"
-        metrics = map(AIC, candidate_models)
+        metrics = map(aic, candidate_models)
         metric, indmin = findmin(metrics)
     elseif information_criteria == "bic"
-        metrics = map(BIC, candidate_models)
+        metrics = map(bic, candidate_models)
         metric, indmin = findmin(metrics)
     end
     if show_trace

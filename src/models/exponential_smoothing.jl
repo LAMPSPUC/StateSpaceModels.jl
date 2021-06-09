@@ -325,6 +325,6 @@ function auto_ets(y::Vector{Fl}; seasonal::Int = 0) where Fl
     fit!(m3)
     push!(models, m3)
     push!(models_aic, m3.results.aic)
-    best_aic_idx = findmin(models_aic)[2] # index of the best BIC
+    best_aic_idx = findmin(models_aic)[2] # index of the best bic
     return models[best_aic_idx]
 end
