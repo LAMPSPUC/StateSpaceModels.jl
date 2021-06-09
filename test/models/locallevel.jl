@@ -47,6 +47,7 @@ using CSV, DataFrames
     @test get_constrained_value(model, "sigma2_η") ≈ 1469.1 rtol = 1e-3
 
     # Fix some parameters
+    model = LocalLevel(nile.flow)
     fix_hyperparameters!(model, Dict("sigma2_ε" => 15099.0))
     fit!(model; filter=scalar_filter)
 
