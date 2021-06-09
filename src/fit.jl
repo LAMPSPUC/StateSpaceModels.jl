@@ -167,7 +167,7 @@ end
 
 AIC(model::StateSpaceModel) = model.results.aic
 AICc(model::StateSpaceModel) = model.results.aicc
-BICc(model::StateSpaceModel) = model.results.bic
+BIC(model::StateSpaceModel) = model.results.bic
 
 function build_coef_table(model::StateSpaceModel, std_err::Vector{Fl}) where Fl
     all_coef = get_constrained_values(model)

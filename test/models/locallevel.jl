@@ -1,3 +1,5 @@
+using CSV, DataFrames
+
 @testset "LocalLevel" begin
     nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
 
