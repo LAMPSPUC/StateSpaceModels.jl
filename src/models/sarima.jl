@@ -873,7 +873,7 @@ function auto_arima(y::Vector{Fl};
     @assert start_Q >= 0
     @assert information_criteria in ["aic", "aicc", "bic"]
 
-    D = canova_hansen_test(y, seasonal)
+    D = seasonal != 0 ? canova_hansen_test(y, seasonal) : 0
     d = repeated_kpss_test(y, max_d, D, seasonal)
 
     include_mean = allow_mean && (d + D <= 1)
