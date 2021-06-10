@@ -65,14 +65,19 @@ function seasonal_regression(y::Vector{Fl}, s::Int64, T::Int64) where Fl
     return y - X*((((X'*X)^(-1))*X')*y)
 end
 
+
+
 function seasonal_stationarity_test(y::Vector{Fl}, s::Int64) where Fl
     T  = length(y)
     ε  = seasonal_regression(y, s, T)
     σ  = std(ε)
     ω  = test_statistic(ε, σ, T, s)
-    res = ω - crit_val_05_generalized_von_mises_distribution(s)
-    res > 0 ? println("Rejected seasonal stationarity at 5% significance level") :
-              println("Didn't rejected seasonal stationarity at 5% significance level")
+    crit_val = crit_val_05_generalized_von_mises_distribution(s)
+    res = ω - crit_val
+    res > 0 ? println("Rejected seasonal stationarity at 5% significance level"*
+            " Test Statistic: $ω - Critical Value: $crit_val") :
+              println("Didn't rejected seasonal stationarity at 5% significance level"*
+            " Test Statistic: $ω - Critical Value: $crit_val")
     return res > 0 ? false : true
 end
 
