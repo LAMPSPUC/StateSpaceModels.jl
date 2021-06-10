@@ -682,9 +682,8 @@ function model_name(model::SARIMA)
     return str
 end
 
-function repeated_kpss_test(y::Vector{Fl}, max_d::Int) where Fl
-    # TODO handle seasonal diff from d
-    seasonal_diff_y = y
+function repeated_kpss_test(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int) where Fl
+    seasonal_diff_y = D == 0 ? y : y[seasonal+1:end] - y[1:end-seasonal]
     p_value = kpss_test(seasonal_diff_y)
     d = 0
     while p_value <= 0.01 && d < max_d
@@ -695,9 +694,8 @@ function repeated_kpss_test(y::Vector{Fl}, max_d::Int) where Fl
     return d
 end
 
-function canova_hansen_test(y::Vector{Fl}) where Fl
-    # TODO
-    return 0
+function canova_hansen_test(y::Vector{Fl}, seasonal::Int) where Fl
+    return seasonal_stationarity_test(y, seasonal) ? 0 : 1
 end
 
 function choose_best_model!(
@@ -875,8 +873,9 @@ function auto_arima(y::Vector{Fl};
     @assert start_Q >= 0
     @assert information_criteria in ["aic", "aicc", "bic"]
 
-    d = repeated_kpss_test(y, max_d)
-    D = canova_hansen_test(y)
+    D = canova_hansen_test(y, seasonal)
+    d = repeated_kpss_test(y, max_d, D, seasonal)
+
     include_mean = allow_mean && (d + D <= 1)
     show_trace && println("Model specification                               Selection metric")
 
@@ -891,7 +890,7 @@ function auto_arima(y::Vector{Fl};
         push!(candidate_models, SARIMA(y; order = (1, d, 0), include_mean = include_mean, suppress_warns = true))
         push!(candidate_models, SARIMA(y; order = (0, d, 1), include_mean = include_mean, suppress_warns = true))
     else
-        #TODO
+        return D
     end
 
     fit_candidate_models!(candidate_models)
