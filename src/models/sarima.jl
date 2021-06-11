@@ -923,7 +923,7 @@ function auto_arima(y::Vector{Fl};
     while true
         # Add new models
         add_new_p_q_models!(candidate_models, max_p, max_q, max_order, visited_models)
-        add_new_P_Q_models!(candidate_models, max_P, max_Q, visited_models)
+        seasonal != 0 &&  add_new_P_Q_models!(candidate_models, max_P, max_Q, visited_models)
         (d + D < 2) && add_model_with_changed_constant!(candidate_models, visited_models)
         # Fit models and evaluate convergence
         fit_candidate_models!(candidate_models, show_trace)
