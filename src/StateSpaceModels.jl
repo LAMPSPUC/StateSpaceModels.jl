@@ -23,6 +23,8 @@ include("systems.jl")
 include("kalman_filter_and_smoother.jl")
 include("kpss.jl")
 include("canova_hensen.jl")
+include("../../SeasonalTrendLoess.jl/src/SeasonalTrendLoess.jl")
+
 
 include("filters/univariate_kalman_filter.jl")
 include("filters/multivariate_kalman_filter.jl")

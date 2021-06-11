@@ -694,8 +694,32 @@ function repeated_kpss_test(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int) wh
     return d
 end
 
+function select_integration_order(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int, test::String) where Fl
+    if test == "kpss"
+        return repeated_kpss_test(y, max_d, D, seasonal)
+    end
+    error("Test $test not found")
+    return 
+end
+
 function canova_hansen_test(y::Vector{Fl}, seasonal::Int) where Fl
     return seasonal_stationarity_test(y, seasonal) ? 0 : 1
+end
+
+function seasonal_strength_test(y::Vector{Fl}, seasonal::Int) where Fl
+    stl = SeasonalTrendLoess.stl(y, seasonal)
+    strength = max(0, min(1, 1 - var(stl.remainder)/(var(stl.remainder + stl.seasonal))))
+    return strength > 0.64 ? 1 : 0
+end
+
+function select_seasonal_integration_order(y::Vector{Fl}, seasonal::Int, seasonal_test::String) where Fl
+    if seasonal_test == "ch"
+        return canova_hansen_test(y, seasonal)
+    elseif seasonal_test == "seas"
+        return seasonal_strength_test(y, seasonal)
+    end
+    error("Seasonal test $seasonal_test not found")
+    return 
 end
 
 function choose_best_model!(
@@ -739,6 +763,7 @@ function fit_candidate_models!(candidate_models::Vector{SARIMA})
         end
     end
     deleteat!(candidate_models, non_converged_models)
+    isempty(candidate_models) ? error("Not converged") : nothing
     return
 end
 
@@ -779,15 +804,42 @@ function is_visited(model::SARIMA, visited_models::Vector{NamedTuple})
     return false
 end
 
+function add_new_p_q_P_Q_models!(candidate_models::Vector{SARIMA}, 
+                             max_p::Int, max_q::Int, max_P::Int, max_Q::Int,
+                             visited_models::Vector{NamedTuple})
+    best_model = candidate_models[1]
+    for p in -1:1, q in -1:1, P in -1:1, Q in -1:1
+        new_p = best_model.order.p + p
+        new_q = best_model.order.q + q
+        new_P = best_model.order.P + P
+        new_Q = best_model.order.Q + Q
+        # invalid new orders
+        if (0 > new_p) || (new_p > max_p) || (0 > new_q) || (new_q > max_q) || (new_Q > max_Q) || (new_P > max_P)
+            continue
+        end
+        model = SARIMA(
+                    observations(best_model); 
+                    order = (new_p, best_model.order.d, new_q),
+                    seasonal_order = (best_model.order.P, best_model.order.D, best_model.order.Q, best_model.order.s),
+                    include_mean = best_model.include_mean, 
+                    suppress_warns = true
+                )
+        if !is_visited(model, visited_models)
+            push!(candidate_models, model)
+        end
+    end
+    return candidate_models
+end
+
 function add_new_p_q_models!(candidate_models::Vector{SARIMA}, 
-                             max_p::Int, max_q::Int, max_order::Int,
+                             max_p::Int, max_q::Int,
                              visited_models::Vector{NamedTuple})
     best_model = candidate_models[1]
     for p in -1:1, q in -1:1
         new_p = best_model.order.p + p
         new_q = best_model.order.q + q
         # invalid new orders
-        if (0 > new_p) || (new_p > max_p) || (0 > new_q) || (new_q > max_q) || (new_q + new_p > max_order)
+        if (0 > new_p) || (new_p > max_p) || (0 > new_q) || (new_q > max_q)
             continue
         end
         model = SARIMA(
@@ -848,14 +900,15 @@ function auto_arima(y::Vector{Fl};
                     max_Q::Int = 2,
                     max_d::Int = 2,
                     max_D::Int = 1,
-                    max_order::Int = 5,
                     start_p::Int = 2,
                     start_q::Int = 2,
                     start_P::Int = 1,
                     start_Q::Int = 1,
                     information_criteria::String = "aicc",
                     allow_mean::Bool = true,
-                    show_trace::Bool = false
+                    show_trace::Bool = false,
+                    test::String = "kpss",
+                    seasonal_test::String = "seas"
                     ) where Fl
     
     # Assert parameters
@@ -866,16 +919,16 @@ function auto_arima(y::Vector{Fl};
     @assert max_P > 0
     @assert max_D > 0
     @assert max_Q > 0
-    @assert max_order > 0
     @assert start_p >= 0
     @assert start_q >= 0
     @assert start_P >= 0
     @assert start_Q >= 0
     @assert information_criteria in ["aic", "aicc", "bic"]
 
-    D = seasonal != 0 ? canova_hansen_test(y, seasonal) : 0
-    d = repeated_kpss_test(y, max_d, D, seasonal)
-
+    D = seasonal != 0 ? select_seasonal_integration_order(y, seasonal, seasonal_test) : 0
+    @show D
+    d = select_integration_order(y, max_d, D, seasonal, test)
+    @show d
     include_mean = allow_mean && (d + D <= 1)
     show_trace && println("Model specification                               Selection metric")
 
@@ -890,7 +943,10 @@ function auto_arima(y::Vector{Fl};
         push!(candidate_models, SARIMA(y; order = (1, d, 0), include_mean = include_mean, suppress_warns = true))
         push!(candidate_models, SARIMA(y; order = (0, d, 1), include_mean = include_mean, suppress_warns = true))
     else
-        return D
+        push!(candidate_models, SARIMA(y; order = (2, d, 2), seasonal_order = (1, D, 1, seasonal), include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (0, d, 0), seasonal_order = (0, D, 0, seasonal), include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (1, d, 0), seasonal_order = (1, D, 0, seasonal), include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (0, d, 1), seasonal_order = (0, D, 1, seasonal), include_mean = include_mean, suppress_warns = true))
     end
 
     fit_candidate_models!(candidate_models)
@@ -899,7 +955,12 @@ function auto_arima(y::Vector{Fl};
     save_current_best_model!(current_best_model, candidate_models[1])
     while true
         # Add new models
-        add_new_p_q_models!(candidate_models, max_p, max_q, max_order, visited_models)
+        if seasonal != 0
+            add_new_p_q_P_Q_models!(candidate_models, max_p, max_q, max_P, max_Q, visited_models)
+        else
+            add_new_p_q_models!(candidate_models, max_p, max_q, visited_models)
+        end
+        
         add_model_with_changed_constant!(candidate_models, visited_models)
         # Fit models and evaluate convergence
         fit_candidate_models!(candidate_models)
@@ -909,6 +970,7 @@ function auto_arima(y::Vector{Fl};
             break # converged
         end
         save_current_best_model!(current_best_model, candidate_models[1])
+        @show current_best_model
     end
 
     return candidate_models[1]
