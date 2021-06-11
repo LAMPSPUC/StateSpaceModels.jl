@@ -13,6 +13,7 @@ using Optim
 using OrderedCollections
 using RecipesBase
 using StatsBase
+# using SeasonalTrendLoess
 
 abstract type StateSpaceModel end
 
@@ -23,6 +24,7 @@ include("systems.jl")
 include("kalman_filter_and_smoother.jl")
 include("kpss.jl")
 include("canova_hensen.jl")
+include("../../SeasonalTrendLoess.jl/src/SeasonalTrendLoess.jl") # path to stl module
 
 include("filters/univariate_kalman_filter.jl")
 include("filters/multivariate_kalman_filter.jl")
