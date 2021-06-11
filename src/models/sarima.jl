@@ -694,13 +694,40 @@ function repeated_kpss_test(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int) wh
     return d
 end
 
+function select_integration_order(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int, test::String) where Fl
+    if test == "kpss"
+        return repeated_kpss_test(y, max_d, D, seasonal)
+    end
+    error("Test $test not found")
+end
+
 function canova_hansen_test(y::Vector{Fl}, seasonal::Int) where Fl
-    if seasonal_stationarity_test(y, seasonal) # Failed to reject stationarity
+    if seasonal_stationarity_test(y, seasonal) # Failed to reject seasonal stationarity
         return 0
     else
         return 1
     end
 end
+
+function seasonal_strength_test(y::Vector{Fl}, seasonal::Int) where Fl
+    stl = SeasonalTrendLoess.stl(y, seasonal)
+    seasonal_strength = max(0, min(1, 1 - var(stl.remainder)/(var(stl.remainder + stl.seasonal))))
+    if seasonal_strength > 0.64 
+        return 1
+    else 
+        return 0
+    end
+end
+
+function select_seasonal_integration_order(y::Vector{Fl}, seasonal::Int, seasonal_test::String) where Fl
+    if seasonal_test == "ch"
+        return canova_hansen_test(y, seasonal)
+    elseif seasonal_test == "seas"
+        return seasonal_strength_test(y, seasonal)
+    end
+    error("Seasonal test $seasonal_test not found")
+end
+
 
 function choose_best_model!(
                         candidate_models::Vector{SARIMA}, 
@@ -869,6 +896,8 @@ TODO
 """
 function auto_arima(y::Vector{Fl};
                     seasonal::Int = 0,
+                    d::Int = -1,
+                    D::Int = -1,
                     max_p::Int = 5,
                     max_q::Int = 5,
                     max_P::Int = 2,
@@ -878,11 +907,17 @@ function auto_arima(y::Vector{Fl};
                     max_order::Int = 5,
                     information_criteria::String = "aicc",
                     allow_mean::Bool = true,
-                    show_trace::Bool = false
+                    show_trace::Bool = false,
+                    test::String = "kpss",
+                    seasonal_test::String = "seas"
                     ) where Fl <: AbstractFloat
     
     # Assert parameters
     @assert seasonal >= 0
+    @assert D >= -1
+    @assert D <= max_D
+    @assert d >= -1
+    @assert d <= max_d
     @assert max_p > 0
     @assert max_q > 0
     @assert max_d > 0
@@ -892,10 +927,10 @@ function auto_arima(y::Vector{Fl};
     @assert max_order > 0
     @assert information_criteria in ["aic", "aicc", "bic"]
 
-    D = seasonal != 0 ? StateSpaceModels.canova_hansen_test(y, seasonal) : 0
-    D = 1
-    d = repeated_kpss_test(y, max_d, D, seasonal)
 
+    D = seasonal != 0 && D <= 0 ? select_seasonal_integration_order(y, seasonal, seasonal_test) : D
+    d = d <= 0 ? select_integration_order(y, max_d, D, seasonal, test) : d
+    @show D, d
     include_mean = allow_mean && (d + D < 2)
     show_trace && println("Model specification                               Selection metric")
 
