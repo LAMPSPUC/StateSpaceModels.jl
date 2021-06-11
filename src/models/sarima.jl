@@ -686,7 +686,7 @@ function repeated_kpss_test(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int) wh
     seasonal_diff_y = D == 0 ? y : y[seasonal+1:end] - y[1:end-seasonal]
     p_value = kpss_test(seasonal_diff_y)
     d = 0
-    while p_value <= 0.01 && d < max_d
+    while p_value <= 0.05 && d < max_d
        seasonal_diff_y = diff(seasonal_diff_y)
        p_value = kpss_test(seasonal_diff_y) 
        d += 1
@@ -695,7 +695,11 @@ function repeated_kpss_test(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int) wh
 end
 
 function canova_hansen_test(y::Vector{Fl}, seasonal::Int) where Fl
-    return seasonal_stationarity_test(y, seasonal) ? 0 : 1
+    if seasonal_stationarity_test(y, seasonal) # Failed to reject stationarity
+        return 0
+    else
+        return 1
+    end
 end
 
 function choose_best_model!(
@@ -726,15 +730,17 @@ function choose_best_model!(
     return
 end
 
-function fit_candidate_models!(candidate_models::Vector{SARIMA})
+function fit_candidate_models!(candidate_models::Vector{SARIMA}, show_trace::Bool)
     non_converged_models = Int[]
     for (i, model) in enumerate(candidate_models)
         try 
             fit!(model)
             if isnan(model.results.llk)
+                show_trace && println(model, " - diverged")
                 push!(non_converged_models, i)
             end
         catch
+            show_trace && println(model, " - diverged")
             push!(non_converged_models, i)
         end
     end
@@ -804,6 +810,31 @@ function add_new_p_q_models!(candidate_models::Vector{SARIMA},
     return candidate_models
 end
 
+function add_new_P_Q_models!(candidate_models::Vector{SARIMA}, 
+                             max_P::Int, max_Q::Int,
+                             visited_models::Vector{NamedTuple})
+    best_model = candidate_models[1]
+    for P in -1:1, Q in -1:1
+        new_P = best_model.order.P + P
+        new_Q = best_model.order.Q + Q
+        # invalid new orders
+        if (0 > new_P) || (new_P > max_P) || (0 > new_Q) || (new_Q > max_Q)
+            continue
+        end
+        model = SARIMA(
+                    observations(best_model); 
+                    order = (best_model.order.p, best_model.order.d, best_model.order.q),
+                    seasonal_order = (new_P, best_model.order.D, new_Q, best_model.order.s),
+                    include_mean = best_model.include_mean, 
+                    suppress_warns = true
+                )
+        if !is_visited(model, visited_models)
+            push!(candidate_models, model)
+        end
+    end
+    return candidate_models
+end
+
 function add_model_with_changed_constant!(candidate_models, visited_models)
     best_model = candidate_models[1]
     model = SARIMA(
@@ -829,10 +860,6 @@ end
                max_d::Int = 2,
                max_D::Int = 1,
                max_order::Int = 5,
-               start_p::Int = 2,
-               start_q::Int = 2,
-               start_P::Int = 1,
-               start_Q::Int = 1,
                information_criteria::String = "aicc",
                allow_mean::Bool = true,
                show_trace::Bool = false
@@ -849,14 +876,10 @@ function auto_arima(y::Vector{Fl};
                     max_d::Int = 2,
                     max_D::Int = 1,
                     max_order::Int = 5,
-                    start_p::Int = 2,
-                    start_q::Int = 2,
-                    start_P::Int = 1,
-                    start_Q::Int = 1,
                     information_criteria::String = "aicc",
                     allow_mean::Bool = true,
                     show_trace::Bool = false
-                    ) where Fl
+                    ) where Fl <: AbstractFloat
     
     # Assert parameters
     @assert seasonal >= 0
@@ -867,16 +890,13 @@ function auto_arima(y::Vector{Fl};
     @assert max_D > 0
     @assert max_Q > 0
     @assert max_order > 0
-    @assert start_p >= 0
-    @assert start_q >= 0
-    @assert start_P >= 0
-    @assert start_Q >= 0
     @assert information_criteria in ["aic", "aicc", "bic"]
 
-    D = seasonal != 0 ? canova_hansen_test(y, seasonal) : 0
+    D = seasonal != 0 ? StateSpaceModels.canova_hansen_test(y, seasonal) : 0
+    D = 1
     d = repeated_kpss_test(y, max_d, D, seasonal)
 
-    include_mean = allow_mean && (d + D <= 1)
+    include_mean = allow_mean && (d + D < 2)
     show_trace && println("Model specification                               Selection metric")
 
     candidate_models = SARIMA[]
@@ -890,19 +910,23 @@ function auto_arima(y::Vector{Fl};
         push!(candidate_models, SARIMA(y; order = (1, d, 0), include_mean = include_mean, suppress_warns = true))
         push!(candidate_models, SARIMA(y; order = (0, d, 1), include_mean = include_mean, suppress_warns = true))
     else
-        return D
+        push!(candidate_models, SARIMA(y; order = (2, d, 2), seasonal_order = (1, D, 1, seasonal) , include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (0, d, 0), seasonal_order = (0, D, 0, seasonal) , include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (1, d, 0), seasonal_order = (1, D, 0, seasonal) , include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (0, d, 1), seasonal_order = (0, D, 1, seasonal) , include_mean = include_mean, suppress_warns = true))
     end
 
-    fit_candidate_models!(candidate_models)
+    fit_candidate_models!(candidate_models, show_trace)
     fill_visited_models!(visited_models, candidate_models)
     choose_best_model!(candidate_models, information_criteria, show_trace)
     save_current_best_model!(current_best_model, candidate_models[1])
     while true
         # Add new models
         add_new_p_q_models!(candidate_models, max_p, max_q, max_order, visited_models)
-        add_model_with_changed_constant!(candidate_models, visited_models)
+        add_new_P_Q_models!(candidate_models, max_P, max_Q, visited_models)
+        (d + D < 2) && add_model_with_changed_constant!(candidate_models, visited_models)
         # Fit models and evaluate convergence
-        fit_candidate_models!(candidate_models)
+        fit_candidate_models!(candidate_models, show_trace)
         fill_visited_models!(visited_models, candidate_models)
         choose_best_model!(candidate_models, information_criteria, show_trace)
         if is_visited(candidate_models[1], current_best_model) # The best from this round
