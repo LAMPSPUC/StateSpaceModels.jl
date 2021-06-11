@@ -710,7 +710,7 @@ function canova_hansen_test(y::Vector{Fl}, seasonal::Int) where Fl
 end
 
 function seasonal_strength_test(y::Vector{Fl}, seasonal::Int) where Fl
-    stl = SeasonalTrendLoess.stl(y, seasonal)
+    stl = SeasonalTrendLoess.stl(y, seasonal, robust = true)
     seasonal_strength = max(0, min(1, 1 - var(stl.remainder)/(var(stl.remainder + stl.seasonal))))
     if seasonal_strength > 0.64 
         return 1
