@@ -930,7 +930,7 @@ function auto_arima(y::Vector{Fl};
 
     D = seasonal != 0 && D <= 0 ? select_seasonal_integration_order(y, seasonal, seasonal_test) : D
     d = d <= 0 ? select_integration_order(y, max_d, D, seasonal, test) : d
-    @show D, d
+
     include_mean = allow_mean && (d + D < 2)
     show_trace && println("Model specification                               Selection metric")
 
