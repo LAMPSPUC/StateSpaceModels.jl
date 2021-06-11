@@ -694,11 +694,11 @@ function repeated_kpss_test(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int) wh
     return d
 end
 
-function select_integration_order(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int, test::String) where Fl
-    if test == "kpss"
+function select_integration_order(y::Vector{Fl}, max_d::Int, D::Int, seasonal::Int, integration_test::String) where Fl
+    if integration_test == "kpss"
         return repeated_kpss_test(y, max_d, D, seasonal)
     end
-    error("Test $test not found")
+    error("Test $integration_test not found")
 end
 
 function canova_hansen_test(y::Vector{Fl}, seasonal::Int) where Fl
@@ -719,13 +719,13 @@ function seasonal_strength_test(y::Vector{Fl}, seasonal::Int) where Fl
     end
 end
 
-function select_seasonal_integration_order(y::Vector{Fl}, seasonal::Int, seasonal_test::String) where Fl
-    if seasonal_test == "ch"
+function select_seasonal_integration_order(y::Vector{Fl}, seasonal::Int, seasonal_integration_test::String) where Fl
+    if seasonal_integration_test == "ch"
         return canova_hansen_test(y, seasonal)
-    elseif seasonal_test == "seas"
+    elseif seasonal_integration_test == "seas"
         return seasonal_strength_test(y, seasonal)
     end
-    error("Seasonal test $seasonal_test not found")
+    error("Seasonal test $seasonal_integration_test not found")
 end
 
 
@@ -908,8 +908,8 @@ function auto_arima(y::Vector{Fl};
                     information_criteria::String = "aicc",
                     allow_mean::Bool = true,
                     show_trace::Bool = false,
-                    test::String = "kpss",
-                    seasonal_test::String = "seas"
+                    integration_test::String = "kpss",
+                    seasonal_integration_test::String = "seas"
                     ) where Fl <: AbstractFloat
     
     # Assert parameters
@@ -926,10 +926,11 @@ function auto_arima(y::Vector{Fl};
     @assert max_Q > 0
     @assert max_order > 0
     @assert information_criteria in ["aic", "aicc", "bic"]
+    @assert integration_test in ["kpss"]
+    @assert seasonal_integration_test in ["seas", "ch"]
 
-
-    D = seasonal != 0 && D <= 0 ? select_seasonal_integration_order(y, seasonal, seasonal_test) : D
-    d = d <= 0 ? select_integration_order(y, max_d, D, seasonal, test) : d
+    D = seasonal != 0 && D <= 0 ? select_seasonal_integration_order(y, seasonal, seasonal_integration_test) : D
+    d = d <= 0 ? select_integration_order(y, max_d, D, seasonal, integration_test) : d
 
     include_mean = allow_mean && (d + D < 2)
     show_trace && println("Model specification                               Selection metric")
