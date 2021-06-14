@@ -76,6 +76,7 @@ In any case if the documentation explains the procedures and indicates if there 
 
 ```
 auto_ets
+auto_arima
 ```
 
 ### Implementing a custom model

@@ -22,8 +22,8 @@ include("datasets.jl")
 include("hyperparameters.jl")
 include("systems.jl")
 include("kalman_filter_and_smoother.jl")
-include("kpss.jl")
-include("canova_hensen.jl")
+include("kpss.jl") # For auto_arima
+include("canova_hensen.jl") # For auto_arima
 include("filters/univariate_kalman_filter.jl")
 include("filters/multivariate_kalman_filter.jl")
 include("filters/scalar_kalman_filter.jl")

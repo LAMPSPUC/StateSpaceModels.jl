@@ -102,7 +102,7 @@
     @test model.include_mean == false
 
     nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
-    model = auto_arima(nile.flow)
+    model = auto_arima(nile.flow; d = 1, show_trace = true)
     @test model.order.p == 1
     @test model.order.d == 1
     @test model.order.q == 1
@@ -113,4 +113,12 @@
     @test model.order.d == 0
     @test model.order.q == 3
     @test model.include_mean == true
+
+    model = auto_arima(float(air_passengers.passengers); seasonal = 12)
+    @test model.order.d == 1
+    @test model.order.D == 1
+
+    model = auto_arima(log.(air_passengers.passengers); seasonal = 12, show_trace = true)
+    @test model.order.d == 0
+    @test model.order.D == 1
 end
