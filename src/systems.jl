@@ -327,16 +327,16 @@ function simulate(
     chol_H = sqrt(sys.H)
     chol_Q = cholesky(sys.Q)
     standard_ε = randn(n)
-    standard_η = randn(n + 1, size(sys.Q, 1))
+    standard_η = randn(n + 2, size(sys.Q, 1))
 
     # The first state of the simulation is the update of a_0
-    alpha[1, :] .= initial_state
+    alpha[1, :] .= initial_state .+ sys.R * chol_Q.L * standard_η[1, :]
     y[1] = dot(sys.Z, initial_state) + sys.d + chol_H * standard_ε[1]
-    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[1, :]
+    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[2, :]
     # Simulate scenarios
     for t in 2:n
         y[t] = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
-        alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
+        alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t + 1, :]
     end
 
     if return_simulated_states
@@ -359,16 +359,16 @@ function simulate(
     chol_H = cholesky(sys.H)
     chol_Q = cholesky(sys.Q)
     standard_ε = randn(n, size(sys.H, 1))
-    standard_η = randn(n + 1, size(sys.Q, 1))
+    standard_η = randn(n + 2, size(sys.Q, 1))
 
     # The first state of the simulation is the update of a_0
-    alpha[1, :] .= initial_state
+    alpha[1, :] .= initial_state .+ sys.R * chol_Q.L * standard_η[1, :]
     y[1, :] = sys.Z * initial_state + sys.d + chol_H.L * standard_ε[1, :]
-    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[1, :]
+    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[2, :]
     # Simulate scenarios
     for t in 2:n
         y[t, :] = sys.Z * alpha[t, :] + sys.d + chol_H.L * standard_ε[t, :]
-        alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t, :]
+        alpha[t + 1, :] = sys.T * alpha[t, :] + sys.c + sys.R * chol_Q.L * standard_η[t + 1, :]
     end
 
     if return_simulated_states
