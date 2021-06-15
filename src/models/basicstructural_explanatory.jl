@@ -17,7 +17,7 @@ It is defined by:
 # Example
 ```jldoctest
 julia> model = BasicStructuralExplanatory(rand(100), 12, rand(100, 2))
-BasicStructuralExplanatory model
+BasicStructuralExplanatory
 ```
 
 # References

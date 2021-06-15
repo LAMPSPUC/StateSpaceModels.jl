@@ -17,7 +17,7 @@ component. It is defined by:
 # Example
 ```jldoctest
 julia> model = BasicStructural(rand(100), 12)
-BasicStructural model
+BasicStructural
 ```
 
 # References

@@ -18,7 +18,7 @@ function Base.show(io::IO, results::Results{Fl}) where Fl
 end
 
 function Base.show(io::IO, model::StateSpaceModel)
-    print(io, model_name(model), " model")
+    print(io, model_name(model))
     return nothing
 end
 

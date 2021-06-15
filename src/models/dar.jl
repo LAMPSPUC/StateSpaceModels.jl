@@ -22,7 +22,7 @@ A Dynamic Autorregressive model is defined by:
 # Example
 ```jldoctest
 julia> model = DAR(randn(100), 2)
-DAR model
+DAR
 ```
 """
 mutable struct DAR <: StateSpaceModel

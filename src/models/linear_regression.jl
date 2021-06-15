@@ -23,7 +23,7 @@ The linear regression state-space model is defined by:
 # Example
 ```jldoctest
 julia> model = LinearRegression(rand(100, 2), rand(100))
-LinearRegression model
+LinearRegression
 ```
 """
 mutable struct LinearRegression <: StateSpaceModel

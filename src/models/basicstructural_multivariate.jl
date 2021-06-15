@@ -18,7 +18,7 @@ It is defined by:
 # Example
 ```jldoctest
 julia> model = MultivariateBasicStructural(rand(100, 2), 12)
-MultivariateBasicStructural model
+MultivariateBasicStructural
 ```
 
 # References

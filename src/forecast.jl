@@ -39,7 +39,7 @@ function forecast(
     # Associate with the model hyperparameters
     forecasting_model.hyperparameters = model_hyperparameters
     # Perform the kalman filter
-    fo = kalman_filter(forecasting_model)
+    fo = kalman_filter(forecasting_model; filter = filter)
     # fill forecast matrices
     expected_value = Vector{Vector{Fl}}(undef, steps_ahead)
     covariance = Vector{Matrix{Fl}}(undef, steps_ahead)
@@ -82,7 +82,7 @@ function forecast(
     # Associate with the model hyperparameters
     forecasting_model.hyperparameters = model_hyperparameters
     # Perform the kalman filter
-    fo = kalman_filter(forecasting_model)
+    fo = kalman_filter(forecasting_model; filter = filter)
     # fill forecast matrices
     expected_value = Vector{Vector{Fl}}(undef, steps_ahead)
     covariance = Vector{Matrix{Fl}}(undef, steps_ahead)
@@ -119,7 +119,7 @@ function simulate_scenarios(
 )
     # Query the type of model elements
     Fl = typeof_model_elements(model)
-    fo = kalman_filter(model)
+    fo = kalman_filter(model; filter = filter)
     last_state = fo.a[end]
     num_series = size(model.system.y, 2)
 

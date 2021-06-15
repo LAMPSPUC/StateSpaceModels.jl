@@ -13,6 +13,7 @@ using Optim
 using OrderedCollections
 using RecipesBase
 using StatsBase
+using SeasonalTrendLoess
 
 abstract type StateSpaceModel end
 
@@ -21,7 +22,8 @@ include("datasets.jl")
 include("hyperparameters.jl")
 include("systems.jl")
 include("kalman_filter_and_smoother.jl")
-
+include("statistical_tests/kpss.jl")
+include("statistical_tests/canova_hensen.jl")
 include("filters/univariate_kalman_filter.jl")
 include("filters/multivariate_kalman_filter.jl")
 include("filters/scalar_kalman_filter.jl")
@@ -81,6 +83,7 @@ export UnivariateKalmanFilter
 export UnobservedComponents
 
 # Exported functions
+export auto_arima
 export auto_ets
 export cross_validation
 export constrain_box!

@@ -17,7 +17,7 @@ A local level model with explanatory variables is defined by:
 # Example
 ```jldoctest
 julia> model = LocalLevelExplanatory(rand(100), rand(100, 1))
-LocalLevelExplanatory model
+LocalLevelExplanatory
 ```
 """
 mutable struct LocalLevelExplanatory <: StateSpaceModel

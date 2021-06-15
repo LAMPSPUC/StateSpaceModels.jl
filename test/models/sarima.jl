@@ -94,4 +94,31 @@
     model = SARIMA(log_air_passengers; order = (2, 0, 0), seasonal_order = (0, 1, 0, 12))
     fit!(model)
     @test loglike(model) ≈ 228.502 atol = 1e-3 rtol = 1e-3
+
+    # auto arima tests
+    model = auto_arima(dinternet)
+    @test model.order.p == 1
+    @test model.order.q == 1
+    @test model.include_mean == false
+
+    nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
+    model = auto_arima(nile.flow; d = 1, show_trace = true)
+    @test model.order.p == 1
+    @test model.order.d == 1
+    @test model.order.q == 1
+    @test model.include_mean == false
+
+    model = auto_arima(uschange_consumption.Consumption)
+    @test model.order.p == 1
+    @test model.order.d == 0
+    @test model.order.q == 3
+    @test model.include_mean == true
+
+    model = auto_arima(float(air_passengers.passengers); seasonal = 12)
+    @test model.order.d == 1
+    @test model.order.D == 1
+
+    model = auto_arima(log.(air_passengers.passengers); seasonal = 12, show_trace = true)
+    @test model.order.d == 0
+    @test model.order.D == 1
 end

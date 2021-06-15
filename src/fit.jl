@@ -30,6 +30,7 @@ function fit!(
     filter::KalmanFilter=default_filter(model),
     optimizer::Optimizer=default_optimizer(model),
 )
+    isfitted(model) && return model
     @assert has_fit_methods(typeof(model))
     initial_unconstrained_hyperparameter = handle_optim_initial_hyperparameters(model)
     # TODO Should there be a try catch?
@@ -144,25 +145,29 @@ function fill_results!(model::StateSpaceModel, llk::Fl, std_err::Vector{Fl}) whe
     model.results.model_name = model_name(model)
     model.results.coef_table = coef_table
     model.results.llk = llk
-    model.results.aic = AIC(num_hyperparameters, llk)
-    model.results.aicc = AICc(n_obs, num_hyperparameters, llk)
-    model.results.bic = BIC(n_obs, num_hyperparameters, llk)
+    model.results.aic = aic(num_hyperparameters, llk)
+    model.results.aicc = aicc(n_obs, num_hyperparameters, llk)
+    model.results.bic = bic(n_obs, num_hyperparameters, llk)
     model.results.num_observations = n_obs
     model.results.num_hyperparameters = num_hyperparameters
     return model
 end
 
-function AIC(k::Int, llk::Fl) where Fl
+function aic(k::Int, llk::Fl) where Fl
     return convert(Fl, 2 * k - 2 * llk)
 end
 
-function AICc(n::Int, k::Int, llk::Fl) where Fl
-    return convert(Fl, AIC(k, llk) + (2 * k * (k + 1) / (n - k - 1)))
+function aicc(n::Int, k::Int, llk::Fl) where Fl
+    return convert(Fl, aic(k, llk) + (2 * k * (k + 1) / (n - k - 1)))
 end
 
-function BIC(n::Int, k::Int, llk::Fl) where Fl
+function bic(n::Int, k::Int, llk::Fl) where Fl
     return convert(Fl, log(n) * k - 2 * llk)
 end
+
+aic(model::StateSpaceModel) = model.results.aic
+aicc(model::StateSpaceModel) = model.results.aicc
+bic(model::StateSpaceModel) = model.results.bic
 
 function build_coef_table(model::StateSpaceModel, std_err::Vector{Fl}) where Fl
     all_coef = get_constrained_values(model)
