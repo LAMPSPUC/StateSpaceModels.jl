@@ -331,8 +331,8 @@ function simulate(
 
     # The first state of the simulation is the update of a_0
     alpha[1, :] .= initial_state .+ sys.R * chol_Q.L * standard_η[1, :]
-    y[1] = dot(sys.Z, initial_state) + sys.d + chol_H * standard_ε[1]
-    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[2, :]
+    y[1] = dot(sys.Z, alpha[1, :]) + sys.d + chol_H * standard_ε[1]
+    alpha[2, :] = sys.T * alpha[1, :] + sys.c + sys.R * chol_Q.L * standard_η[2, :]
     # Simulate scenarios
     for t in 2:n
         y[t] = dot(sys.Z, alpha[t, :]) + sys.d + chol_H * standard_ε[t]
@@ -363,8 +363,8 @@ function simulate(
 
     # The first state of the simulation is the update of a_0
     alpha[1, :] .= initial_state .+ sys.R * chol_Q.L * standard_η[1, :]
-    y[1, :] = sys.Z * initial_state + sys.d + chol_H.L * standard_ε[1, :]
-    alpha[2, :] = sys.T * initial_state + sys.c + sys.R * chol_Q.L * standard_η[2, :]
+    y[1, :] = sys.Z * alpha[1, :] + sys.d + chol_H.L * standard_ε[1, :]
+    alpha[2, :] = sys.T * alpha[1, :] + sys.c + sys.R * chol_Q.L * standard_η[2, :]
     # Simulate scenarios
     for t in 2:n
         y[t, :] = sys.Z * alpha[t, :] + sys.d + chol_H.L * standard_ε[t, :]
