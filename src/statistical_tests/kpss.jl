@@ -36,10 +36,10 @@ function p_value_from_η(η::Fl, crit_vals::Vector{Fl}) where Fl
 end
 
 function calc_η_level(y::Vector{Fl}, lags::Bool) where Fl
-    n     = length(y)
-    ϵ     = y .- (mean(y))
-    l     = calc_lag_kpss(lags, n)
-    η     = (1/n^2)*sum(sum((((sum(ϵ[i] for i in 1:t))^2)/σ²_estimator(l, n, ϵ)) for t in 1:n))
+    n = length(y)
+    ϵ = y .- (mean(y))
+    l = calc_lag_kpss(lags, n)
+    η = (1/n^2)*sum(sum((((sum(ϵ[i] for i in 1:t))^2)/σ²_estimator(l, n, ϵ)) for t in 1:n))
     return η
 end
 
