@@ -1,4 +1,12 @@
-# This methods are used solely to help the auto-arima algorithm
+# These methods are used solely to help the auto-arima algorithm
+# Kwiatkowski, D.; 
+# Phillips, P. C. B.; 
+# Schmidt, P.; 
+# Shin, Y. (1992)
+# "Testing the null hypothesis 
+#  of stationarity against the 
+#  alternative of a unit root"
+
 function calc_lag_kpss(lags::Bool, n::Int)
     return lags ? trunc(Int, 4*(n/100)^0.25) : trunc(Int, 12*(n/100)^0.25)
 end
