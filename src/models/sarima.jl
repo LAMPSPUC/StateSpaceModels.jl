@@ -939,8 +939,15 @@ function auto_arima(y::Vector{Fl};
     @assert integration_test in ["kpss"]
     @assert seasonal_integration_test in ["seas", "ch"]
 
-    D = seasonal != 0 && D <= 0 ? select_seasonal_integration_order(y, seasonal, seasonal_integration_test) : D
-    d = d <= 0 ? select_integration_order(y, max_d, D, seasonal, integration_test) : d
+    if seasonal == 0
+        D = 0
+    elseif D < 0 # select automatically
+        D = select_seasonal_integration_order(y, seasonal, seasonal_integration_test)
+    end # D was fixed
+
+    if d < 0 # select automatically
+        d = select_integration_order(y, max_d, D, seasonal, integration_test)
+    end
 
     include_mean = allow_mean && (d + D < 2)
     show_trace && println("Model specification                               Selection metric")
