@@ -46,7 +46,7 @@ function fit!(
     opt_hyperparameters = opt.minimizer
     update_model_hyperparameters!(model, opt_hyperparameters)
     # TODO
-    # I leaned that this is not a good way to compute the covariance matrix of paarameters
+    # I leaned that this is not a good way to compute the covariance matrix of parameters
     # we should investigate other methods
     numerical_hessian = Optim.hessian!(func, opt_hyperparameters)
     std_err = diag(pinv(numerical_hessian))
