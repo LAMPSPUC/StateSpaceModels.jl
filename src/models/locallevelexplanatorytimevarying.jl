@@ -1,7 +1,7 @@
 @doc raw"""
     LocalLevelExplanatoryTimeVarying(y::Vector{Fl}, X::Matrix{Fl}) where Fl
 
-A local level model with time-varying regressors is defined by:
+A local level model allowing time-varying regressors is defined by:
 ```math
 \begin{gather*}
     \begin{aligned}
@@ -14,9 +14,10 @@ A local level model with time-varying regressors is defined by:
 \end{gather*}
 ```
 
+This model can quickly overfit, so it is useful to fix the variance of one or more of the tau hyperparamters at zero - with all fixed to zero, this model becomes the LocalLevelExplanatory
 # Example
 ```jldoctest
-julia> model = tvr(rand(100), rand(100, 1))
+julia> model = LocalLevelExplanatoryTimeVarying(rand(100), rand(100, 1))
 tvr
 ```
 """
