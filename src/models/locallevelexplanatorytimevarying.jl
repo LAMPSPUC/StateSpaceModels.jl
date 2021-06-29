@@ -18,7 +18,7 @@ This model can quickly overfit, so it is useful to fix the variance of one or mo
 # Example
 ```jldoctest
 julia> model = LocalLevelExplanatoryTimeVarying(rand(100), rand(100, 1))
-tvr
+LocalLevelExplanatoryTimeVarying
 ```
 """
 mutable struct LocalLevelExplanatoryTimeVarying <: StateSpaceModel
