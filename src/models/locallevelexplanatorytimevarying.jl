@@ -37,16 +37,16 @@ mutable struct LocalLevelExplanatoryTimeVarying <: StateSpaceModel
         # Define system matrices
         Z = [vcat(ones(Fl, 1), X[t, :]) for t in 1:num_observations]
         T = [Matrix{Fl}(I, m, m) for _ in 1:num_observations]
-        R = [Matrix{Fl}(I, m, m)[:, 1:2] for _ in 1:num_observations]
+        R = [Matrix{Fl}(I, m, m) for _ in 1:num_observations]
         d = [zero(Fl) for _ in 1:num_observations]
         c = [zeros(m) for _ in 1:num_observations]
         H = [one(Fl) for _ in 1:num_observations]
-        Q = [Matrix{Fl}(I, 2, 2) for _ in 1:num_observations]
+        Q = [Matrix{Fl}(I, m, m) for _ in 1:num_observations]
 
         system = LinearUnivariateTimeVariant{Fl}(y, Z, T, R, d, c, H, Q)
 
         # Define hyperparameters names
-        names = [["sigma2_ε", "sigma2_η"];["β_$i" for i in 1:num_exogenous]; ["τ_1"]]
+        names = [["sigma2_ε", "sigma2_η"];["β_$i" for i in 1:num_exogenous]; ["tau2_$i" for i in 1:num_exogenous]]
         hyperparameters = HyperParameters{Fl}(names)
 
         return new(hyperparameters, system, Results{Fl}(), X)
@@ -67,11 +67,11 @@ function get_beta_name(model::LocalLevelExplanatoryTimeVarying, i::Int)
 end
 
 function initial_hyperparameters!(model::LocalLevelExplanatoryTimeVarying)
-    #Placeholder initial hyperparamters for tau
+    #Fill all with observed variance - betas redone later, taus are pretty bad
     Fl = typeof_model_elements(model)
     observed_variance = var(model.system.y[findall(!isnan, model.system.y)])
     initial_hyperparameters = Dict{String,Fl}(
-        "sigma2_ε" => observed_variance, "sigma2_η" => observed_variance, "τ_1" => observed_variance
+        model.hyperparameters.names .=> observed_variance
     )
     # This is an heuristic for a good approximation
     initial_exogenous = model.exogenous \ model.system.y
@@ -83,31 +83,34 @@ function initial_hyperparameters!(model::LocalLevelExplanatoryTimeVarying)
 end
 
 function constrain_hyperparameters!(model::LocalLevelExplanatoryTimeVarying)
-    for i in axes(model.exogenous, 2)
-        constrain_identity!(model, get_beta_name(model, i))
-    end
-    constrain_variance!(model, "sigma2_ε")
-    constrain_variance!(model, "sigma2_η")
-    constrain_variance!(model, "τ_1")
+    betas = [get_beta_name(model, i) for i in axes(model.exogenous, 2)]
+    constrain_identity!.(Ref(model), betas)
+
+    non_betas = setdiff(model.hyperparameters.names, betas)
+    constrain_variance!.(Ref(model), non_betas)
     return model
 end
 
 function unconstrain_hyperparameters!(model::LocalLevelExplanatoryTimeVarying)
-    for i in axes(model.exogenous, 2)
-        unconstrain_identity!(model, get_beta_name(model, i))
-    end
-    unconstrain_variance!(model, "sigma2_ε")
-    unconstrain_variance!(model, "sigma2_η")
-    unconstrain_variance!(model, "τ_1")
+    betas = [get_beta_name(model, i) for i in axes(model.exogenous, 2)]
+    unconstrain_identity!.(Ref(model), betas)
+
+    non_betas = setdiff(model.hyperparameters.names, betas)
+    unconstrain_variance!.(Ref(model), non_betas)
     return model
 end
 
 function fill_model_system!(model::LocalLevelExplanatoryTimeVarying)
     H = get_constrained_value(model, "sigma2_ε")
     fill_H_in_time(model, H)
+
+    numtaus = Int((length(model.hyperparameters.names) - 2) / 2)
+    taus = model.hyperparameters.names[Int(end - numtaus + 1): end]
+
+    constrained_values_taus = get_constrained_value.(Ref(model), taus)
+    
     for t in 1:length(model.system.Q)
-        model.system.Q[t][1] = get_constrained_value(model, "sigma2_η")
-        model.system.Q[t][end] = get_constrained_value(model, "τ_1")
+        model.system.Q[t] = diagm([get_constrained_value(model, "sigma2_η"); constrained_values_taus])
     end
     return model
 end
