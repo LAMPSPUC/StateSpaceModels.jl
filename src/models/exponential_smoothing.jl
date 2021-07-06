@@ -181,7 +181,7 @@ function constrain_hyperparameters!(model::ExponentialSmoothing)
         end
     end
     if model.seasonal > 0
-        ub = min(Fl(0.9999), 1 - get_constrained_value(model, "smoothing_level"))
+        ub = min(Fl(0.9999), 1 - min(Fl(0.99989), get_constrained_value(model, "smoothing_level")))
         constrain_box!(model, "smoothing_seasonal", Fl(0.0001), ub)
         for i in 1:model.seasonal - 1
             constrain_identity!(model, "initial_seasonal_$i")
@@ -204,7 +204,7 @@ function unconstrain_hyperparameters!(model::ExponentialSmoothing)
         end
     end
     if model.seasonal > 0
-        ub = min(Fl(0.9999), 1 - get_constrained_value(model, "smoothing_level"))
+        ub = min(Fl(0.9999), 1 - min(Fl(0.99989), get_constrained_value(model, "smoothing_level")))
         unconstrain_box!(model, "smoothing_seasonal", Fl(0.0001), ub)
         for i in 1:model.seasonal - 1
             unconstrain_identity!(model, "initial_seasonal_$i")

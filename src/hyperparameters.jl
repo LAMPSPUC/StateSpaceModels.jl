@@ -324,7 +324,7 @@ The mapping is
 ``\\psi = lb + \\frac{ub - lb}{1 + \\exp(-\\psi_{*})}``
 """
 function constrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
-    @assert ub > lb
+    @assert ub >= lb
     update_constrained_value!(
         model, str, lb + ((ub - lb) / (1 + exp(-get_unconstrained_value(model, str))))
     )
@@ -341,7 +341,7 @@ The mapping is
 ``\\psi_* = -\\ln \\frac{ub - lb}{\\psi - lb} - 1``
 """
 function unconstrain_box!(model::StateSpaceModel, str::String, lb::Fl, ub::Fl) where Fl
-    @assert ub > lb
+    @assert ub >= lb
     update_unconstrained_value!(
         model, str, -log((ub - lb) / (get_constrained_value(model, str) - lb) - 1)
     )
