@@ -1,7 +1,7 @@
 name = "StateSpaceModels"
 uuid = "99342f36-827c-5390-97c9-d7f9ee765c78"
 authors = ["raphaelsaavedra <raphael.saavedra93@gmail.com>, guilhermebodin <guilherme.b.moraes@gmail.com>, mariohsouto"]
-version = "0.5.17"
+version = "0.5.18"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
