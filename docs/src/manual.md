@@ -74,7 +74,7 @@ search through different parameters to obtain the best fit for your data without
 The search procedures can be published in scientific papers or purely heuristic designed by the developers.
 In any case if the documentation explains the procedures and indicates if there are any references.
 
-```
+```@docs
 auto_ets
 auto_arima
 ```
