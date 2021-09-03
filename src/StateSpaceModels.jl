@@ -12,8 +12,9 @@ using Printf
 using Optim
 using OrderedCollections
 using RecipesBase
-using StatsBase
 using SeasonalTrendLoess
+using SparseArrays
+using StatsBase
 
 abstract type StateSpaceModel end
 
@@ -28,6 +29,7 @@ include("filters/univariate_kalman_filter.jl")
 include("filters/multivariate_kalman_filter.jl")
 include("filters/scalar_kalman_filter.jl")
 include("filters/regression_kalman_filter.jl")
+include("filters/sparse_univariate_kalman_filter.jl")
 
 include("smoothers/kalman_smoother.jl")
 
@@ -63,6 +65,7 @@ export ExperimentalSeasonalNaive
 export BasicStructuralExplanatory
 export DAR
 export ExponentialSmoothing
+export FilterOutput
 export LinearMultivariateTimeInvariant
 export LinearMultivariateTimeVariant
 export LinearRegression
@@ -78,6 +81,8 @@ export Optimizer
 export SARIMA
 export ScalarKalmanFilter
 export SeasonalNaive
+export SmootherOutput
+export SparseUnivariateKalmanFilter
 export StateSpaceModel
 export UnivariateKalmanFilter
 export UnobservedComponents
@@ -110,6 +115,7 @@ export isunivariate
 export kalman_filter
 export kalman_smoother
 export loglike
+export num_states
 export number_hyperparameters
 export results
 export set_initial_hyperparameters!
