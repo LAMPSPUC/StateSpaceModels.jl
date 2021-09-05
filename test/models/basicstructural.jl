@@ -25,11 +25,9 @@
 
     
     model = BasicStructural(log_air_passengers, 12)
-    steadystate_tol = 1e-5
-    a1 = zeros(num_states(model))
-    P1 = 1e6 .* Matrix{Float64}(I, num_states(model), num_states(model))
-    sparse_filter = SparseUnivariateKalmanFilter(a1, P1, num_states(model), steadystate_tol)
-    fit!(model; filter=sparse_filter)
+    model.system.T = sparse(model.system.T)
+    model.system.Z = sparse(model.system.Z)
+    fit!(model)
     # Runned on Python statsmodels
     @test loglike(model) ≈ 234.33641 atol = 1e-5 rtol = 1e-5
 
@@ -39,4 +37,19 @@
     # simualting
     scenarios = simulate_scenarios(model, 10, 10_000)
     test_scenarios_adequacy_with_forecast(forec, scenarios)
+end
+
+using StateSpaceModels
+using SparseArrays
+y = randn(100)
+@time begin
+    model = BasicStructural(y, 12)
+    fit!(model)
+end
+
+@time begin
+    model = BasicStructural(y, 12)
+    model.system.T = sparse(model.system.T)
+    model.system.Z = sparse(model.system.Z)
+    fit!(model)
 end
