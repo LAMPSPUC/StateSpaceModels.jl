@@ -147,7 +147,7 @@ function repeat_a_in_att!(kalman_state::SparseUnivariateKalmanState{Fl}) where F
 end
 
 function update_a!(
-    kalman_state::SparseUnivariateKalmanState{Fl}, T::SparseMatrixCSC{Fl, Int64}, c::Vector{Fl}
+    kalman_state::SparseUnivariateKalmanState{Fl}, T::SparseMatrixCSC{Fl, Int}, c::Vector{Fl}
 ) where Fl
     kalman_state.a = T * kalman_state.att
     kalman_state.a .+= c
@@ -170,7 +170,7 @@ function repeat_P_in_Ptt!(kalman_state::SparseUnivariateKalmanState{Fl}) where F
 end
 
 function update_P!(
-    kalman_state::SparseUnivariateKalmanState{Fl}, T::SparseMatrixCSC{Float64, Int64}, RQR::Matrix{Fl}
+    kalman_state::SparseUnivariateKalmanState{Fl}, T::SparseMatrixCSC{Fl, Int}, RQR::Matrix{Fl}
 ) where Fl
     mul!(kalman_state.TPtt, T, kalman_state.Ptt)
     mul!(kalman_state.P, kalman_state.TPtt, T')
@@ -189,7 +189,7 @@ function update_kalman_state!(
     kalman_state::SparseUnivariateKalmanState{Fl},
     y::Fl,
     Z::SparseVector{Fl, Int},
-    T::SparseMatrixCSC{Fl, Int64},
+    T::SparseMatrixCSC{Fl, Int},
     H::Fl,
     RQR::Matrix{Fl},
     d::Fl,
