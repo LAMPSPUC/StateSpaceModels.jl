@@ -128,7 +128,9 @@ StateSpaceModels.jl lets users define tailor-made filters in an easy manner. TOD
 ```@docs
 UnivariateKalmanFilter
 ScalarKalmanFilter
-StateSpaceModels.FilterOutput
+SparseUnivariateKalmanFilter
+FilterOutput
+SmootherOutput
 get_innovations
 get_innovations_variance
 get_filtered_state
