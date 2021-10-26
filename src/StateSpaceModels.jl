@@ -53,6 +53,7 @@ include("models/unobserved_components.jl")
 include("models/exponential_smoothing.jl")
 include("models/naive_models.jl")
 include("models/dar.jl")
+include("models/locallevelexplanatorytimevarying.jl")
 
 include("visualization/forecast.jl")
 include("visualization/components.jl")
@@ -74,6 +75,7 @@ export LinearUnivariateTimeVariant
 export LocalLevel
 export LocalLevelCycle
 export LocalLevelExplanatory
+export LocalLevelExplanatoryTimeVarying
 export LocalLinearTrend
 export MultivariateBasicStructural
 export Naive
