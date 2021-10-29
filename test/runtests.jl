@@ -27,6 +27,7 @@ include("models/linear_regression.jl")
 include("models/exponential_smoothing.jl")
 include("models/naive_models.jl")
 include("models/dar.jl")
+include("models/vehicle_tracking.jl")
 
 # Visualization
 include("visualization/forecast.jl")
