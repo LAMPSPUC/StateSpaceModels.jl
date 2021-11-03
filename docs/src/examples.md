@@ -221,7 +221,7 @@ kalman_filter(model)
 pos_pred = get_predictive_state(model)
 pos_filtered = get_filtered_state(model)
 
-# Plot a gil illustrating the result
+# Plot a gif illustrating the result
 using Plots
 anim = @animate for i in 1:n
     plot(sim[1:i, 1], sim[1:i, 2], label="Measured position", line=:scatter, lw=2, markeralpha=0.2, color=:black, title="Vehicle tracking")
