@@ -53,6 +53,7 @@ include("models/unobserved_components.jl")
 include("models/exponential_smoothing.jl")
 include("models/naive_models.jl")
 include("models/dar.jl")
+include("models/vehicle_tracking.jl")
 
 include("visualization/forecast.jl")
 include("visualization/components.jl")
@@ -86,6 +87,7 @@ export SparseUnivariateKalmanFilter
 export StateSpaceModel
 export UnivariateKalmanFilter
 export UnobservedComponents
+export VehicleTracking
 
 # Exported functions
 export auto_arima

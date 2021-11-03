@@ -55,6 +55,7 @@ LocalLevelCycle
 LocalLevelExplanatory
 LocalLinearTrend
 MultivariateBasicStructural
+VehicleTracking
 ```
 
 ## Naive models

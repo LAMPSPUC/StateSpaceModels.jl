@@ -193,6 +193,44 @@ smoother_output = kalman_smoother(model)
 plot(df.date, get_smoothed_state(smoother_output)[:, 2], label = "slope")
 ```
 
+## Vehicle tracking
+
+This example illustrates how to perform vehicle tracking from noisy data.
+
+```@setup bt
+using StateSpaceModels, Random
+using Plots
+```
+
+```@example vehicle_tracking
+using Random
+Random.seed!(1)
+
+# Define a random trajectory
+n = 100
+H = [1 0; 0 1.0]
+Q = [1 0; 0 1.0]
+rho = 0.1
+model = VehicleTracking(rand(n, 2), rho, H, Q)
+initial_state = [0.0, 0, 0, 0]
+sim = StateSpaceModels.simulate(model.system, initial_state, n)
+
+# Use a Kalman filter to get the predictive and filtered states
+model = VehicleTracking(sim, 0.1, H, Q)
+kalman_filter(model)
+pos_pred = get_predictive_state(model)
+pos_filtered = get_filtered_state(model)
+
+# Plot a gif illustrating the result
+using Plots
+anim = @animate for i in 1:n
+    plot(sim[1:i, 1], sim[1:i, 2], label="Measured position", line=:scatter, lw=2, markeralpha=0.2, color=:black, title="Vehicle tracking")
+    plot!(pos_pred[1:i+1, 1], pos_pred[1:i+1, 3], label = "Predicted position", lw=2, color=:forestgreen)
+    plot!(pos_filtered[1:i, 1], pos_filtered[1:i, 3], label = "Filtered position", lw=2, color=:indianred)
+end
+gif(anim, "anim_fps15.gif", fps = 15)
+```
+
 ## Cross validation of the forecasts of a model
 
 Often times users would like to compare the forecasting skill of different models. The function 

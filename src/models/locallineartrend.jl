@@ -1,4 +1,6 @@
 @doc raw"""
+    LocalLinearTrend(y::Vector{Fl}) where Fl
+
 The linear trend model is defined by:
 ```math
 \begin{gather*}
