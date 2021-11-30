@@ -88,6 +88,26 @@ function get_standard_innovations(fo::FilterOutput)
     return v[:, 1] ./ sqrt.(F[1, 1, :])
 end
 
+function vector_of_vector_to_matrix(vov::Vector{Vector{T}}) where T
+    n = length(vov)
+    p = length(vov[1])
+    mat = Matrix{T}(undef, n, p)
+    for i in 1:n, j in 1:p
+        mat[i, j] = vov[i][j]
+    end
+    return mat
+end
+
+function vector_of_matrix_to_array(vom::Vector{Matrix{T}}) where T
+    n = length(vom)
+    p = length(vom[1])
+    arr = Array{T, 3}(undef, n, p, p)
+    for i in 1:n, j in 1:p, k in 1:p
+        arr[i, j, k] = vom[i][j, k]
+    end
+    return arr
+end
+
 """
     get_innovations
 
@@ -95,7 +115,9 @@ Returns the innovations `v` obtained with the Kalman filter.
 """
 function get_innovations end
 
-get_innovations(filter::FilterOutput) = permutedims(cat(filter.v...; dims=2))
+function get_innovations(filter::FilterOutput)
+    return vector_of_vector_to_matrix(filter.v)
+end
 
 function get_innovations(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
@@ -109,7 +131,9 @@ Returns the variance `F` of innovations obtained with the Kalman filter.
 """
 function get_innovations_variance end
 
-get_innovations_variance(filter_output::FilterOutput) = cat(filter_output.F...; dims=3)
+function get_innovations_variance(filter::FilterOutput)
+    return vector_of_matrix_to_array(filter.F)
+end
 
 function get_innovations_variance(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
@@ -123,7 +147,9 @@ Returns the filtered state `att` obtained with the Kalman filter.
 """
 function get_filtered_state end
 
-get_filtered_state(filter::FilterOutput) = permutedims(cat(filter.att...; dims=2))
+function get_filtered_state(filter::FilterOutput)
+    return vector_of_vector_to_matrix(filter.att)
+end
 
 function get_filtered_state(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
@@ -137,7 +163,7 @@ Returns the variance `Ptt` of the filtered state obtained with the Kalman filter
 """
 function get_filtered_state_variance end
 
-get_filtered_state_variance(filter::FilterOutput) = cat(filter.Ptt...; dims=3)
+get_filtered_state_variance(filter::FilterOutput) = vector_of_matrix_to_array(filter.Ptt)
 
 function get_filtered_state_variance(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
@@ -151,7 +177,7 @@ Returns the predictive state `a` obtained with the Kalman filter.
 """
 function get_predictive_state end
 
-get_predictive_state(filter::FilterOutput) = permutedims(cat(filter.a...; dims=2))
+get_predictive_state(filter::FilterOutput) = vector_of_vector_to_matrix(filter.a)
 
 function get_predictive_state(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
@@ -165,7 +191,7 @@ Returns the variance `P` of the predictive state obtained with the Kalman filter
 """
 function get_predictive_state_variance end
 
-get_predictive_state_variance(filter::FilterOutput) = cat(filter.P...; dims=3)
+get_predictive_state_variance(filter::FilterOutput) = vector_of_matrix_to_array(filter.P)
 
 function get_predictive_state_variance(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
@@ -229,7 +255,7 @@ Returns the smoothed state `alpha` obtained with the smoother.
 """
 function get_smoothed_state end
 
-get_smoothed_state(smoother::SmootherOutput) = permutedims(cat(smoother.alpha...; dims=2))
+get_smoothed_state(smoother::SmootherOutput) = vector_of_vector_to_matrix(smoother.alpha)
 
 function get_smoothed_state(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
@@ -243,7 +269,7 @@ Returns the variance `V` of the smoothed state obtained with the smoother.
 """
 function get_smoothed_state_variance end
 
-get_smoothed_state_variance(smoother::SmootherOutput) = cat(smoother.V...; dims=3)
+get_smoothed_state_variance(smoother::SmootherOutput) = vector_of_matrix_to_array(smoother.V)
 
 function get_smoothed_state_variance(model::StateSpaceModel; filter::KalmanFilter=default_filter(model))
     assert_possible_to_filter(model)
