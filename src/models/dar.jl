@@ -19,6 +19,9 @@ A Dynamic Autorregressive model is defined by:
     The dynamic autorregressive model does not have the [`forecast`](@ref) method implemented yet. 
     If you wish to perform forecasts with this model please open an issue.
 
+!!! warning Missing values
+    The dynamic autorregressive model currently does not support missing values (`NaN` observations.)
+
 # Example
 ```jldoctest
 julia> model = DAR(randn(100), 2)
@@ -33,6 +36,8 @@ mutable struct DAR <: StateSpaceModel
     results::Results
 
     function DAR(y::Vector{Fl}, lags::Int) where Fl
+
+        assert_zero_missing_values(y)
 
         X = lagmat(y, lags)
         num_observations = size(X, 1)
@@ -73,8 +78,8 @@ end
 
 function initial_hyperparameters!(model::DAR)
     Fl = typeof_model_elements(model)
-    observed_variance = var(model.system.y[findall(!isnan, model.system.y)])
-    observed_mean = mean(model.system.y[findall(!isnan, model.system.y)])
+    observed_variance = variance_of_valid_observations(model.system.y)
+    observed_mean = mean_of_valid_observations(model.system.y)
     initial_hyperparameters = Dict{String,Fl}(
         "sigma2_ε" => observed_variance, "intercept" => observed_mean
     )

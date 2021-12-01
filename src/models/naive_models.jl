@@ -13,7 +13,7 @@ typeof_model_elements(model::NaiveModel) = eltype(model.y)
 function assert_zero_missing_values(model::NaiveModel)
     for i in 1:length(model.y)
         if isnan(model.y[i])
-            return error("model $(typeof(model)) does not support missing values.)")
+            return error("model $(typeof(model)) does not support missing values.")
         end
     end
     return nothing

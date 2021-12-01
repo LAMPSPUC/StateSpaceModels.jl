@@ -50,16 +50,17 @@ end
 function default_filter(model::LocalLinearTrend)
     Fl = typeof_model_elements(model)
     steadystate_tol = Fl(1e-5)
-    a1 = zeros(Fl, 2)
-    P1 = Fl(1e6) .* Matrix{Fl}(I, 2, 2)
-    return UnivariateKalmanFilter(a1, P1, 2, steadystate_tol)
+    a1 = zeros(Fl, num_states(model))
+    P1 = Fl(1e6) .* Matrix{Fl}(I, num_states(model), num_states(model))
+    return UnivariateKalmanFilter(a1, P1, num_states(model), steadystate_tol)
 end
 
 function initial_hyperparameters!(model::LocalLinearTrend)
     Fl = typeof_model_elements(model)
+    observed_variance = variance_of_valid_observations(model.system.y)
     initial_hyperparameters = Dict{String,Fl}(
-        "sigma2_ε" => var(model.system.y),
-        "sigma2_ξ" => var(model.system.y),
+        "sigma2_ε" => observed_variance,
+        "sigma2_ξ" => observed_variance,
         "sigma2_ζ" => one(Fl),
     )
     set_initial_hyperparameters!(model, initial_hyperparameters)
