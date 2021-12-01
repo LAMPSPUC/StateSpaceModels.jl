@@ -65,7 +65,7 @@ end
 
 function initial_hyperparameters!(model::LocalLevelCycle)
     Fl = typeof_model_elements(model)
-    observed_variance = var(model.system.y[findall(!isnan, model.system.y)])
+    observed_variance = variance_of_valid_observations(model.system.y)
     initial_hyperparameters = Dict{String,Fl}(
         "sigma2_ε" => observed_variance,
         "sigma2_η" => observed_variance,

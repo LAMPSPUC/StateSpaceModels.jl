@@ -14,3 +14,20 @@ function lagmat(y::Vector{Fl}, k::Int) where Fl
     end
     return X
 end
+
+function variance_of_valid_observations(y::Vector{Fl}) where Fl
+    return var(filter(!isnan, y))
+end
+
+function mean_of_valid_observations(y::Vector{Fl}) where Fl
+    return mean(filter(!isnan, y))
+end
+
+function assert_zero_missing_values(y::Vector)
+    for el in y
+        if isnan(el)
+            return error("This model does not support missing values.")
+        end
+    end
+    return nothing
+end

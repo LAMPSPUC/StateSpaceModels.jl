@@ -455,8 +455,7 @@ end
 
 function initial_hyperparameters!(model::UnobservedComponents)
     Fl = typeof_model_elements(model)
-    y = filter(!isnan, model.system.y)
-    observed_variance = var(y)
+    observed_variance = variance_of_valid_observations(model.system.y)
     # TODO add heuristic for initial hyperparameters
     initial_hyperparameters = Dict{String,Fl}(get_names(model) .=> one(Fl))
     if model.has_irregular

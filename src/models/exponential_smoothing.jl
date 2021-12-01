@@ -135,8 +135,8 @@ end
 
 function initial_hyperparameters!(model::ExponentialSmoothing)
     Fl = typeof_model_elements(model)
-    observations = model.system.y[findall(!isnan, model.system.y)]
-    observed_variance = var(observations)
+    observations = filter(!isnan, model.system.y)
+    observed_variance = variance_of_valid_observations(model.system.y)
     initial_hyperparameters = Dict{String,Fl}(
         "sigma2" => observed_variance,
         "smoothing_level" => Fl(0.1),
