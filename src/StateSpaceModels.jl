@@ -119,7 +119,7 @@ export kalman_smoother
 export loglike
 export num_states
 export number_hyperparameters
-export results
+export print_results
 export set_initial_hyperparameters!
 export simulate
 export simulate_scenarios

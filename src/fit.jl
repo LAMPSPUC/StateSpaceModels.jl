@@ -2,7 +2,8 @@
     fit!(
         model::StateSpaceModel;
         filter::KalmanFilter=default_filter(model),
-        optimizer::Optimizer=Optimizer(Optim.LBFGS())
+        optimizer::Optimizer=Optimizer(Optim.LBFGS()),
+        save_hyperparameter_distribution::Bool=true
     )
 
 Estimate the state-space model parameters via maximum likelihood. The resulting optimal
@@ -29,6 +30,7 @@ function fit!(
     model::StateSpaceModel;
     filter::KalmanFilter=default_filter(model),
     optimizer::Optimizer=default_optimizer(model),
+    save_hyperparameter_distribution::Bool=true
 )
     isfitted(model) && return model
     @assert has_fit_methods(typeof(model))
@@ -45,12 +47,29 @@ function fit!(
     opt_loglikelihood = -opt.minimum * size(model.system.y, 1)
     opt_hyperparameters = opt.minimizer
     update_model_hyperparameters!(model, opt_hyperparameters)
-    # TODO
-    # I leaned that this is not a good way to compute the covariance matrix of paarameters
-    # we should investigate other methods
-    numerical_hessian = Optim.hessian!(func, opt_hyperparameters)
-    std_err = diag(pinv(numerical_hessian))
-    fill_results!(model, opt_loglikelihood, std_err)
+
+    if save_hyperparameter_distribution
+        numerical_hessian = Optim.hessian!(func, opt_hyperparameters)
+        try 
+            std_err = numerical_hessian |> pinv |> diag .|> sqrt
+            fill_results!(model, opt_loglikelihood, std_err)
+        catch
+            @warn(
+                "The optimization process converged but the Hessian matrix is not positive definite. " *
+                "This means that StateSpaceModels.jl cannot estimate the distribution of the hyperparameters " *
+                "If you are interested in estimates of the distribution of ther hyperparameters we advise you to" *
+                "change the optimization algorithm by using the kwarg fit(...; optimizer = "*
+                "Optimizer(StateSpaceModels.Optim.THE_METHOD_OF_YOUR_CHOICE()))" * 
+                "The list of possible algorithms can be found on this link https://julianlsolvers.github.io/Optim.jl/stable/#" * 
+                "Otherwise you can simply skip this proccess by using fit(...; save_hyperparameter_distribution=false) "
+            )
+            std_err = fill(NaN, number_hyperparameters(model))
+            fill_results!(model, opt_loglikelihood, std_err)
+        end
+    else
+        std_err = fill(NaN, number_hyperparameters(model))
+        fill_results!(model, opt_loglikelihood, std_err)
+    end
     return model
 end
 
@@ -121,12 +140,7 @@ function Results{Fl}() where Fl
     return Results{Fl}("", CoefficientTable{Fl}(), Fl(NaN), Fl(NaN), Fl(NaN), Fl(NaN), 0, 0)
 end
 
-"""
-    results(model::StateSpaceModel)
-
-Query the results of the optimization called by `fit!`.
-"""
-results(model::StateSpaceModel) = model.results
+get_results(model::StateSpaceModel) = model.results
 function Base.isempty(results::Results)
     return isempty(results.coef_table) &&
            isnan(results.llk) &&

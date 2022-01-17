@@ -761,7 +761,7 @@ function fit_candidate_models!(candidate_models::Vector{SARIMA}, show_trace::Boo
     non_converged_models = Int[]
     for (i, model) in enumerate(candidate_models)
         try 
-            fit!(model)
+            fit!(model; save_hyperparameter_distribution=false)
             if isnan(model.results.llk)
                 show_trace && println(model, " - diverged")
                 push!(non_converged_models, i)

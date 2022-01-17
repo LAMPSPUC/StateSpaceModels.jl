@@ -26,7 +26,7 @@ model = LocalLevel(y)
 
 fit!(model)
 
-results(model)
+print_results(model)
 
 forecast(model, 10)
 
@@ -105,6 +105,7 @@ Quick examples on automatic forecasting. When performing automatic forecasting
 users should provide the seasonal period if there is one.
 ```julia
 model = auto_ets(log_air_passengers; seasonal = 12)
+model = auto_arima(log_air_passengers; seasonal = 12)
 ```
 
 ## Contributing

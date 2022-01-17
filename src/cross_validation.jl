@@ -58,7 +58,7 @@ function cross_validation(model::StateSpaceModel, steps_ahead::Int, start_idx::I
         y_to_fit = model.system.y[1:start_idx - 1 + i]
         y_to_verify = model.system.y[start_idx + i:start_idx - 1 + i + steps_ahead]
         model_to_fit = reinstantiate(model, y_to_fit)
-        fit!(model_to_fit; filter=filter, optimizer=optimizer)
+        fit!(model_to_fit; filter=filter, optimizer=optimizer, save_hyperparameter_distribution=false)
         forec = forecast(model_to_fit, steps_ahead; filter=filter)
         scenarios = simulate_scenarios(model_to_fit, steps_ahead, n_scenarios; filter=filter)
         expected_value_vector = forecast_expected_value(forec)[:]

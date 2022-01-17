@@ -147,7 +147,7 @@ air_passengers = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
 log_air_passengers = log.(air_passengers.passengers)
 model = SARIMA(log_air_passengers; order = (0, 1, 1), seasonal_order = (0, 1, 1, 12))
 fit!(model)
-results(model)
+print_results(model)
 ```
 
 To make a forecast of 24 steps ahead of the model the command is:

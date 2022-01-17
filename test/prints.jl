@@ -5,7 +5,7 @@
     show(model)
     println("")
     fit!(model)
-    show(results(model))
+    print_results(model)
     println("")
     # Specific show methods
     model = SARIMA(random_series)
