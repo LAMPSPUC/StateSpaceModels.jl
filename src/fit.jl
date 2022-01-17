@@ -3,7 +3,7 @@
         model::StateSpaceModel;
         filter::KalmanFilter=default_filter(model),
         optimizer::Optimizer=Optimizer(Optim.LBFGS()),
-        save_results::Bool=true
+        save_hyperparameter_distribution_results::Bool=true
     )
 
 Estimate the state-space model parameters via maximum likelihood. The resulting optimal
@@ -30,7 +30,7 @@ function fit!(
     model::StateSpaceModel;
     filter::KalmanFilter=default_filter(model),
     optimizer::Optimizer=default_optimizer(model),
-    save_results::Bool=true
+    save_hyperparameter_distribution_results::Bool=true
 )
     isfitted(model) && return model
     @assert has_fit_methods(typeof(model))
@@ -48,7 +48,7 @@ function fit!(
     opt_hyperparameters = opt.minimizer
     update_model_hyperparameters!(model, opt_hyperparameters)
 
-    if save_results
+    if save_hyperparameter_distribution_results
         numerical_hessian = Optim.hessian!(func, opt_hyperparameters)
         try 
             std_err = numerical_hessian |> pinv |> diag .|> sqrt
@@ -60,11 +60,15 @@ function fit!(
                 "If you are interested in estimates of the distribution of ther hyperparameters we advise you to" *
                 "change the optimization algorithm by using the kwarg fit(...; optimizer = "*
                 "Optimizer(StateSpaceModels.Optim.THE_METHOD_OF_YOUR_CHOICE()))" * 
-                "The list of possible algorithms can be found on this link https://julianlsolvers.github.io/Optim.jl/stable/#"
+                "The list of possible algorithms can be found on this link https://julianlsolvers.github.io/Optim.jl/stable/#" * 
+                "Otherwise you can simply skip this proccess by using fit(...; save_hyperparameter_distribution_results=false) "
             )
             std_err = fill(NaN, number_hyperparameters(model))
             fill_results!(model, opt_loglikelihood, std_err)
         end
+    else
+        std_err = fill(NaN, number_hyperparameters(model))
+        fill_results!(model, opt_loglikelihood, std_err)
     end
     return model
 end
