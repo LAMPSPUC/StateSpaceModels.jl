@@ -154,7 +154,7 @@ function update_Ptt!(kalman_state::MultivariateKalmanState{Fl}, Z::Matrix{Fl}) w
 end
 
 function repeat_P_in_Ptt!(kalman_state::MultivariateKalmanState{Fl}) where Fl
-    for i in axes(kalman_state.P, 1), j in axes(kalman_state.P, 2)
+    for j in axes(kalman_state.P, 1), i in axes(kalman_state.P, 2)
         kalman_state.Ptt[i, j] = kalman_state.P[i, j]
     end
     return kalman_state

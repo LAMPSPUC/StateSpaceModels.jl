@@ -14,7 +14,6 @@ using CSV, DataFrames
     @test_throws ErrorException get_filtered_state_variance(model)
     @test_throws ErrorException get_predictive_state(model)
     @test_throws ErrorException get_predictive_state_variance(model)
-    @test_throws ErrorException show(stdout, results(model))
 
     fit!(model)
     @test loglike(model) ≈ -632.5376 atol = 1e-5 rtol = 1e-5
@@ -71,7 +70,7 @@ using CSV, DataFrames
 
     filter = kalman_filter(model)
     smoother = kalman_smoother(model)
-    @test filter.Ptt[end] == smoother.V[end] # by construction
+    @test filter.Ptt[end] ≈ smoother.V[end] atol = 1e-7 # by construction
 
     for t in 2:(length(model.system.y) - 1)
         @test filter.Ptt[t][1] > smoother.V[t][1] # by construction

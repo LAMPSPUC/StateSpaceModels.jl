@@ -131,7 +131,7 @@ end
 
 function update_att!(kalman_state::UnivariateKalmanState{Fl}, Z::Vector{Fl}) where Fl
     copyto!(kalman_state.att, kalman_state.a)
-    @inbounds for i in axes(kalman_state.P, 1), j in axes(kalman_state.P, 2)
+    @inbounds for j in axes(kalman_state.P, 1), i in axes(kalman_state.P, 2)
         kalman_state.att[i] +=
             (kalman_state.v / kalman_state.F) * kalman_state.P[i, j] * Z[j]
     end
@@ -162,7 +162,7 @@ function update_Ptt!(kalman_state::UnivariateKalmanState{Fl}) where Fl
 end
 
 function repeat_P_in_Ptt!(kalman_state::UnivariateKalmanState{Fl}) where Fl
-    for i in axes(kalman_state.P, 1), j in axes(kalman_state.P, 2)
+    for j in axes(kalman_state.P, 1), i in axes(kalman_state.P, 2)
         kalman_state.Ptt[i, j] = kalman_state.P[i, j]
     end
     return kalman_state

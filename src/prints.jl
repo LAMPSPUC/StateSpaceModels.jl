@@ -1,20 +1,24 @@
-function Base.show(io::IO, results::Results{Fl}) where Fl
+"""
+    print_results(model::StateSpaceModel)
+
+Query the results of the optimization called by `fit!`.
+"""
+function print_results(model::StateSpaceModel)
+    results = get_results(model)
     if !isempty(results)
-        println(io, "                             Results                           ")
-        println(io, "===============================================================" * adjust_charachters("=", results.coef_table))
-        println(io, "Model:                        ", results.model_name)
-        println(io, "Number of observations:       ", results.num_observations)
-        println(io, "Number of unknown parameters: ", results.num_hyperparameters)
-        println(io, "Log-likelihood:               ", pretty_number(results.llk))
-        println(io, "AIC:                          ", pretty_number(results.aic))
-        println(io, "AICc:                         ", pretty_number(results.aicc))
-        println(io, "BIC:                          ", pretty_number(results.bic))
-        print_coef_table(io, results.coef_table)
+        println("                             Results                           ")
+        println("===============================================================" * adjust_charachters("=", results.coef_table))
+        println("Model:                        ", results.model_name)
+        println("Number of observations:       ", results.num_observations)
+        println("Number of unknown parameters: ", results.num_hyperparameters)
+        println("Log-likelihood:               ", pretty_number(results.llk))
+        println("AIC:                          ", pretty_number(results.aic))
+        println("AICc:                         ", pretty_number(results.aicc))
+        println("BIC:                          ", pretty_number(results.bic))
+        print_coef_table(results.coef_table)
     else
-        # Up to discussion of what should be the behaviour
-        error("You must call fit! to get results.")
+        println("Results are empty.")
     end
-    return nothing
 end
 
 function Base.show(io::IO, model::StateSpaceModel)
@@ -22,14 +26,14 @@ function Base.show(io::IO, model::StateSpaceModel)
     return nothing
 end
 
-function print_coef_table(io::IO, coef_table::CoefficientTable{Fl}) where Fl
+function print_coef_table(coef_table::CoefficientTable{Fl}) where Fl
     # The repeats adjust the space for large names
-    println(io, "---------------------------------------------------------------" * adjust_charachters("-", coef_table))
-    println(io, "Parameter" * adjust_charachters(" ", coef_table) * "      Estimate      Std.Error      z stat      p-value")
+    println("---------------------------------------------------------------" * adjust_charachters("-", coef_table))
+    println("Parameter" * adjust_charachters(" ", coef_table) * "      Estimate      Std.Error      z stat      p-value")
     offset = 1
     for i in 1:length(coef_table)
         p_c, p_std, p_z_stat, p_p_val = print_coef(coef_table, offset)
-        println(io, build_print(p_c, p_std, p_z_stat, p_p_val, offset, coef_table))
+        println(build_print(p_c, p_std, p_z_stat, p_p_val, offset, coef_table))
         offset += 1
     end
     return nothing

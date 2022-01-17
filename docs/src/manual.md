@@ -19,7 +19,7 @@ model = LocalLevel(y)
 
 fit!(model)
 
-results(model)
+print_results(model)
 
 forec = forecast(model, 10)
 
