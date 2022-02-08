@@ -7,7 +7,7 @@
     for d in eachindex(dists)
         dists[d] = Normal(forec.expected_value[d][1], sqrt(forec.covariance[d][1]))
     end
-    n = length_observations(model)
+    n = num_observations(model)
     forec_idx = collect(n + 1: n + length(forec.expected_value))
     fillrange_color = :steelblue
     # Plot the series
@@ -47,7 +47,7 @@ RecipesBase.@recipe function f(model::Union{StateSpaceModel, NaiveModel},
     if !isunivariate(model)
         error("This plot recipe currently works for univariate models only.")
     end
-    n = length_observations(model)
+    n = num_observations(model)
     n_scen = size(scenarios, 3)
     scenarios_idx = collect(n + 1: n + size(scenarios, 1))
     # Plot the series
