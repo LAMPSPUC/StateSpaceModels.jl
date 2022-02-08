@@ -5,7 +5,7 @@ function isfitted(model::NaiveModel)
 end
 
 isunivariate(model::NaiveModel) = true
-length_observations(model::NaiveModel) = length(model.y)
+num_observations(model::NaiveModel) = length(model.y)
 observations(model::NaiveModel) = model.y
 get_standard_residuals(model::NaiveModel) = model.residuals ./ sqrt(model.sigma2)
 typeof_model_elements(model::NaiveModel) = eltype(model.y)

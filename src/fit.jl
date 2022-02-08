@@ -51,7 +51,7 @@ function fit!(
     if save_hyperparameter_distribution
         numerical_hessian = Optim.hessian!(func, opt_hyperparameters)
         try 
-            std_err = numerical_hessian |> pinv |> diag .|> sqrt
+            std_err = sqrt.(diag(inv(numerical_hessian)) ./ (num_observations(model) - filter.skip_llk_instants))
             fill_results!(model, opt_loglikelihood, std_err)
         catch
             @warn(
