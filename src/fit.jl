@@ -60,8 +60,8 @@ function fit!(
                 "If you are interested in estimates of the distribution of ther hyperparameters we advise you to" *
                 "change the optimization algorithm by using the kwarg fit(...; optimizer = "*
                 "Optimizer(StateSpaceModels.Optim.THE_METHOD_OF_YOUR_CHOICE()))" * 
-                "The list of possible algorithms can be found on this link https://julianlsolvers.github.io/Optim.jl/stable/#" * 
-                "Otherwise you can simply skip this proccess by using fit(...; save_hyperparameter_distribution=false) "
+                "The list of possible algorithms can be found on this link https://julianlsolvers.github.io/Optim.jl/stable/# " * 
+                "otherwise you can simply skip this proccess by using fit(...; save_hyperparameter_distribution=false) "
             )
             std_err = fill(NaN, number_hyperparameters(model))
             fill_results!(model, opt_loglikelihood, std_err)
