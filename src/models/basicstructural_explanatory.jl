@@ -42,8 +42,8 @@ mutable struct BasicStructuralExplanatory <: StateSpaceModel
             1 1 zeros(Fl, 1, s - 1) zeros(Fl, 1, num_exogenous)
             0 1 zeros(Fl, 1, s - 1) zeros(Fl, 1, num_exogenous)
             0 0 -ones(Fl, 1, s - 1) zeros(Fl, 1, num_exogenous)
-            zeros(Fl, s - 2, 2) Matrix{Fl}(I, s - 2, s - 2) zeros(Fl, s - 2) zeros(Fl, 10, num_exogenous)
-            zeros(Fl, num_exogenous, 13) Matrix{Fl}(I, num_exogenous, num_exogenous)
+            zeros(Fl, s - 2, 2) Matrix{Fl}(I, s - 2, s - 2) zeros(Fl, s - 2) zeros(Fl, s - 2, num_exogenous)
+            zeros(Fl, num_exogenous, s + 1) Matrix{Fl}(I, num_exogenous, num_exogenous) 
         ] for _ in 1:num_observations]
         R = [[
             Matrix{Fl}(I, 3, 3)

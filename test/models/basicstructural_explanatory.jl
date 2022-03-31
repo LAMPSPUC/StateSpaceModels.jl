@@ -3,6 +3,9 @@
     y = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
     logap = log.(y.passengers)
     X = rand(length(logap), 2)
+    model = BasicStructuralExplanatory(logap, 10, X)
+    fit!(model)
+    model.results
     model = BasicStructuralExplanatory(logap, 12, X)
     fit!(model)
     model.results
