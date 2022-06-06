@@ -27,7 +27,7 @@ mutable struct LocalLevelExplanatoryTimeVarying <: StateSpaceModel
     results::Results
     exogenous::Matrix
 
-    function LocalLevelExplanatoryTimeVarying(y::Vector{Fl}, X::Matrix{Fl}) where Fl
+    function LocalLevelExplanatoryTimeVarying(y::Vector{Fl}, X::Matrix{Fl}; names_of_exogeneous = []) where Fl
 
         @assert length(y) == size(X, 1)
 
@@ -47,7 +47,11 @@ mutable struct LocalLevelExplanatoryTimeVarying <: StateSpaceModel
         system = LinearUnivariateTimeVariant{Fl}(y, Z, T, R, d, c, H, Q)
 
         # Define hyperparameters names
-        names = [["sigma2_ε", "sigma2_η"];["β_$i" for i in 1:num_exogenous]; ["tau2_$i" for i in 1:num_exogenous]]
+        if isempty(names_of_exogeneous)
+            names = [["sigma2_ε", "sigma2_η"];["β_$i" for i in 1:num_exogenous]; ["tau2_$i" for i in 1:num_exogenous]]
+        else
+            names = [["sigma2_ε", "sigma2_η"];[name * "_β" for name in names_of_exogeneous]; [name * "_τ2" for name in names_of_exogeneous]]
+        end
         hyperparameters = HyperParameters{Fl}(names)
 
         return new(hyperparameters, system, Results{Fl}(), X)
