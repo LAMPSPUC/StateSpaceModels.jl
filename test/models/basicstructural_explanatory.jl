@@ -2,7 +2,7 @@
     @test has_fit_methods(BasicStructuralExplanatory)
     y = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
     logap = log.(y.passengers)
-    X = rand(length(logap), 2)
+    X = ones(length(logap), 2)
     model = BasicStructuralExplanatory(logap, 12, X)
     fit!(model)
     model = BasicStructuralExplanatory(logap, 10, X)
