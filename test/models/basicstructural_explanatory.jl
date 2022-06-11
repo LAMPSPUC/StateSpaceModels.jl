@@ -2,13 +2,11 @@
     @test has_fit_methods(BasicStructuralExplanatory)
     y = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
     logap = log.(y.passengers)
-    X = rand(length(logap), 2)
-    model = BasicStructuralExplanatory(logap, 10, X)
-    fit!(model)
-    model.results
+    X = ones(length(logap), 2)
     model = BasicStructuralExplanatory(logap, 12, X)
     fit!(model)
-    model.results
+    model = BasicStructuralExplanatory(logap, 10, X)
+    fit!(model)
     # forecasting
     # For a fixed forecasting explanatory the variance must not decrease
     forec = forecast(model, ones(10, 2))

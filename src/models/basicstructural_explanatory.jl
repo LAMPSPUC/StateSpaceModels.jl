@@ -196,14 +196,17 @@ function simulate(
     standard_ε = randn(n)
     standard_η = randn(n + 1, size(sys.Q[1], 1))
 
+    num_exogenous = size(model.exogenous, 2)
+    @assert num_exogenous == size(new_exogenous, 2) "You must have the same number of exogenous variables of the model."
+
     # The first state of the simulation is the update of a_0
     alpha[1, :] .= initial_state
-    sys.Z[1][14:end] .= new_exogenous[1, :]
+    sys.Z[1][end-num_exogenous+1:end] .= new_exogenous[1, :]
     y[1] = dot(sys.Z[1], initial_state) + sys.d[1] + chol_H * standard_ε[1]
     alpha[2, :] = sys.T[1] * initial_state + sys.c[1] + sys.R[1] * chol_Q.L * standard_η[1, :]
     # Simulate scenarios
     for t in 2:n
-        sys.Z[t][14:end] .= new_exogenous[t, :]
+        sys.Z[t][end-num_exogenous+1:end] .= new_exogenous[t, :]
         y[t] = dot(sys.Z[t], alpha[t, :]) + sys.d[t] + chol_H * standard_ε[t]
         alpha[t + 1, :] = sys.T[t] * alpha[t, :] + sys.c[t] + sys.R[t] * chol_Q.L * standard_η[t, :]
     end

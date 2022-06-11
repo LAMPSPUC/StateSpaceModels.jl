@@ -1,7 +1,7 @@
 name = "StateSpaceModels"
 uuid = "99342f36-827c-5390-97c9-d7f9ee765c78"
 authors = ["raphaelsaavedra <raphael.saavedra93@gmail.com>, guilhermebodin <guilherme.b.moraes@gmail.com>, mariohsouto"]
-version = "0.6.2"
+version = "0.6.3"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -33,7 +33,8 @@ julia = "1"
 [extras]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["CSV", "DataFrames", "Test"]
+test = ["CSV", "DataFrames", "Random", "Test"]
