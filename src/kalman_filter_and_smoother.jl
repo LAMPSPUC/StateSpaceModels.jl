@@ -85,7 +85,7 @@ function get_standard_innovations(fo::FilterOutput)
     v = get_innovations(fo)
     F = get_innovations_variance(fo)
     @assert size(v, 2) == 1 # Must be univariate
-    return v[:, 1] ./ sqrt.(F[1, 1, :])
+    return v[:, 1] ./ sqrt.(F[:, 1, 1])
 end
 
 function vector_of_vector_to_matrix(vov::Vector{Vector{T}}) where T

@@ -8,7 +8,4 @@
     @test length(methods(plotdiagnostics)) == 1
     @test typeof(plotdiagnostics!) <: Function
     @test length(methods(plotdiagnostics!)) == 2
-    diagnostics = StateSpaceModels.PlotDiagnostics(kf)
-    rec = RecipesBase.apply_recipe(Dict{Symbol, Any}(), diagnostics)
-    @test length(rec) == 8
 end
