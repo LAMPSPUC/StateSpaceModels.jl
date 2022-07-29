@@ -312,6 +312,7 @@ function to_multivariate_time_variant(system::LinearUnivariateTimeVariant{Fl}) w
 end
 
 to_multivariate_time_variant(system::LinearMultivariateTimeVariant) = system
+ispossemdef(M::Matrix{Fl}) where Fl = all(i -> i >= 0.0, eigvals(M))
 
 # Functions for simulations
 function simulate(
@@ -325,7 +326,17 @@ function simulate(
     alpha = Matrix{Fl}(undef, n + 1, m)
     # Sampling errors
     chol_H = sqrt(sys.H)
-    chol_Q = cholesky(sys.Q)
+
+    if isposdef(sys.Q)
+        chol_Q = cholesky(sys.Q)
+    elseif ispossemdef(sys.Q)
+        num_states_variances = size(sys.Q, 1)
+        chol_Q = cholesky(sys.Q .+ I(num_states_variances) .* floatmin(Float64))
+        chol_Q.L[:, :] = round.(chol_Q.L; digits = 6)
+        chol_Q.U[:, :] = round.(chol_Q.U; digits = 6)
+        chol_Q.UL[:, :] = round.(chol_Q.UL; digits = 6)
+    end
+    
     standard_ε = randn(n)
     standard_η = randn(n + 2, size(sys.Q, 1))
 
@@ -357,7 +368,17 @@ function simulate(
     alpha = Matrix{Fl}(undef, n + 1, m)
     # Sampling errors
     chol_H = cholesky(sys.H)
-    chol_Q = cholesky(sys.Q)
+
+    if isposdef(sys.Q)
+        chol_Q = cholesky(sys.Q)
+    elseif ispossemdef(sys.Q)
+        num_states_variances = size(sys.Q, 1)
+        chol_Q = cholesky(sys.Q .+ I(num_states_variances) .* floatmin(Float64))
+        chol_Q.L[:, :] = round.(chol_Q.L; digits = 6)
+        chol_Q.U[:, :] = round.(chol_Q.U; digits = 6)
+        chol_Q.UL[:, :] = round.(chol_Q.UL; digits = 6)
+    end
+
     standard_ε = randn(n, size(sys.H, 1))
     standard_η = randn(n + 2, size(sys.Q, 1))
 
