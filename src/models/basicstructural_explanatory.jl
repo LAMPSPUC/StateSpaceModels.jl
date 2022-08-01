@@ -192,17 +192,7 @@ function simulate(
     alpha = Matrix{Fl}(undef, n + 1, m)
     # Sampling errors
     chol_H = sqrt(sys.H[1])
-
-    if isposdef(sys.Q[1])
-        chol_Q = cholesky(sys.Q[1])
-    elseif ispossemdef(sys.Q[1])
-        num_states_variances = size(sys.Q[1], 1)
-        chol_Q = cholesky(sys.Q[1] .+ I(num_states_variances) .* floatmin(Float64))
-        chol_Q.L[:, :] = round.(chol_Q.L; digits = 6)
-        chol_Q.U[:, :] = round.(chol_Q.U; digits = 6)
-        chol_Q.UL[:, :] = round.(chol_Q.UL; digits = 6)
-    end
-
+    chol_Q = cholesky_decomposition(sys.Q[1])
     standard_ε = randn(n)
     standard_η = randn(n + 1, size(sys.Q[1], 1))
 
