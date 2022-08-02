@@ -319,10 +319,10 @@ function cholesky_decomposition(M::Matrix{Fl}) where Fl
         return cholesky(M)
     elseif ispossemdef(M)
         size_matrix = size(M, 1)
-        chol_M = cholesky(M .+ I(size_matrix) .* floatmin(Float64))
-        chol_M.L[:, :] = round.(chol_M.L; digits = 6)
-        chol_M.U[:, :] = round.(chol_M.U; digits = 6)
-        chol_M.UL[:, :] = round.(chol_M.UL; digits = 6)
+        chol_M = cholesky(M .+ I(size_matrix) .* floatmin(Fl))
+        chol_M.L[:, :] = round.(chol_M.L; digits = 10)
+        chol_M.U[:, :] = round.(chol_M.U; digits = 10)
+        chol_M.UL[:, :] = round.(chol_M.UL; digits = 10)
 
         return chol_M
     else
