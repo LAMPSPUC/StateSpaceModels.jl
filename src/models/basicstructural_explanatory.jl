@@ -192,7 +192,7 @@ function simulate(
     alpha = Matrix{Fl}(undef, n + 1, m)
     # Sampling errors
     chol_H = sqrt(sys.H[1])
-    chol_Q = cholesky(sys.Q[1])
+    chol_Q = cholesky_decomposition(sys.Q[1])
     standard_ε = randn(n)
     standard_η = randn(n + 1, size(sys.Q[1], 1))
 

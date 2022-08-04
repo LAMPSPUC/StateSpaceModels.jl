@@ -312,6 +312,23 @@ function to_multivariate_time_variant(system::LinearUnivariateTimeVariant{Fl}) w
 end
 
 to_multivariate_time_variant(system::LinearMultivariateTimeVariant) = system
+ispossemdef(M::Matrix{Fl}) where Fl = all(i -> i >= 0.0, eigvals(M))
+
+function cholesky_decomposition(M::Matrix{Fl}) where Fl
+    if isposdef(M)
+        return cholesky(M)
+    elseif ispossemdef(M)
+        size_matrix = size(M, 1)
+        chol_M = cholesky(M .+ I(size_matrix) .* floatmin(Fl))
+        chol_M.L[:, :] = round.(chol_M.L; digits = 10)
+        chol_M.U[:, :] = round.(chol_M.U; digits = 10)
+        chol_M.UL[:, :] = round.(chol_M.UL; digits = 10)
+
+        return chol_M
+    else
+        @error("Matrix is not positive definite or semidefinite. Cholesky decomposition cannot be performed.")
+    end
+end
 
 # Functions for simulations
 function simulate(
@@ -325,7 +342,7 @@ function simulate(
     alpha = Matrix{Fl}(undef, n + 1, m)
     # Sampling errors
     chol_H = sqrt(sys.H)
-    chol_Q = cholesky(sys.Q)
+    chol_Q = cholesky_decomposition(sys.Q)
     standard_ε = randn(n)
     standard_η = randn(n + 2, size(sys.Q, 1))
 
@@ -357,7 +374,7 @@ function simulate(
     alpha = Matrix{Fl}(undef, n + 1, m)
     # Sampling errors
     chol_H = cholesky(sys.H)
-    chol_Q = cholesky(sys.Q)
+    chol_Q = cholesky_decomposition(sys.Q)
     standard_ε = randn(n, size(sys.H, 1))
     standard_η = randn(n + 2, size(sys.Q, 1))
 
