@@ -877,6 +877,52 @@ function add_model_with_changed_constant!(candidate_models, visited_models)
     return candidate_models
 end
 
+function add_first_non_seasonal_models!(
+    candidate_models::Vector{SARIMA},
+    y::Vector{Fl},
+    d::Int,
+    include_mean::Bool,
+    max_p::Int,
+    max_q::Int
+) where Fl <: AbstractFloat
+    if max_p >= 2 && max_q >= 2
+        push!(candidate_models, SARIMA(y; order = (2, d, 2), include_mean = include_mean, suppress_warns = true))
+    end
+    if max_p >= 1
+        push!(candidate_models, SARIMA(y; order = (1, d, 0), include_mean = include_mean, suppress_warns = true))
+    end
+    if max_q >= 1
+        push!(candidate_models, SARIMA(y; order = (0, d, 1), include_mean = include_mean, suppress_warns = true))
+    end
+    push!(candidate_models, SARIMA(y; order = (0, d, 0), include_mean = include_mean, suppress_warns = true))
+    return candidate_models
+end
+
+function add_first_seasonal_models!(
+    candidate_models::Vector{SARIMA},
+    y::Vector{Fl},
+    d::Int,
+    D::Int,
+    include_mean::Bool,
+    max_p::Int,
+    max_q::Int,
+    max_P::Int,
+    max_Q::Int,
+    seasonal::Int
+) where Fl <: AbstractFloat
+    if max_p >= 2 && max_q >= 2 && max_P >= 1 && max_Q >= 1
+        push!(candidate_models, SARIMA(y; order = (2, d, 2), seasonal_order = (1, D, 1, seasonal) , include_mean = include_mean, suppress_warns = true))
+    end
+    if max_p >= 1 && max_P >= 1
+        push!(candidate_models, SARIMA(y; order = (1, d, 0), seasonal_order = (1, D, 0, seasonal) , include_mean = include_mean, suppress_warns = true))
+    end
+    if max_q >= 1 && max_Q >= 1
+        push!(candidate_models, SARIMA(y; order = (0, d, 1), seasonal_order = (0, D, 1, seasonal) , include_mean = include_mean, suppress_warns = true))
+    end
+    push!(candidate_models, SARIMA(y; order = (0, d, 0), seasonal_order = (0, D, 0, seasonal) , include_mean = include_mean, suppress_warns = true))
+    return candidate_models
+end
+
 """
     auto_arima(y::Vector{Fl};
                seasonal::Int = 0,
@@ -928,13 +974,13 @@ function auto_arima(y::Vector{Fl};
     @assert D <= max_D
     @assert d >= -1
     @assert d <= max_d
-    @assert max_p > 0
-    @assert max_q > 0
-    @assert max_d > 0
-    @assert max_P > 0
-    @assert max_D > 0
-    @assert max_Q > 0
-    @assert max_order > 0
+    @assert max_p >= 0
+    @assert max_q >= 0
+    @assert max_d >= 0
+    @assert max_P >= 0
+    @assert max_D >= 0
+    @assert max_Q >= 0
+    @assert max_order >= 0
     @assert information_criteria in ["aic", "aicc", "bic"]
     @assert integration_test in ["kpss"]
     @assert seasonal_integration_test in ["seas", "ch"]
@@ -958,15 +1004,27 @@ function auto_arima(y::Vector{Fl};
 
     # fit the first four models
     if seasonal == 0
-        push!(candidate_models, SARIMA(y; order = (2, d, 2), include_mean = include_mean, suppress_warns = true))
-        push!(candidate_models, SARIMA(y; order = (0, d, 0), include_mean = include_mean, suppress_warns = true))
-        push!(candidate_models, SARIMA(y; order = (1, d, 0), include_mean = include_mean, suppress_warns = true))
-        push!(candidate_models, SARIMA(y; order = (0, d, 1), include_mean = include_mean, suppress_warns = true))
+        add_first_non_seasonal_models!(
+            candidate_models,
+            y,
+            d,
+            include_mean,
+            max_p,
+            max_q
+        )
     else
-        push!(candidate_models, SARIMA(y; order = (2, d, 2), seasonal_order = (1, D, 1, seasonal) , include_mean = include_mean, suppress_warns = true))
-        push!(candidate_models, SARIMA(y; order = (0, d, 0), seasonal_order = (0, D, 0, seasonal) , include_mean = include_mean, suppress_warns = true))
-        push!(candidate_models, SARIMA(y; order = (1, d, 0), seasonal_order = (1, D, 0, seasonal) , include_mean = include_mean, suppress_warns = true))
-        push!(candidate_models, SARIMA(y; order = (0, d, 1), seasonal_order = (0, D, 1, seasonal) , include_mean = include_mean, suppress_warns = true))
+        add_first_seasonal_models!(
+            candidate_models,
+            y,
+            d,
+            D,
+            include_mean,
+            max_p,
+            max_q,
+            max_P,
+            max_Q,
+            seasonal
+        )
     end
 
     fit_candidate_models!(candidate_models, show_trace)

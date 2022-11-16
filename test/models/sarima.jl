@@ -101,6 +101,13 @@
     @test model.order.q == 1
     @test model.include_mean == false
 
+    model = auto_arima(dinternet; max_q = 0)
+    @test model.order.q == 0
+
+    model = auto_arima(dinternet; max_q = 0, max_p = 0)
+    @test model.order.p == 0
+    @test model.order.q == 0
+
     nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
     model = auto_arima(nile.flow; d = 1, show_trace = true)
     @test model.order.p == 1
