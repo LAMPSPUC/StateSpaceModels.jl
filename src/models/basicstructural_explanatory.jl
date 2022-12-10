@@ -136,8 +136,9 @@ end
 
 has_exogenous(::BasicStructuralExplanatory) = true
 
-# BasicStructuralExplanatory requires a custom simulation
-
+# # BasicStructuralExplanatory requires a custom simulation
+# TODO this structure should be used to simulate any model with 
+# time variant systems
 function simulate_scenarios(
     model::BasicStructuralExplanatory,
     steps_ahead::Int,
@@ -145,74 +146,34 @@ function simulate_scenarios(
     new_exogenous::Matrix{Fl};
     filter::KalmanFilter=default_filter(model),
 ) where Fl
-    @assert steps_ahead == size(new_exogenous, 1) "new_exogenous must have the same dimension as steps_ahead"
-    # Query the type of model elements
-    fo = kalman_filter(model)
-    last_state = fo.a[end]
-    num_series = size(model.system.y, 2)
 
-    scenarios = Array{Fl,3}(undef, steps_ahead, num_series, n_scenarios)
+    # Query the last state of the fitted model
+    fo = kalman_filter(model; filter = filter)
+    last_state = fo.a[end]
+
+    # Reinstantiate a model with the observations and 
+    # exogenous to simulate the scenarios
+    num_observations = length(model.system.y)
+    steps_ahead = size(new_exogenous, 1)
+    simulating_y = [model.system.y; fill(NaN, steps_ahead)]
+    simulating_X = [model.exogenous; new_exogenous]
+    model_with_all_timestamps = reinstantiate(model, simulating_y, simulating_X)
+
+    # Cut from the original system all of the observations entries
+    system_to_simulate = LinearUnivariateTimeVariant{Fl}(
+        model_with_all_timestamps.system.y[num_observations+1:end],
+        model_with_all_timestamps.system.Z[num_observations+1:end],
+        model_with_all_timestamps.system.T[num_observations+1:end],
+        model_with_all_timestamps.system.R[num_observations+1:end],
+        model_with_all_timestamps.system.d[num_observations+1:end],
+        model_with_all_timestamps.system.c[num_observations+1:end],
+        model_with_all_timestamps.system.H[num_observations+1:end],
+        model_with_all_timestamps.system.Q[num_observations+1:end],
+    )
+
+    scenarios = Array{Fl,3}(undef, steps_ahead, 1, n_scenarios)
     for s in 1:n_scenarios
-        scenarios[:, :, s] = simulate(model, last_state, steps_ahead, new_exogenous)
+        scenarios[:, :, s] = simulate(system_to_simulate, last_state, steps_ahead)
     end
     return scenarios
-end
-
-function simulate_scenarios(
-    model::BasicStructuralExplanatory,
-    steps_ahead::Int,
-    n_scenarios::Int,
-    new_exogenous::Array{Fl, 3};
-    filter::KalmanFilter=default_filter(model),
-) where Fl
-    @assert steps_ahead == size(new_exogenous, 1) "new_exogenous must have the same dimension of steps_ahead"
-    @assert n_scenarios == size(new_exogenous, 3) "new_exogenous must have the same number of scenarios of n_scenarios"
-    # Query the type of model elements
-    fo = kalman_filter(model)
-    last_state = fo.a[end]
-    num_series = size(model.system.y, 2)
-
-    scenarios = Array{Fl,3}(undef, steps_ahead, num_series, n_scenarios)
-    for s in 1:n_scenarios
-        scenarios[:, :, s] = simulate(model, last_state, steps_ahead, new_exogenous[:, :, s])
-    end
-    return scenarios
-end
-
-function simulate(
-    model::BasicStructuralExplanatory,
-    initial_state::Vector{Fl},
-    n::Int,
-    new_exogenous::Matrix{Fl};
-    return_simulated_states::Bool=false,
-) where Fl
-    sys = model.system
-    m = size(sys.T[1], 1)
-    y = Vector{Fl}(undef, n)
-    alpha = Matrix{Fl}(undef, n + 1, m)
-    # Sampling errors
-    chol_H = sqrt(sys.H[1])
-    chol_Q = cholesky_decomposition(sys.Q[1])
-    standard_ε = randn(n)
-    standard_η = randn(n + 1, size(sys.Q[1], 1))
-
-    num_exogenous = size(model.exogenous, 2)
-    @assert num_exogenous == size(new_exogenous, 2) "You must have the same number of exogenous variables of the model."
-
-    # The first state of the simulation is the update of a_0
-    alpha[1, :] .= initial_state
-    sys.Z[1][end-num_exogenous+1:end] .= new_exogenous[1, :]
-    y[1] = dot(sys.Z[1], initial_state) + sys.d[1] + chol_H * standard_ε[1]
-    alpha[2, :] = sys.T[1] * initial_state + sys.c[1] + sys.R[1] * chol_Q.L * standard_η[1, :]
-    # Simulate scenarios
-    for t in 2:n
-        sys.Z[t][end-num_exogenous+1:end] .= new_exogenous[t, :]
-        y[t] = dot(sys.Z[t], alpha[t, :]) + sys.d[t] + chol_H * standard_ε[t]
-        alpha[t + 1, :] = sys.T[t] * alpha[t, :] + sys.c[t] + sys.R[t] * chol_Q.L * standard_η[t, :]
-    end
-
-    if return_simulated_states
-        return y, alpha[1:n, :]
-    end
-    return y
 end

@@ -363,6 +363,37 @@ function simulate(
 end
 
 function simulate(
+    sys::LinearUnivariateTimeVariant{Fl},
+    initial_state::Vector{Fl},
+    n::Int;
+    return_simulated_states::Bool=false,
+) where Fl
+    m = size(sys.T[1], 1)
+    y = Vector{Fl}(undef, n)
+    alpha = Matrix{Fl}(undef, n + 1, m)
+    # Sampling errors
+    chol_H = sqrt.(sys.H)
+    chol_Q = cholesky_decomposition.(sys.Q)
+    standard_ε = randn(n)
+    standard_η = randn(n + 2, size(sys.Q[1], 1))
+
+    # The first state of the simulation is the update of a_0
+    alpha[1, :] .= initial_state .+ sys.R[1] * chol_Q[1].L * standard_η[1, :]
+    y[1] = dot(sys.Z[1], alpha[1, :]) + sys.d[1] + chol_H[1] * standard_ε[1]
+    alpha[2, :] = sys.T[1] * alpha[1, :] + sys.c[1] + sys.R[1] * chol_Q[1].L * standard_η[2, :]
+    # Simulate scenarios
+    for t in 2:n
+        y[t] = dot(sys.Z[t], alpha[t, :]) + sys.d[t] + chol_H[t] * standard_ε[t]
+        alpha[t + 1, :] = sys.T[t] * alpha[t, :] + sys.c[t] + sys.R[t] * chol_Q[t].L * standard_η[t + 1, :]
+    end
+
+    if return_simulated_states
+        return y, alpha[1:n, :]
+    end
+    return y
+end
+
+function simulate(
     sys::LinearMultivariateTimeInvariant{Fl},
     initial_state::Vector{Fl},
     n::Int;
