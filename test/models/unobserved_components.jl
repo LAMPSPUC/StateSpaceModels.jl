@@ -40,4 +40,9 @@
     @test minimum(alpha[:, 1]) <= 296
     @test maximum(alpha[:, 2]) >= 7.5
     @test minimum(alpha[:, 2]) <= -7.5
+
+    # Testing that it does not break
+    rj_temp = CSV.File(StateSpaceModels.RJ_TEMPERATURE) |> DataFrame
+    model = UnobservedComponents(rj_temp.Values; trend = "smooth trend", cycle = "stochastic")
+    fit!(model)
 end

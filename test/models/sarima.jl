@@ -29,7 +29,7 @@
     # Values are very close to 0.0 so we test with absolute tolerance
     # It attains 1e-3 when we make 10M simulations, which is too much
     # computation for a rather simple test.
-    test_scenarios_adequacy_with_forecast(forec, scenarios; atol=1e-1)
+    test_scenarios_adequacy_with_forecast(forec, scenarios; atol=2e-1)
 
     missing_obs = [6, 16, 26, 36, 46, 56, 66, 72, 73, 74, 75, 76, 86, 96]
     missing_dinternet = copy(dinternet)

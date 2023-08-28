@@ -461,7 +461,7 @@ function initial_hyperparameters!(model::UnobservedComponents)
     if model.has_irregular
         initial_hyperparameters["sigma2_irregular"] = observed_variance
     end
-    if model.has_trend
+    if model.stochastic_trend
         initial_hyperparameters["sigma2_trend"] = observed_variance
     end
     if model.has_cycle
