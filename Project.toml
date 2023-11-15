@@ -1,7 +1,7 @@
 name = "StateSpaceModels"
 uuid = "99342f36-827c-5390-97c9-d7f9ee765c78"
 authors = ["raphaelsaavedra <raphael.saavedra93@gmail.com>, guilhermebodin <guilherme.b.moraes@gmail.com>, mariohsouto"]
-version = "0.6.7"
+version = "0.7.0"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -26,8 +26,8 @@ OrderedCollections = "1"
 Polynomials = "1, 2"
 RecipesBase = "1"
 SeasonalTrendLoess = "0.1"
-ShiftedArrays = "1"
-StatsBase = "0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33"
+ShiftedArrays = "1, 2"
+StatsBase = "0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33, 0.34"
 julia = "1"
 
 [extras]
