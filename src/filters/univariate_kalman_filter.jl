@@ -195,9 +195,14 @@ function update_P!(
 end
 
 function update_llk!(kalman_state::UnivariateKalmanState{Fl}) where Fl
-    kalman_state.llk -= (
-        HALF_LOG_2_PI + (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F) / 2
-    )
+    try
+        kalman_state.llk -= (
+            HALF_LOG_2_PI + (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F) / 2
+        )
+    catch err
+        println(err)
+        println(kalman_state.F) # log gets negative value
+    end
     return kalman_state
 end
 
