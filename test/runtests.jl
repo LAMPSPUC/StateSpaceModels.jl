@@ -5,6 +5,7 @@ using Random
 using RecipesBase
 using StateSpaceModels
 using Statistics
+using Distributions
 using Test
 
 # Functions that are used in different tests
@@ -24,6 +25,8 @@ include("models/basicstructural_explanatory.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
 include("models/unobserved_components.jl")
+include("models/unobserved_components_explanatory.jl")
+
 include("models/linear_regression.jl")
 include("models/exponential_smoothing.jl")
 include("models/naive_models.jl")
