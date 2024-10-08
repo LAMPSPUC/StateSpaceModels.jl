@@ -25,7 +25,6 @@ include("models/basicstructural_explanatory.jl")
 include("models/basicstructural_multivariate.jl")
 include("models/sarima.jl")
 include("models/unobserved_components.jl")
-include("models/unobserved_components_explanatory.jl")
 
 include("models/linear_regression.jl")
 include("models/exponential_smoothing.jl")
