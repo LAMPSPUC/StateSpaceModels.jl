@@ -88,7 +88,6 @@ export SparseUnivariateKalmanFilter
 export StateSpaceModel
 export UnivariateKalmanFilter
 export UnobservedComponents
-export UnobservedComponentsExplanatory
 export VehicleTracking
 
 # Exported functions

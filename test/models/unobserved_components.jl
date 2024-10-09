@@ -97,4 +97,17 @@ end
     alpha = get_smoothed_state(smoother)
     @test size(alpha) == (144, 16)
 
+    @test_throws AssertionError simulate_scenarios(model, 10, 1000, ones(5, 2))
+    model_sim = deepcopy(model)
+    scenarios = simulate_scenarios(model_sim, 10, 100000, X_test)
+    test_scenarios_adequacy_with_forecast(forec, scenarios)
+    #build X_test as 3D array, where all the scenarios are the same
+    X_test_3d = ones(10, 3, 500)
+    for i in 1:500
+        X_test_3d[:, :, i] = X_test
+    end
+    model_sim2 = deepcopy(model)
+    scenarios = simulate_scenarios(model_sim2, 10, 500, X_test_3d)
+    test_scenarios_adequacy_with_forecast(forec, scenarios)
+
 end

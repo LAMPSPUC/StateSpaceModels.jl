@@ -685,3 +685,85 @@ function reinstantiate(model::UnobservedComponents, y::Vector{Fl}, X::Matrix{Fl}
                                 seasonal = model.seasonal,
                                 cycle = model.cycle)
 end
+
+
+# UnobservedComponents with explanatory requires a custom simulation
+
+function simulate_scenarios(
+    model::UnobservedComponents,
+    steps_ahead::Int,
+    n_scenarios::Int,
+    new_exogenous::Matrix{Fl};
+    filter::KalmanFilter=default_filter(model),
+) where Fl
+    @assert steps_ahead == size(new_exogenous, 1) "new_exogenous must have the same dimension as steps_ahead"
+    # Query the type of model elements
+    fo = kalman_filter(model)
+    last_state = fo.a[end]
+    num_series = size(model.system.y, 2)
+
+    scenarios = Array{Fl,3}(undef, steps_ahead, num_series, n_scenarios)
+    for s in 1:n_scenarios
+        scenarios[:, :, s] = simulate(model, last_state, steps_ahead, new_exogenous)
+    end
+    return scenarios
+end
+
+function simulate_scenarios(
+    model::UnobservedComponents,
+    steps_ahead::Int,
+    n_scenarios::Int,
+    new_exogenous::Array{Fl, 3};
+    filter::KalmanFilter=default_filter(model),
+) where Fl
+    @assert steps_ahead == size(new_exogenous, 1) "new_exogenous must have the same dimension of steps_ahead"
+    @assert n_scenarios == size(new_exogenous, 3) "new_exogenous must have the same number of scenarios of n_scenarios"
+    # Query the type of model elements
+    fo = kalman_filter(model)
+    last_state = fo.a[end]
+    num_series = size(model.system.y, 2)
+
+    scenarios = Array{Fl,3}(undef, steps_ahead, num_series, n_scenarios)
+    for s in 1:n_scenarios
+        scenarios[:, :, s] = simulate(model, last_state, steps_ahead, new_exogenous[:, :, s])
+    end
+    return scenarios
+end
+
+function simulate(
+    model::UnobservedComponents,
+    initial_state::Vector{Fl},
+    n::Int,
+    new_exogenous::Matrix{Fl};
+    return_simulated_states::Bool=false,
+) where Fl
+    sys = model.system
+    m = size(sys.T[1], 1)
+    y = Vector{Fl}(undef, n)
+    alpha = Matrix{Fl}(undef, n + 1, m)
+    # Sampling errors
+    chol_H = sqrt(sys.H[1])
+    chol_Q = cholesky_decomposition(sys.Q[1])
+    standard_ε = randn(n)
+    standard_η = randn(n + 1, size(sys.Q[1], 1))
+
+    num_exogenous = size(model.exogenous, 2)
+    @assert num_exogenous == size(new_exogenous, 2) "You must have the same number of exogenous variables of the model."
+
+    # The first state of the simulation is the update of a_0
+    alpha[1, :] .= initial_state
+    sys.Z[1][end-num_exogenous+1:end] .= new_exogenous[1, :]
+    y[1] = dot(sys.Z[1], initial_state) + sys.d[1] + chol_H * standard_ε[1]
+    alpha[2, :] = sys.T[1] * initial_state + sys.c[1] + sys.R[1] * chol_Q.L * standard_η[1, :]
+    # Simulate scenarios
+    for t in 2:n
+        sys.Z[t][end-num_exogenous+1:end] .= new_exogenous[t, :]
+        y[t] = dot(sys.Z[t], alpha[t, :]) + sys.d[t] + chol_H * standard_ε[t]
+        alpha[t + 1, :] = sys.T[t] * alpha[t, :] + sys.c[t] + sys.R[t] * chol_Q.L * standard_η[t, :]
+    end
+
+    if return_simulated_states
+        return y, alpha[1:n, :]
+    end
+    return y
+end
