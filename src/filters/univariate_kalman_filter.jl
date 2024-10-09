@@ -196,7 +196,7 @@ end
 
 function update_llk!(kalman_state::UnivariateKalmanState{Fl}) where Fl
     kalman_state.llk -= (
-        HALF_LOG_2_PI + (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F) / 2
+        HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
     )
     return kalman_state
 end
@@ -309,21 +309,26 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    RQR = sys.R * sys.Q * sys.R'
-    @inbounds for t in eachindex(sys.y)
-        update_kalman_state!(
-            kalman_state,
-            sys.y[t],
-            sys.Z,
-            sys.T,
-            sys.H,
-            RQR,
-            sys.d,
-            sys.c,
-            skip_llk_instants,
-            steadystate_tol,
-            t,
-        )
+    try
+        RQR = sys.R * sys.Q * sys.R'
+        @inbounds for t in eachindex(sys.y)
+            update_kalman_state!(
+                kalman_state,
+                sys.y[t],
+                sys.Z,
+                sys.T,
+                sys.H,
+                RQR,
+                sys.d,
+                sys.c,
+                skip_llk_instants,
+                steadystate_tol,
+                t,
+            )
+        end
+    catch
+        @error("Numerical error when applying Kalman filter euqations, the current state is: $kalman_state")
+        rethrow()
     end
     return kalman_state.llk
 end
@@ -335,20 +340,25 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    @inbounds for t in eachindex(sys.y)
-        update_kalman_state!(
-            kalman_state,
-            sys.y[t],
-            sys.Z[t],
-            sys.T[t],
-            sys.H[t],
-            sys.R[t],
-            sys.Q[t],
-            sys.d[t],
-            sys.c[t],
-            skip_llk_instants,
-            t,
-        )
+    try 
+        @inbounds for t in eachindex(sys.y)
+            update_kalman_state!(
+                kalman_state,
+                sys.y[t],
+                sys.Z[t],
+                sys.T[t],
+                sys.H[t],
+                sys.R[t],
+                sys.Q[t],
+                sys.d[t],
+                sys.c[t],
+                skip_llk_instants,
+                t,
+            )
+        end
+    catch
+        @error("Numerical error when applying Kalman filter euqations, the current state is: $kalman_state")
+        rethrow()
     end
     return kalman_state.llk
 end
@@ -360,23 +370,28 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    RQR = sys.R * sys.Q * sys.R'
-    save_a1_P1_in_filter_output!(filter_output, kalman_state)
-    @inbounds for t in eachindex(sys.y)
-        update_kalman_state!(
-            kalman_state,
-            sys.y[t],
-            sys.Z,
-            sys.T,
-            sys.H,
-            RQR,
-            sys.d,
-            sys.c,
-            skip_llk_instants,
-            steadystate_tol,
-            t,
-        )
-        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+    try
+        RQR = sys.R * sys.Q * sys.R'
+        save_a1_P1_in_filter_output!(filter_output, kalman_state)
+        @inbounds for t in eachindex(sys.y)
+            update_kalman_state!(
+                kalman_state,
+                sys.y[t],
+                sys.Z,
+                sys.T,
+                sys.H,
+                RQR,
+                sys.d,
+                sys.c,
+                skip_llk_instants,
+                steadystate_tol,
+                t,
+            )
+            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+        end
+    catch
+        @error("Numerical error when applying Kalman filter euqations, the current state is: $kalman_state")
+        rethrow()
     end
     return filter_output
 end
@@ -389,22 +404,27 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    save_a1_P1_in_filter_output!(filter_output, kalman_state)
-    @inbounds for t in eachindex(sys.y)
-        update_kalman_state!(
-            kalman_state,
-            sys.y[t],
-            sys.Z[t],
-            sys.T[t],
-            sys.H[t],
-            sys.R[t],
-            sys.Q[t],
-            sys.d[t],
-            sys.c[t],
-            skip_llk_instants,
-            t,
-        )
-        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+    try
+        save_a1_P1_in_filter_output!(filter_output, kalman_state)
+        @inbounds for t in eachindex(sys.y)
+            update_kalman_state!(
+                kalman_state,
+                sys.y[t],
+                sys.Z[t],
+                sys.T[t],
+                sys.H[t],
+                sys.R[t],
+                sys.Q[t],
+                sys.d[t],
+                sys.c[t],
+                skip_llk_instants,
+                t,
+            )
+            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+        end
+    catch
+        @error("Numerical error when applying Kalman filter euqations, the current state is: $kalman_state")
+        rethrow()
     end
     return filter_output
 end
