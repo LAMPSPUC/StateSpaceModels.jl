@@ -179,14 +179,9 @@ function update_P!(
 end
 
 function update_llk!(kalman_state::SparseUnivariateKalmanState{Fl}) where Fl
-    try 
-        kalman_state.llk -= (
-            HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
-        )
-    catch
-        @error("Numerical error in the log-likelihood calculation. F = $(kalman_state.F), v = $(kalman_state.v). F can only be positive.")
-        rethrow()
-    end
+    kalman_state.llk -= (
+        HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
+    )
     return kalman_state
 end
 
@@ -260,23 +255,28 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    RQR = sys.R * sys.Q * sys.R'
-    T_sparse = sparse(sys.T) 
-    Z_sparse = sparse(sys.Z)
-    @inbounds for t in eachindex(sys.y)
-        update_kalman_state!(
-            kalman_state,
-            sys.y[t],
-            Z_sparse,
-            T_sparse,
-            sys.H,
-            RQR,
-            sys.d,
-            sys.c,
-            skip_llk_instants,
-            steadystate_tol,
-            t,
-        )
+    try 
+        RQR = sys.R * sys.Q * sys.R'
+        T_sparse = sparse(sys.T) 
+        Z_sparse = sparse(sys.Z)
+        @inbounds for t in eachindex(sys.y)
+            update_kalman_state!(
+                kalman_state,
+                sys.y[t],
+                Z_sparse,
+                T_sparse,
+                sys.H,
+                RQR,
+                sys.d,
+                sys.c,
+                skip_llk_instants,
+                steadystate_tol,
+                t,
+            )
+        end
+    catch
+        @error("Numerical error when applying Kalman filter euqations, the current state is: $kalman_state")
+        rethrow()
     end
     return kalman_state.llk
 end
@@ -288,25 +288,30 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    RQR = sys.R * sys.Q * sys.R'
-    T_sparse = sparse(sys.T) 
-    Z_sparse = sparse(sys.Z)
-    save_a1_P1_in_filter_output!(filter_output, kalman_state)
-    @inbounds for t in eachindex(sys.y)
-        update_kalman_state!(
-            kalman_state,
-            sys.y[t],
-            Z_sparse,
-            T_sparse,
-            sys.H,
-            RQR,
-            sys.d,
-            sys.c,
-            skip_llk_instants,
-            steadystate_tol,
-            t,
-        )
-        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+    try
+        RQR = sys.R * sys.Q * sys.R'
+        T_sparse = sparse(sys.T) 
+        Z_sparse = sparse(sys.Z)
+        save_a1_P1_in_filter_output!(filter_output, kalman_state)
+        @inbounds for t in eachindex(sys.y)
+            update_kalman_state!(
+                kalman_state,
+                sys.y[t],
+                Z_sparse,
+                T_sparse,
+                sys.H,
+                RQR,
+                sys.d,
+                sys.c,
+                skip_llk_instants,
+                steadystate_tol,
+                t,
+            )
+            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+        end
+    catch
+        @error("Numerical error when applying Kalman filter euqations, the current state is: $kalman_state")
+        rethrow()
     end
     return filter_output
 end
