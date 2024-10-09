@@ -195,12 +195,14 @@ function update_P!(
 end
 
 function update_llk!(kalman_state::UnivariateKalmanState{Fl}) where Fl
-    if kalman_state.F < 0
-        error("Numerical error, F is negative: $(kalman_state.F)")
+    try 
+        kalman_state.llk -= (
+            HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
+        )
+    catch
+        @error("Numerical error in the log-likelihood calculation. F = $(kalman_state.F), v = $(kalman_state.v). F can only be positive.")
+        rethrow()
     end
-    kalman_state.llk -= (
-        HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
-    )
     return kalman_state
 end
 

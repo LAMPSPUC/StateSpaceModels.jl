@@ -187,13 +187,14 @@ function update_P!(
 end
 
 function update_llk!(kalman_state::MultivariateKalmanState{Fl}) where Fl
-    detF = det(kalman_state.F)
-    if detF < 0
-        error("Numerical error, the determinant of F $(kalman_state.F) is negative: $detF")
-    else
-        kalman_state.llk -=
-            HALF_LOG_2_PI + 0.5 * (log(detF) +
+    try 
+        kalman_state.llk -= (
+            HALF_LOG_2_PI + 0.5 * (logdet(kalman_state.F) +
             kalman_state.v' * inv(kalman_state.F) * kalman_state.v)
+        )
+    catch
+        @error("Numerical error in the log-likelihood calculation. F = $(kalman_state.F), v = $(kalman_state.v). det(F) can only be positive.")
+        rethrow()
     end
     return kalman_state
 end
