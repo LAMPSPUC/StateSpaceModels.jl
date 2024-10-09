@@ -187,9 +187,14 @@ function update_P!(
 end
 
 function update_llk!(kalman_state::MultivariateKalmanState{Fl}) where Fl
-    kalman_state.llk -=
-        HALF_LOG_2_PI + 0.5 * (logdet(kalman_state.F) +
-        kalman_state.v' * inv(kalman_state.F) * kalman_state.v)
+    detF = det(kalman_state.F)
+    if detF < 0
+        error("Numerical error, the determinant of F $(kalman_state.F) is negative: $detF")
+    else
+        kalman_state.llk -=
+            HALF_LOG_2_PI + 0.5 * (log(detF) +
+            kalman_state.v' * inv(kalman_state.F) * kalman_state.v)
+    end
     return kalman_state
 end
 

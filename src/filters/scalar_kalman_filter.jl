@@ -125,6 +125,9 @@ function scalar_update_P!(kalman_state::ScalarKalmanState{Fl}, T::Fl, RQR::Fl) w
 end
 
 function update_llk!(kalman_state::ScalarKalmanState{Fl}) where Fl
+    if kalman_state.F < 0
+        error("Numerical error, F is negative: $(kalman_state.F)")
+    end
     kalman_state.llk -= (
         HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
     )
