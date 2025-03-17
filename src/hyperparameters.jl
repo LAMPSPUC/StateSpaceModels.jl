@@ -206,7 +206,7 @@ julia> set_initial_hyperparameters!(model, Dict("sigma2_η" => 100.0))
 LocalLevel
 
 julia> model.hyperparameters.constrained_values
-2-element Vector{Float64}::
+2-element Vector{Float64}:
  NaN  
  100.0
 ```
@@ -257,7 +257,7 @@ the model estimation.
 # Example
 ```jldoctest
 julia> model = LocalLevel(rand(100))
-LocalLevel model
+LocalLevel
 
 julia> get_names(model)
 2-element Vector{String}:
@@ -265,7 +265,7 @@ julia> get_names(model)
  "sigma2_η"
 
 julia> fix_hyperparameters!(model, Dict("sigma2_ε" => 100.0))
-LocalLevel model
+LocalLevel
 
 julia> model.hyperparameters.fixed_constrained_values
 Dict{String,Float64} with 1 entry:
