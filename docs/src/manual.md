@@ -100,6 +100,10 @@ LinearMultivariateTimeVariant
 
 The model hyperparameters are constant (non-time-varying) parameters that are optimized when [`fit!`](@ref) is called. The package provides some useful functions to accelerate experimentation and custom model development.
 
+```@docs
+StateSpaceModels.HyperParameters
+```
+
 The getters are:
 ```@docs
 get_names
@@ -124,14 +128,17 @@ unconstrain_identity!
 
 ## Filters and smoothers
 
-StateSpaceModels.jl lets users define tailor-made filters in an easy manner. TODO docs here
+StateSpaceModels.jl lets users define tailor-made filters in an easy manner.
 
 ```@docs
 UnivariateKalmanFilter
 ScalarKalmanFilter
 SparseUnivariateKalmanFilter
+MultivariateKalmanFilter
 FilterOutput
 SmootherOutput
+kalman_filter
+kalman_smoother
 get_innovations
 get_innovations_variance
 get_filtered_state
@@ -152,6 +159,7 @@ Optimizer
 results
 has_fit_methods
 isfitted
+print_results
 ```
 
 ## Forecasting and simulating
@@ -199,7 +207,7 @@ plot(model, ks)
 using StateSpaceModels, CSV, DataFrames, Plots
 
 finland_fatalities = CSV.File(StateSpaceModels.NILE) |> DataFrame
-model = UnobservedComponents(nile; trend = "local level", cycle = "stochastic")
+model = UnobservedComponents(finland_fatalities; trend = "local level", cycle = "stochastic")
 fit!(model)
 kf = kalman_filter(model)
 
@@ -219,4 +227,5 @@ StateSpaceModels.RJ_TEMPERATURE
 StateSpaceModels.VEHICLE_FATALITIES
 StateSpaceModels.WHOLESALE_PRICE_INDEX
 StateSpaceModels.US_CHANGE
+StateSpaceModels.SUNSPOTS_YEAR
 ```

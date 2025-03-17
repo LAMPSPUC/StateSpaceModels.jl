@@ -1,8 +1,3 @@
-"""
-    MultivariateKalmanState{Fl <: AbstractFloat}
-
-A Kalman filter that is tailored to multivariate systems.
-"""
 mutable struct MultivariateKalmanState{Fl<:AbstractFloat}
     v::Vector{Fl}
     F::Matrix{Fl}

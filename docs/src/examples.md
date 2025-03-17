@@ -197,7 +197,7 @@ plot(df.date, get_smoothed_state(smoother_output)[:, 2], label = "slope")
 
 This example illustrates how to perform vehicle tracking from noisy data.
 
-```@setup bt
+```@setup vehicle_tracking
 using StateSpaceModels, Random
 using Plots
 ```
