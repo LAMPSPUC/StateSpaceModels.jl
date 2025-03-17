@@ -209,7 +209,7 @@ function filter_recursions!(
             )
         end
     catch
-        @error("Numerical error when applying Kalman filter euqations, the current state is: $kalman_state")
+        @error("Numerical error when applying Kalman filter equations")
         rethrow()
     end
     return kalman_state.llk
@@ -242,7 +242,7 @@ function filter_recursions!(
             save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
         end
     catch
-        @error("Numerical error when applying Kalman filter euqations, the current state is: $kalman_state")
+        @error("Numerical error when applying Kalman filter equations")
         rethrow()
     end
     return filter_output

@@ -10,7 +10,7 @@ observations(model::StateSpaceModel) = model.system.y
 function lagmat(y::Vector{Fl}, k::Int) where Fl
     X = Matrix{Fl}(undef, length(y) - k, k)
     for i in 1:k
-        X[:, i] = lag(y, i)[k + 1:end]
+        X[:, i] = ShiftedArrays.lag(y, i)[k + 1:end]
     end
     return X
 end
