@@ -78,6 +78,7 @@ export LocalLevelCycle
 export LocalLevelExplanatory
 export LocalLinearTrend
 export MultivariateBasicStructural
+export MultivariateKalmanFilter
 export Naive
 export Optimizer
 export SARIMA

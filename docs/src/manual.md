@@ -206,8 +206,8 @@ plot(model, ks)
 ```@example
 using StateSpaceModels, CSV, DataFrames, Plots
 
-finland_fatalities = CSV.File(StateSpaceModels.NILE) |> DataFrame
-model = UnobservedComponents(finland_fatalities; trend = "local level", cycle = "stochastic")
+nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
+model = UnobservedComponents(nile.flow; trend = "local level", cycle = "stochastic")
 fit!(model)
 kf = kalman_filter(model)
 
