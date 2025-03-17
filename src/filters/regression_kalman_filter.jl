@@ -1,10 +1,8 @@
-"""
-    RegressionKalmanState{Fl <: AbstractFloat}
+#     RegressionKalmanState{Fl <: AbstractFloat}
 
-Similar to the univariate Kalman filter, but exploits the structure of the regression system
-matrices - in particular, the fact that the variance of the state (`P`) is always zero, as
-well as `R` and `Q`.
-"""
+# Similar to the univariate Kalman filter, but exploits the structure of the regression system
+# matrices - in particular, the fact that the variance of the state (`P`) is always zero, as
+# well as `R` and `Q`.
 mutable struct RegressionKalmanState{Fl<:AbstractFloat}
     v::Fl
     F::Fl

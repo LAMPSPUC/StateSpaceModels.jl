@@ -14,16 +14,16 @@ the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) optimization algortih
 # Example
 ```jldoctest
 julia> model = LocalLevel(rand(100))
-LocalLevel model
+LocalLevel
 
 julia> fit!(model)
-LocalLevel model
+LocalLevel
 
 julia> model = LocalLinearTrend(LinRange(1, 100, 100) + rand(100))
-LocalLinearTrend model
+LocalLinearTrend
 
 julia> fit!(model; optimizer = Optimizer(StateSpaceModels.Optim.NelderMead()))
-LocalLinearTrend model
+LocalLinearTrend
 ```
 """
 function fit!(
@@ -57,9 +57,9 @@ function fit!(
             @warn(
                 "The optimization process converged but the Hessian matrix is not positive definite. " *
                 "This means that StateSpaceModels.jl cannot estimate the distribution of the hyperparameters " *
-                "If you are interested in estimates of the distribution of ther hyperparameters we advise you to" *
+                "If you are interested in estimates of the distribution of ther hyperparameters we advise you to " *
                 "change the optimization algorithm by using the kwarg fit(...; optimizer = "*
-                "Optimizer(StateSpaceModels.Optim.THE_METHOD_OF_YOUR_CHOICE()))" * 
+                "Optimizer(StateSpaceModels.Optim.THE_METHOD_OF_YOUR_CHOICE())) " * 
                 "The list of possible algorithms can be found on this link https://julianlsolvers.github.io/Optim.jl/stable/# " * 
                 "otherwise you can simply skip this proccess by using fit(...; save_hyperparameter_distribution=false) "
             )
