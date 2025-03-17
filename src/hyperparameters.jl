@@ -268,7 +268,7 @@ julia> fix_hyperparameters!(model, Dict("sigma2_ε" => 100.0))
 LocalLevel
 
 julia> model.hyperparameters.fixed_constrained_values
-Dict{String,Float64} with 1 entry:
+Dict{String, Float64} with 1 entry:
   "sigma2_ε" => 100.0
 ```
 """
