@@ -156,10 +156,9 @@ StateSpaceModels.jl has an interface for [Optim.jl](https://github.com/JuliaNLSo
 ```@docs
 fit!
 Optimizer
-results
+print_results
 has_fit_methods
 isfitted
-print_results
 ```
 
 ## Forecasting and simulating
