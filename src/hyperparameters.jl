@@ -195,18 +195,18 @@ Fill a model with user inputed initial points for hyperparameter optimzation.
 # Example
 ```jldoctest
 julia> model = LocalLevel(rand(100))
-LocalLevel model
+LocalLevel
 
 julia> get_names(model)
-2-element Array{String,1}:
+2-element Vector{String}:
  "sigma2_ε"
  "sigma2_η"
 
 julia> set_initial_hyperparameters!(model, Dict("sigma2_η" => 100.0))
-LocalLevel model
+LocalLevel
 
 julia> model.hyperparameters.constrained_values
-2-element Array{Float64,1}:
+2-element Vector{Float64}::
  NaN  
  100.0
 ```
@@ -260,7 +260,7 @@ julia> model = LocalLevel(rand(100))
 LocalLevel model
 
 julia> get_names(model)
-2-element Array{String,1}:
+2-element Vector{String}:
  "sigma2_ε"
  "sigma2_η"
 

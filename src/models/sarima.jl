@@ -89,7 +89,7 @@ In terms of a univariate structural model, this can be represented as
 # Example
 ```jldoctest
 julia> model = SARIMA(rand(100); order=(1,1,1), seasonal_order=(1,2,3,12))
-SARIMA(1, 1, 1)x(1, 2, 3, 12) model
+SARIMA(1, 1, 1)x(1, 2, 3, 12) with zero mean
 ```
 
 See more on [Airline passengers](@ref)

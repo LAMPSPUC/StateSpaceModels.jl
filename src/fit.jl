@@ -14,16 +14,16 @@ the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) optimization algortih
 # Example
 ```jldoctest
 julia> model = LocalLevel(rand(100))
-LocalLevel model
+LocalLevel
 
 julia> fit!(model)
-LocalLevel model
+LocalLevel
 
 julia> model = LocalLinearTrend(LinRange(1, 100, 100) + rand(100))
-LocalLinearTrend model
+LocalLinearTrend
 
 julia> fit!(model; optimizer = Optimizer(StateSpaceModels.Optim.NelderMead()))
-LocalLinearTrend model
+LocalLinearTrend
 ```
 """
 function fit!(
