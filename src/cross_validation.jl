@@ -41,7 +41,7 @@ end
 
 Makes rolling window estimating and forecasting to benchmark the forecasting skill of the model
 in for different time periods and different lead times. The function returns a struct with the MAE
-and mean CRPS per lead time. See more on [CrossValidation the forecasts of a model](@ref)
+and mean CRPS per lead time. See more on [Cross validation of the forecasts of a model](@ref)
 
 # References
  * DTU course "31761 - Renewables in electricity markets" available on youtube https://www.youtube.com/watch?v=Ffo8XilZAZw&t=556s
