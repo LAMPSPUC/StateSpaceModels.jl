@@ -19,7 +19,7 @@ end
 
 function Optimizer(
     method::Optim.AbstractOptimizer;
-    options=Optim.Options(; f_tol=1e-6, g_tol=1e-6, iterations=10^5, show_trace=false),
+    options=Optim.Options(; f_abstol=1e-6, g_abstol=1e-6, iterations=10^5, show_trace=false),
 )
     return Optimizer(method, options)
 end
