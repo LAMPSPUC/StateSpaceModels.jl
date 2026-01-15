@@ -56,6 +56,13 @@ function regression_update_v!(
 end
 
 function update_llk!(kalman_state::RegressionKalmanState{Fl}) where Fl
+    # Check if F is valid (positive and finite)
+    if kalman_state.F <= 0 || !isfinite(kalman_state.F)
+        # Set likelihood to NaN to signal invalid parameters
+        # The optimizer will reject this point
+        kalman_state.llk = Fl(NaN)
+        return kalman_state
+    end
     kalman_state.llk -= (
         HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
     )

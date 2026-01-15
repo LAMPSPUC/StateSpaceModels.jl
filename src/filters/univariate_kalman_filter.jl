@@ -292,6 +292,13 @@ function update_P!(
 end
 
 function update_llk!(kalman_state::UnivariateKalmanState{Fl}) where Fl
+    # Check if F is valid (positive and finite)
+    if kalman_state.F <= 0 || !isfinite(kalman_state.F)
+        # Set likelihood to NaN to signal invalid parameters
+        # The optimizer will reject this point
+        kalman_state.llk = Fl(NaN)
+        return kalman_state
+    end
     kalman_state.llk -= (
         HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
     )
@@ -409,32 +416,32 @@ function filter_recursions!(
     skip_llk_instants::Int;
     check_PD_freq::Int=50,
 ) where Fl
-    try
-        RQR = sys.R * sys.Q * sys.R'
-        @inbounds for t in eachindex(sys.y)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t],
-                sys.Z,
-                sys.T,
-                sys.H,
-                RQR,
-                sys.d,
-                sys.c,
-                skip_llk_instants,
-                steadystate_tol,
-                t,
-            )
+    RQR = sys.R * sys.Q * sys.R'
+    @inbounds for t in eachindex(sys.y)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t],
+            sys.Z,
+            sys.T,
+            sys.H,
+            RQR,
+            sys.d,
+            sys.c,
+            skip_llk_instants,
+            steadystate_tol,
+            t,
+        )
 
-            # Periodically check and enforce positive definiteness
-            # This helps catch numerical drift before it becomes severe
-            if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
-                ensure_positive_definite!(kalman_state)
-            end
+        # Early exit if likelihood becomes NaN (invalid parameters)
+        if isnan(kalman_state.llk)
+            return kalman_state.llk
         end
-    catch
-      @error("Numerical error when applying Kalman filter equations.")
-       rethrow()
+
+        # Periodically check and enforce positive definiteness
+        # This helps catch numerical drift before it becomes severe
+        if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
+            ensure_positive_definite!(kalman_state)
+        end
     end
     return kalman_state.llk
 end
@@ -447,30 +454,30 @@ function filter_recursions!(
     skip_llk_instants::Int;
     check_PD_freq::Int=50,
 ) where Fl
-    try
-        @inbounds for t in eachindex(sys.y)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t],
-                sys.Z[t],
-                sys.T[t],
-                sys.H[t],
-                sys.R[t],
-                sys.Q[t],
-                sys.d[t],
-                sys.c[t],
-                skip_llk_instants,
-                t,
-            )
+    @inbounds for t in eachindex(sys.y)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t],
+            sys.Z[t],
+            sys.T[t],
+            sys.H[t],
+            sys.R[t],
+            sys.Q[t],
+            sys.d[t],
+            sys.c[t],
+            skip_llk_instants,
+            t,
+        )
 
-            # Periodically check and enforce positive definiteness
-            if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
-                ensure_positive_definite!(kalman_state)
-            end
+        # Early exit if likelihood becomes NaN (invalid parameters)
+        if isnan(kalman_state.llk)
+            return kalman_state.llk
         end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+
+        # Periodically check and enforce positive definiteness
+        if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
+            ensure_positive_definite!(kalman_state)
+        end
     end
     return kalman_state.llk
 end
@@ -483,33 +490,34 @@ function filter_recursions!(
     skip_llk_instants::Int;
     check_PD_freq::Int=50,
 ) where Fl
-    try
-        RQR = sys.R * sys.Q * sys.R'
-        save_a1_P1_in_filter_output!(filter_output, kalman_state)
-        @inbounds for t in eachindex(sys.y)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t],
-                sys.Z,
-                sys.T,
-                sys.H,
-                RQR,
-                sys.d,
-                sys.c,
-                skip_llk_instants,
-                steadystate_tol,
-                t,
-            )
-            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+    RQR = sys.R * sys.Q * sys.R'
+    save_a1_P1_in_filter_output!(filter_output, kalman_state)
+    @inbounds for t in eachindex(sys.y)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t],
+            sys.Z,
+            sys.T,
+            sys.H,
+            RQR,
+            sys.d,
+            sys.c,
+            skip_llk_instants,
+            steadystate_tol,
+            t,
+        )
 
-            # Periodically check and enforce positive definiteness
-            if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
-                ensure_positive_definite!(kalman_state)
-            end
+        # Early exit if likelihood becomes NaN (invalid parameters)
+        if isnan(kalman_state.llk)
+            return filter_output
         end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+
+        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+
+        # Periodically check and enforce positive definiteness
+        if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
+            ensure_positive_definite!(kalman_state)
+        end
     end
     return filter_output
 end
@@ -523,32 +531,33 @@ function filter_recursions!(
     skip_llk_instants::Int;
     check_PD_freq::Int=50,
 ) where Fl
-    try
-        save_a1_P1_in_filter_output!(filter_output, kalman_state)
-        @inbounds for t in eachindex(sys.y)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t],
-                sys.Z[t],
-                sys.T[t],
-                sys.H[t],
-                sys.R[t],
-                sys.Q[t],
-                sys.d[t],
-                sys.c[t],
-                skip_llk_instants,
-                t,
-            )
-            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+    save_a1_P1_in_filter_output!(filter_output, kalman_state)
+    @inbounds for t in eachindex(sys.y)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t],
+            sys.Z[t],
+            sys.T[t],
+            sys.H[t],
+            sys.R[t],
+            sys.Q[t],
+            sys.d[t],
+            sys.c[t],
+            skip_llk_instants,
+            t,
+        )
 
-            # Periodically check and enforce positive definiteness
-            if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
-                ensure_positive_definite!(kalman_state)
-            end
+        # Early exit if likelihood becomes NaN (invalid parameters)
+        if isnan(kalman_state.llk)
+            return filter_output
         end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+
+        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+
+        # Periodically check and enforce positive definiteness
+        if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
+            ensure_positive_definite!(kalman_state)
+        end
     end
     return filter_output
 end

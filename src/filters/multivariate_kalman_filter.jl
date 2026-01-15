@@ -182,8 +182,17 @@ function update_P!(
 end
 
 function update_llk!(kalman_state::MultivariateKalmanState{Fl}) where Fl
+    # Check if F is valid (positive definite and finite)
+    # For a matrix to be positive definite, logdet must be finite and positive
+    ld = logdet(kalman_state.F)
+    if !isfinite(ld) || ld == -Inf
+        # Set likelihood to NaN to signal invalid parameters
+        # The optimizer will reject this point
+        kalman_state.llk = Fl(NaN)
+        return kalman_state
+    end
     kalman_state.llk -= (
-        HALF_LOG_2_PI + 0.5 * (logdet(kalman_state.F) +
+        HALF_LOG_2_PI + 0.5 * (ld +
         kalman_state.v' * inv(kalman_state.F) * kalman_state.v)
     )
     return kalman_state
@@ -297,26 +306,21 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    try
-        RQR = sys.R * sys.Q * sys.R'
-        @inbounds for t in 1:size(sys.y, 1)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t, :],
-                sys.Z,
-                sys.T,
-                sys.H,
-                RQR,
-                sys.d,
-                sys.c,
-                skip_llk_instants,
-                steadystate_tol,
-                t,
-            )
-        end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+    RQR = sys.R * sys.Q * sys.R'
+    @inbounds for t in 1:size(sys.y, 1)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t, :],
+            sys.Z,
+            sys.T,
+            sys.H,
+            RQR,
+            sys.d,
+            sys.c,
+            skip_llk_instants,
+            steadystate_tol,
+            t,
+        )
     end
     return kalman_state.llk
 end
@@ -328,25 +332,20 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    try
-        @inbounds for t in 1:size(sys.y, 1)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t, :],
-                sys.Z[t],
-                sys.T[t],
-                sys.H[t],
-                sys.R[t],
-                sys.Q[t],
-                sys.d[t],
-                sys.c[t],
-                skip_llk_instants,
-                t,
-            )
-        end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+    @inbounds for t in 1:size(sys.y, 1)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t, :],
+            sys.Z[t],
+            sys.T[t],
+            sys.H[t],
+            sys.R[t],
+            sys.Q[t],
+            sys.d[t],
+            sys.c[t],
+            skip_llk_instants,
+            t,
+        )
     end
     return kalman_state.llk
 end
@@ -358,28 +357,23 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    try
-        RQR = sys.R * sys.Q * sys.R'
-        save_a1_P1_in_filter_output!(filter_output, kalman_state)
-        @inbounds for t in 1:size(sys.y, 1)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t, :],
-                sys.Z,
-                sys.T,
-                sys.H,
-                RQR,
-                sys.d,
-                sys.c,
-                skip_llk_instants,
-                steadystate_tol,
-                t,
-            )
-            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
-        end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+    RQR = sys.R * sys.Q * sys.R'
+    save_a1_P1_in_filter_output!(filter_output, kalman_state)
+    @inbounds for t in 1:size(sys.y, 1)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t, :],
+            sys.Z,
+            sys.T,
+            sys.H,
+            RQR,
+            sys.d,
+            sys.c,
+            skip_llk_instants,
+            steadystate_tol,
+            t,
+        )
+        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
     end
     return filter_output
 end
@@ -391,27 +385,22 @@ function filter_recursions!(
     steadystate_tol::Fl,
     skip_llk_instants::Int,
 ) where Fl
-    try 
-        save_a1_P1_in_filter_output!(filter_output, kalman_state)
-        @inbounds for t in 1:size(sys.y, 1)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t, :],
-                sys.Z[t],
-                sys.T[t],
-                sys.H[t],
-                sys.R[t],
-                sys.Q[t],
-                sys.d[t],
-                sys.c[t],
-                skip_llk_instants,
-                t,
-            )
-            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
-        end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+    save_a1_P1_in_filter_output!(filter_output, kalman_state)
+    @inbounds for t in 1:size(sys.y, 1)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t, :],
+            sys.Z[t],
+            sys.T[t],
+            sys.H[t],
+            sys.R[t],
+            sys.Q[t],
+            sys.d[t],
+            sys.c[t],
+            skip_llk_instants,
+            t,
+        )
+        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
     end
     return filter_output
 end

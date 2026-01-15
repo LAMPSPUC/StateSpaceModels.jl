@@ -760,15 +760,19 @@ end
 function fit_candidate_models!(candidate_models::Vector{SARIMA}, show_trace::Bool)
     non_converged_models = Int[]
     for (i, model) in enumerate(candidate_models)
-        try 
+        try
             fit!(model; save_hyperparameter_distribution=false)
             if isnan(model.results.llk)
                 show_trace && println(model, " - diverged")
                 push!(non_converged_models, i)
             end
-        catch
-            show_trace && println(model, " - diverged")
-            push!(non_converged_models, i)
+        catch e
+            if e isa LinearAlgebra.SingularException || e isa LinearAlgebra.PosDefException || e isa DomainError
+                show_trace && println(model, " - diverged")
+                push!(non_converged_models, i)
+            else
+                rethrow()
+            end
         end
     end
     deleteat!(candidate_models, non_converged_models)
