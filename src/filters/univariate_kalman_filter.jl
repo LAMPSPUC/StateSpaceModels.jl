@@ -11,11 +11,15 @@ mutable struct UnivariateKalmanState{Fl<:AbstractFloat}
     P_to_check_steady_state::Matrix{Fl}
     ZP::Vector{Fl}
     TPtt::Matrix{Fl}
+    K::Vector{Fl}  # Kalman gain for Joseph form
+    IKZ::Matrix{Fl}  # (I - K*Z') for Joseph form
     function UnivariateKalmanState(a1::Vector{Fl}, P1::Matrix{Fl}) where Fl
         m = length(a1)
         P_to_check_steady_state = zeros(Fl, m, m)
         ZP = zeros(Fl, m)
         TPtt = zeros(Fl, m, m)
+        K = zeros(Fl, m)
+        IKZ = zeros(Fl, m, m)
 
         return new{Fl}(
             zero(Fl),
@@ -29,6 +33,8 @@ mutable struct UnivariateKalmanState{Fl<:AbstractFloat}
             P_to_check_steady_state,
             ZP,
             TPtt,
+            K,
+            IKZ,
         )
     end
 end
@@ -90,6 +96,8 @@ function reset_filter!(kf::UnivariateKalmanFilter{Fl}) where Fl
     fill!(kf.kalman_state.P_to_check_steady_state, zero(Fl))
     fill!(kf.kalman_state.ZP, zero(Fl))
     fill!(kf.kalman_state.TPtt, zero(Fl))
+    fill!(kf.kalman_state.K, zero(Fl))
+    fill!(kf.kalman_state.IKZ, zero(Fl))
     kf.kalman_state.steady_state = false
     return kf
 end
@@ -153,11 +161,44 @@ function update_a!(
     return kalman_state
 end
 
-function update_Ptt!(kalman_state::UnivariateKalmanState{Fl}) where Fl
-    LinearAlgebra.BLAS.gemm!(
-        'N', 'T', one(Fl), kalman_state.ZP, kalman_state.ZP, zero(Fl), kalman_state.Ptt
-    )
-    @. kalman_state.Ptt = kalman_state.P - (kalman_state.Ptt / kalman_state.F)
+function update_Ptt!(kalman_state::UnivariateKalmanState{Fl}, Z::Vector{Fl}, H::Fl) where Fl
+    # Joseph form covariance update for numerical stability
+    # Ptt = (I - K*Z') * P * (I - K*Z')' + K*H*K'
+    # where K = P*Z/F (Kalman gain)
+
+    # Compute Kalman gain: K = P*Z/F
+    # Note: kalman_state.ZP already contains P*Z from update_F!
+    @inbounds for i in eachindex(kalman_state.K)
+        kalman_state.K[i] = kalman_state.ZP[i] / kalman_state.F
+    end
+
+    # Compute (I - K*Z')
+    m = length(kalman_state.K)
+    @inbounds for i in 1:m, j in 1:m
+        if i == j
+            kalman_state.IKZ[i, j] = one(Fl) - kalman_state.K[i] * Z[j]
+        else
+            kalman_state.IKZ[i, j] = -kalman_state.K[i] * Z[j]
+        end
+    end
+
+    # Compute (I - K*Z') * P
+    # Reuse ZP as temporary storage (we don't need it anymore in this iteration)
+    # Actually, we need a matrix. Let's compute it in two steps
+    # First: Ptt_temp = (I - K*Z') * P
+    # Then: Ptt = Ptt_temp * (I - K*Z')'
+
+    # Temporary result: TPtt = (I - K*Z') * P
+    LinearAlgebra.BLAS.gemm!('N', 'N', one(Fl), kalman_state.IKZ, kalman_state.P, zero(Fl), kalman_state.TPtt)
+
+    # Ptt = TPtt * (I - K*Z')'
+    LinearAlgebra.BLAS.gemm!('N', 'T', one(Fl), kalman_state.TPtt, kalman_state.IKZ, zero(Fl), kalman_state.Ptt)
+
+    # Add K*H*K' term
+    @inbounds for i in 1:m, j in 1:m
+        kalman_state.Ptt[i, j] += H * kalman_state.K[i] * kalman_state.K[j]
+    end
+
     return kalman_state
 end
 
@@ -178,6 +219,15 @@ function update_P!(
         'N', 'T', one(Fl), kalman_state.TPtt, T, zero(Fl), kalman_state.P
     )
     kalman_state.P .+= RQR
+
+    # Enforce symmetry for numerical stability
+    m = size(kalman_state.P, 1)
+    @inbounds for i in 1:m, j in (i+1):m
+        avg = (kalman_state.P[i, j] + kalman_state.P[j, i]) / 2
+        kalman_state.P[i, j] = avg
+        kalman_state.P[j, i] = avg
+    end
+
     return kalman_state
 end
 
@@ -191,6 +241,15 @@ function update_P!(
         'N', 'T', one(Fl), kalman_state.TPtt, T, zero(Fl), kalman_state.P
     )
     kalman_state.P .+= R * Q * R'
+
+    # Enforce symmetry for numerical stability
+    m = size(kalman_state.P, 1)
+    @inbounds for i in 1:m, j in (i+1):m
+        avg = (kalman_state.P[i, j] + kalman_state.P[j, i]) / 2
+        kalman_state.P[i, j] = avg
+        kalman_state.P[j, i] = avg
+    end
+
     return kalman_state
 end
 
@@ -234,7 +293,7 @@ function update_kalman_state!(
         update_F!(kalman_state, Z, H)
         update_att!(kalman_state, Z)
         update_a!(kalman_state, T, c)
-        update_Ptt!(kalman_state)
+        update_Ptt!(kalman_state, Z, H)
         update_P!(kalman_state, T, RQR)
         check_steady_state(kalman_state, tol)
         if t > skip_llk_instants
@@ -273,7 +332,7 @@ function update_kalman_state!(
         update_F!(kalman_state, Z, H)
         update_att!(kalman_state, Z)
         update_a!(kalman_state, T, c)
-        update_Ptt!(kalman_state)
+        update_Ptt!(kalman_state, Z, H)
         update_P!(kalman_state, T, R, Q)
     end
     if t > skip_llk_instants
