@@ -11,11 +11,15 @@ mutable struct UnivariateKalmanState{Fl<:AbstractFloat}
     P_to_check_steady_state::Matrix{Fl}
     ZP::Vector{Fl}
     TPtt::Matrix{Fl}
+    K::Vector{Fl}  # Kalman gain for Joseph form
+    IKZ::Matrix{Fl}  # (I - K*Z') for Joseph form
     function UnivariateKalmanState(a1::Vector{Fl}, P1::Matrix{Fl}) where Fl
         m = length(a1)
         P_to_check_steady_state = zeros(Fl, m, m)
         ZP = zeros(Fl, m)
         TPtt = zeros(Fl, m, m)
+        K = zeros(Fl, m)
+        IKZ = zeros(Fl, m, m)
 
         return new{Fl}(
             zero(Fl),
@@ -29,6 +33,8 @@ mutable struct UnivariateKalmanState{Fl<:AbstractFloat}
             P_to_check_steady_state,
             ZP,
             TPtt,
+            K,
+            IKZ,
         )
     end
 end
@@ -70,6 +76,7 @@ mutable struct UnivariateKalmanFilter{Fl<:AbstractFloat} <: KalmanFilter
     a1::Vector{Fl}
     P1::Matrix{Fl}
     skip_llk_instants::Int
+    check_PD_freq::Int  # Frequency for positive definiteness checks (0 = disabled)
     kalman_state::UnivariateKalmanState
 
     function UnivariateKalmanFilter(
@@ -77,9 +84,10 @@ mutable struct UnivariateKalmanFilter{Fl<:AbstractFloat} <: KalmanFilter
         P1::Matrix{Fl},
         skip_llk_instants::Int=length(a1),
         steadystate_tol::Fl=Fl(1e-5),
+        check_PD_freq::Int=50,
     ) where Fl
         kalman_state = UnivariateKalmanState(copy(a1), copy(P1))
-        return new{Fl}(steadystate_tol, a1, P1, skip_llk_instants, kalman_state)
+        return new{Fl}(steadystate_tol, a1, P1, skip_llk_instants, check_PD_freq, kalman_state)
     end
 end
 
@@ -90,6 +98,8 @@ function reset_filter!(kf::UnivariateKalmanFilter{Fl}) where Fl
     fill!(kf.kalman_state.P_to_check_steady_state, zero(Fl))
     fill!(kf.kalman_state.ZP, zero(Fl))
     fill!(kf.kalman_state.TPtt, zero(Fl))
+    fill!(kf.kalman_state.K, zero(Fl))
+    fill!(kf.kalman_state.IKZ, zero(Fl))
     kf.kalman_state.steady_state = false
     return kf
 end
@@ -99,13 +109,17 @@ function set_state_llk_to_zero!(kalman_state::UnivariateKalmanState{Fl}) where F
     return kalman_state
 end
 
-# TODO this should either have ! or return something
+# Check if the covariance matrix has reached steady state
+# Uses normalized absolute difference to avoid division by zero
 function check_steady_state(kalman_state::UnivariateKalmanState{Fl}, tol::Fl) where Fl
     @inbounds for j in axes(kalman_state.P, 2), i in axes(kalman_state.P, 1)
-        if abs(
-            (kalman_state.P[i, j] - kalman_state.P_to_check_steady_state[i, j]) /
-            kalman_state.P[i, j],
-        ) > tol
+        # Use normalized absolute difference: |P - P_old| / (1 + |P|)
+        # This avoids division by zero and handles small values robustly
+        abs_diff = abs(kalman_state.P[i, j] - kalman_state.P_to_check_steady_state[i, j])
+        normalizer = one(Fl) + abs(kalman_state.P[i, j])
+        relative_change = abs_diff / normalizer
+
+        if relative_change > tol
             # Update the P_to_check_steady_state matrix
             copyto!(kalman_state.P_to_check_steady_state, kalman_state.P)
             return nothing
@@ -113,6 +127,38 @@ function check_steady_state(kalman_state::UnivariateKalmanState{Fl}, tol::Fl) wh
     end
     kalman_state.steady_state = true
     return nothing
+end
+
+# Ensure the covariance matrix P remains positive definite
+# This function checks and corrects P if it becomes indefinite due to numerical errors
+function ensure_positive_definite!(kalman_state::UnivariateKalmanState{Fl}, min_eigenvalue::Fl=Fl(1e-10)) where Fl
+    # First, ensure symmetry (should already be enforced, but double-check)
+    m = size(kalman_state.P, 1)
+    @inbounds for i in 1:m, j in (i+1):m
+        avg = (kalman_state.P[i, j] + kalman_state.P[j, i]) / 2
+        kalman_state.P[i, j] = avg
+        kalman_state.P[j, i] = avg
+    end
+
+    # Try Cholesky decomposition to check positive definiteness
+    try
+        chol = cholesky(Symmetric(kalman_state.P, :L))
+        # If successful, reconstruct from Cholesky to ensure exact symmetry and PD
+        # (This also helps with numerical stability)
+        kalman_state.P .= Matrix(chol)
+    catch e
+        # Cholesky failed - matrix is not positive definite
+        # Use eigenvalue clipping as fallback
+        eigen_decomp = eigen(Symmetric(kalman_state.P, :L))
+
+        # Clip negative eigenvalues to min_eigenvalue
+        eigenvalues_clipped = max.(eigen_decomp.values, min_eigenvalue)
+
+        # Reconstruct P from clipped eigenvalues
+        kalman_state.P .= eigen_decomp.vectors * Diagonal(eigenvalues_clipped) * eigen_decomp.vectors'
+    end
+
+    return kalman_state
 end
 
 function update_v!(
@@ -153,11 +199,44 @@ function update_a!(
     return kalman_state
 end
 
-function update_Ptt!(kalman_state::UnivariateKalmanState{Fl}) where Fl
-    LinearAlgebra.BLAS.gemm!(
-        'N', 'T', one(Fl), kalman_state.ZP, kalman_state.ZP, zero(Fl), kalman_state.Ptt
-    )
-    @. kalman_state.Ptt = kalman_state.P - (kalman_state.Ptt / kalman_state.F)
+function update_Ptt!(kalman_state::UnivariateKalmanState{Fl}, Z::Vector{Fl}, H::Fl) where Fl
+    # Joseph form covariance update for numerical stability
+    # Ptt = (I - K*Z') * P * (I - K*Z')' + K*H*K'
+    # where K = P*Z/F (Kalman gain)
+
+    # Compute Kalman gain: K = P*Z/F
+    # Note: kalman_state.ZP already contains P*Z from update_F!
+    @inbounds for i in eachindex(kalman_state.K)
+        kalman_state.K[i] = kalman_state.ZP[i] / kalman_state.F
+    end
+
+    # Compute (I - K*Z')
+    m = length(kalman_state.K)
+    @inbounds for i in 1:m, j in 1:m
+        if i == j
+            kalman_state.IKZ[i, j] = one(Fl) - kalman_state.K[i] * Z[j]
+        else
+            kalman_state.IKZ[i, j] = -kalman_state.K[i] * Z[j]
+        end
+    end
+
+    # Compute (I - K*Z') * P
+    # Reuse ZP as temporary storage (we don't need it anymore in this iteration)
+    # Actually, we need a matrix. Let's compute it in two steps
+    # First: Ptt_temp = (I - K*Z') * P
+    # Then: Ptt = Ptt_temp * (I - K*Z')'
+
+    # Temporary result: TPtt = (I - K*Z') * P
+    LinearAlgebra.BLAS.gemm!('N', 'N', one(Fl), kalman_state.IKZ, kalman_state.P, zero(Fl), kalman_state.TPtt)
+
+    # Ptt = TPtt * (I - K*Z')'
+    LinearAlgebra.BLAS.gemm!('N', 'T', one(Fl), kalman_state.TPtt, kalman_state.IKZ, zero(Fl), kalman_state.Ptt)
+
+    # Add K*H*K' term
+    @inbounds for i in 1:m, j in 1:m
+        kalman_state.Ptt[i, j] += H * kalman_state.K[i] * kalman_state.K[j]
+    end
+
     return kalman_state
 end
 
@@ -178,6 +257,15 @@ function update_P!(
         'N', 'T', one(Fl), kalman_state.TPtt, T, zero(Fl), kalman_state.P
     )
     kalman_state.P .+= RQR
+
+    # Enforce symmetry for numerical stability
+    m = size(kalman_state.P, 1)
+    @inbounds for i in 1:m, j in (i+1):m
+        avg = (kalman_state.P[i, j] + kalman_state.P[j, i]) / 2
+        kalman_state.P[i, j] = avg
+        kalman_state.P[j, i] = avg
+    end
+
     return kalman_state
 end
 
@@ -191,10 +279,26 @@ function update_P!(
         'N', 'T', one(Fl), kalman_state.TPtt, T, zero(Fl), kalman_state.P
     )
     kalman_state.P .+= R * Q * R'
+
+    # Enforce symmetry for numerical stability
+    m = size(kalman_state.P, 1)
+    @inbounds for i in 1:m, j in (i+1):m
+        avg = (kalman_state.P[i, j] + kalman_state.P[j, i]) / 2
+        kalman_state.P[i, j] = avg
+        kalman_state.P[j, i] = avg
+    end
+
     return kalman_state
 end
 
 function update_llk!(kalman_state::UnivariateKalmanState{Fl}) where Fl
+    # Check if F is valid (positive and finite)
+    if kalman_state.F <= 0 || !isfinite(kalman_state.F)
+        # Set likelihood to NaN to signal invalid parameters
+        # The optimizer will reject this point
+        kalman_state.llk = Fl(NaN)
+        return kalman_state
+    end
     kalman_state.llk -= (
         HALF_LOG_2_PI + 0.5 * (log(kalman_state.F) + kalman_state.v^2 / kalman_state.F)
     )
@@ -234,7 +338,7 @@ function update_kalman_state!(
         update_F!(kalman_state, Z, H)
         update_att!(kalman_state, Z)
         update_a!(kalman_state, T, c)
-        update_Ptt!(kalman_state)
+        update_Ptt!(kalman_state, Z, H)
         update_P!(kalman_state, T, RQR)
         check_steady_state(kalman_state, tol)
         if t > skip_llk_instants
@@ -273,7 +377,7 @@ function update_kalman_state!(
         update_F!(kalman_state, Z, H)
         update_att!(kalman_state, Z)
         update_a!(kalman_state, T, c)
-        update_Ptt!(kalman_state)
+        update_Ptt!(kalman_state, Z, H)
         update_P!(kalman_state, T, R, Q)
     end
     if t > skip_llk_instants
@@ -286,7 +390,8 @@ function optim_kalman_filter(
     sys::StateSpaceSystem, filter::UnivariateKalmanFilter{Fl}
 ) where Fl
     return filter_recursions!(
-        filter.kalman_state, sys, filter.steadystate_tol, filter.skip_llk_instants
+        filter.kalman_state, sys, filter.steadystate_tol, filter.skip_llk_instants;
+        check_PD_freq=filter.check_PD_freq
     )
 end
 
@@ -298,7 +403,8 @@ function kalman_filter!(
         filter.kalman_state,
         sys,
         filter.steadystate_tol,
-        filter.skip_llk_instants,
+        filter.skip_llk_instants;
+        check_PD_freq=filter.check_PD_freq
     )
     return filter_output
 end
@@ -307,28 +413,35 @@ function filter_recursions!(
     kalman_state::UnivariateKalmanState{Fl},
     sys::LinearUnivariateTimeInvariant,
     steadystate_tol::Fl,
-    skip_llk_instants::Int,
+    skip_llk_instants::Int;
+    check_PD_freq::Int=50,
 ) where Fl
-    try
-        RQR = sys.R * sys.Q * sys.R'
-        @inbounds for t in eachindex(sys.y)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t],
-                sys.Z,
-                sys.T,
-                sys.H,
-                RQR,
-                sys.d,
-                sys.c,
-                skip_llk_instants,
-                steadystate_tol,
-                t,
-            )
+    RQR = sys.R * sys.Q * sys.R'
+    @inbounds for t in eachindex(sys.y)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t],
+            sys.Z,
+            sys.T,
+            sys.H,
+            RQR,
+            sys.d,
+            sys.c,
+            skip_llk_instants,
+            steadystate_tol,
+            t,
+        )
+
+        # Early exit if likelihood becomes NaN (invalid parameters)
+        if isnan(kalman_state.llk)
+            return kalman_state.llk
         end
-    catch
-        @error("Numerical error when applying Kalman filter equations.")
-        rethrow()
+
+        # Periodically check and enforce positive definiteness
+        # This helps catch numerical drift before it becomes severe
+        if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
+            ensure_positive_definite!(kalman_state)
+        end
     end
     return kalman_state.llk
 end
@@ -338,27 +451,33 @@ function filter_recursions!(
     kalman_state::UnivariateKalmanState{Fl},
     sys::LinearUnivariateTimeVariant,
     steadystate_tol::Fl,
-    skip_llk_instants::Int,
+    skip_llk_instants::Int;
+    check_PD_freq::Int=50,
 ) where Fl
-    try 
-        @inbounds for t in eachindex(sys.y)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t],
-                sys.Z[t],
-                sys.T[t],
-                sys.H[t],
-                sys.R[t],
-                sys.Q[t],
-                sys.d[t],
-                sys.c[t],
-                skip_llk_instants,
-                t,
-            )
+    @inbounds for t in eachindex(sys.y)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t],
+            sys.Z[t],
+            sys.T[t],
+            sys.H[t],
+            sys.R[t],
+            sys.Q[t],
+            sys.d[t],
+            sys.c[t],
+            skip_llk_instants,
+            t,
+        )
+
+        # Early exit if likelihood becomes NaN (invalid parameters)
+        if isnan(kalman_state.llk)
+            return kalman_state.llk
         end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+
+        # Periodically check and enforce positive definiteness
+        if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
+            ensure_positive_definite!(kalman_state)
+        end
     end
     return kalman_state.llk
 end
@@ -368,30 +487,37 @@ function filter_recursions!(
     kalman_state::UnivariateKalmanState{Fl},
     sys::LinearUnivariateTimeInvariant,
     steadystate_tol::Fl,
-    skip_llk_instants::Int,
+    skip_llk_instants::Int;
+    check_PD_freq::Int=50,
 ) where Fl
-    try
-        RQR = sys.R * sys.Q * sys.R'
-        save_a1_P1_in_filter_output!(filter_output, kalman_state)
-        @inbounds for t in eachindex(sys.y)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t],
-                sys.Z,
-                sys.T,
-                sys.H,
-                RQR,
-                sys.d,
-                sys.c,
-                skip_llk_instants,
-                steadystate_tol,
-                t,
-            )
-            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+    RQR = sys.R * sys.Q * sys.R'
+    save_a1_P1_in_filter_output!(filter_output, kalman_state)
+    @inbounds for t in eachindex(sys.y)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t],
+            sys.Z,
+            sys.T,
+            sys.H,
+            RQR,
+            sys.d,
+            sys.c,
+            skip_llk_instants,
+            steadystate_tol,
+            t,
+        )
+
+        # Early exit if likelihood becomes NaN (invalid parameters)
+        if isnan(kalman_state.llk)
+            return filter_output
         end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+
+        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+
+        # Periodically check and enforce positive definiteness
+        if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
+            ensure_positive_definite!(kalman_state)
+        end
     end
     return filter_output
 end
@@ -402,29 +528,36 @@ function filter_recursions!(
     kalman_state::UnivariateKalmanState{Fl},
     sys::LinearUnivariateTimeVariant,
     steadystate_tol::Fl,
-    skip_llk_instants::Int,
+    skip_llk_instants::Int;
+    check_PD_freq::Int=50,
 ) where Fl
-    try
-        save_a1_P1_in_filter_output!(filter_output, kalman_state)
-        @inbounds for t in eachindex(sys.y)
-            update_kalman_state!(
-                kalman_state,
-                sys.y[t],
-                sys.Z[t],
-                sys.T[t],
-                sys.H[t],
-                sys.R[t],
-                sys.Q[t],
-                sys.d[t],
-                sys.c[t],
-                skip_llk_instants,
-                t,
-            )
-            save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+    save_a1_P1_in_filter_output!(filter_output, kalman_state)
+    @inbounds for t in eachindex(sys.y)
+        update_kalman_state!(
+            kalman_state,
+            sys.y[t],
+            sys.Z[t],
+            sys.T[t],
+            sys.H[t],
+            sys.R[t],
+            sys.Q[t],
+            sys.d[t],
+            sys.c[t],
+            skip_llk_instants,
+            t,
+        )
+
+        # Early exit if likelihood becomes NaN (invalid parameters)
+        if isnan(kalman_state.llk)
+            return filter_output
         end
-    catch
-        @error("Numerical error when applying Kalman filter equations")
-        rethrow()
+
+        save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
+
+        # Periodically check and enforce positive definiteness
+        if check_PD_freq > 0 && t % check_PD_freq == 0 && !kalman_state.steady_state
+            ensure_positive_definite!(kalman_state)
+        end
     end
     return filter_output
 end
