@@ -767,7 +767,7 @@ function fit_candidate_models!(candidate_models::Vector{SARIMA}, show_trace::Boo
                 push!(non_converged_models, i)
             end
         catch e
-            if e isa LinearAlgebra.SingularException || e isa LinearAlgebra.PosDefException || e isa DomainError
+            if e isa LinearAlgebra.SingularException || e isa LinearAlgebra.PosDefException || e isa DomainError || e isa AssertionError
                 show_trace && println(model, " - diverged")
                 push!(non_converged_models, i)
             else
