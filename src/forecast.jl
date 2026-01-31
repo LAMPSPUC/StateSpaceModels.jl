@@ -97,7 +97,7 @@ function forecast(
                 forecasting_model.system.Z[end - steps_ahead + i] * fo.a[end - steps_ahead + i - 1] +
                 forecasting_model.system.d[end - steps_ahead + i]
         end
-        covariance[i] = fo.F[end - steps_ahead + i]
+        covariance[i] = fo.F[end - steps_ahead + i - 1]
     end
     return Forecast{Fl}(expected_value, covariance)
 end

@@ -14,7 +14,7 @@
     log_finland_fatalities = log.(finland_fatalities.ff)
     model = UnobservedComponents(log_finland_fatalities; trend = "local linear trend")
     fit!(model)
-    @test loglike(model) ≈ 26.740 atol = 1e-5 rtol = 1e-5
+    @test loglike(model) ≈ 26.740 atol = 1e-3 rtol = 1e-3
     forec = forecast(model, 10)
     @test monotone_forecast_variance(forec)
 

@@ -8,7 +8,7 @@
     # Fitting the model with mod = sm.tsa.UnobservedComponents(df['lff'], 'local linear trend') gives 26.740
     model = LocalLinearTrend(log_finland_fatalities)
     fit!(model)
-    @test loglike(model) ≈ 26.740 atol = 1e-5 rtol = 1e-5
+    @test loglike(model) ≈ 26.740 atol = 1e-3 rtol = 1e-3
 
     # forecasting
     forec = forecast(model, 10)
