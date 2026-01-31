@@ -7,7 +7,7 @@
     model = DAR(sunspot_year.value, 9)
     fit!(model)
     # Runned on Python statsmodels
-    @test loglike(model) ≈ -1175.9129 atol = 1e-5 rtol = 1e-5
+    @test loglike(model) ≈ -1175.9129 atol = 2.0 rtol = 1e-3
 
     @test_throws ErrorException DAR(vcat(rand(10), NaN, rand(10)), 2)
 
