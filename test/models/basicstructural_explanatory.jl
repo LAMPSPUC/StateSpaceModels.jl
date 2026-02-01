@@ -9,7 +9,7 @@
     fit!(model)
     # forecasting
     # For a fixed forecasting explanatory the variance must not decrease
-    forec = forecast(model, ones(10, 2))
+    @show forec = forecast(model, ones(10, 2))
     @test monotone_forecast_variance(forec)
     kf = kalman_filter(model)
     ks = kalman_smoother(model)
