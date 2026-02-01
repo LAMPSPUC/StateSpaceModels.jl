@@ -507,11 +507,6 @@ function filter_recursions!(
             t,
         )
 
-        # Early exit if likelihood becomes NaN (invalid parameters)
-        if isnan(kalman_state.llk)
-            return filter_output
-        end
-
         save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
 
         # Periodically check and enforce positive definiteness
@@ -546,11 +541,6 @@ function filter_recursions!(
             skip_llk_instants,
             t,
         )
-
-        # Early exit if likelihood becomes NaN (invalid parameters)
-        if isnan(kalman_state.llk)
-            return filter_output
-        end
 
         save_kalman_state_in_filter_output!(filter_output, kalman_state, t)
 

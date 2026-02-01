@@ -8,11 +8,26 @@ function optim_loglike(
     model::StateSpaceModel, filter::KalmanFilter, unconstrained_hyperparameters::Vector{Fl}
 ) where Fl
     reset_filter!(filter)
-    update_model_hyperparameters!(model, unconstrained_hyperparameters)
-    update_filter_hyperparameters!(filter, model)
-    # A way to stabilize the objective function is to take the mean of the
-    # log like only for the optimizer
-    return optim_kalman_filter(model.system, filter) / size(model.system.y, 1)
+    invalid_penalty = -Fl(1e20)
+    try
+        update_model_hyperparameters!(model, unconstrained_hyperparameters)
+        update_filter_hyperparameters!(filter, model)
+        # A way to stabilize the objective function is to take the mean of the
+        # log like only for the optimizer
+        llk = optim_kalman_filter(model.system, filter)
+        if !isfinite(llk)
+            return invalid_penalty
+        end
+        return llk / size(model.system.y, 1)
+    catch e
+        if e isa LinearAlgebra.SingularException ||
+           e isa LinearAlgebra.PosDefException ||
+           e isa DomainError ||
+           e isa AssertionError
+            return invalid_penalty
+        end
+        rethrow()
+    end
 end
 
 function update_model_hyperparameters!(
