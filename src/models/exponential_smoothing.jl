@@ -50,7 +50,7 @@ in the *recursive* expression of the exponential smoothing
 \end{gather*}
 ```
 
-(with ``\beta^* = \alpha/\beta``)
+(with ``\beta^* = \alpha/\beta`` and written in the special case ``\phi=1`` for simplicity)
 
 In particular, the three smoothing parameters should be interpreted, perhaps despite their names,
 as: ``\alpha \approx 0`` implies strong level smoothing (little effect of new observations)
