@@ -1,31 +1,100 @@
 @doc raw"""
     ExponentialSmoothing(
-        y::Vector{Fl}; 
+        y::Vector{Fl};
         trend::Bool = false,
         damped_trend::Bool = false,
         seasonal::Int = 0
     ) where Fl
 
 Linear exponential smoothing models. These models are also known as ETS in the literature.
-This model is estimated using the Kalman filter for linear Gaussian state space models, for this
-reason the possible models are the following ETS with additive errors:
- * ETS(A, N, N)
- * ETS(A, A, N)
- * ETS(A, Ad, N)
- * ETS(A, N, A)
- * ETS(A, A, A)
- * ETS(A, Ad, A)
 
-Other softwares have use the augmented least squares approach and have all the possible ETS 
-combinations. The Kalman filter approach might be slower than others but have the advantages of
+These models take the general form
+
+```math
+\begin{gather*}
+    \begin{aligned}
+    y_t = l_{t-1} + \phi b_{t-1} + s_{t-m} + \varepsilon_t
+    \end{aligned}
+\end{gather*}
+```
+
+where ``y_t`` refers to the observation vector at time ``t`` and
+``\varepsilon_t`` is the scalar innovation (random white noise input).
+The model then uses from one to three local components:
+ * ``l_{t-1}``: constant level,
+ * ``b_{t-1}``: slope of the linear trend (optional, if `trend=true`),
+   with ``\phi \in ]0,1[`` being the trend damping coefficient (optional, if `damped_trend=true`
+   otherwise ``\phi=1``),
+ * ``s_{t-m}``: seasonal component for a given periodicity ``m`` (optional, if `seasonal>0`)
+
+The model hyperparameters are:
+ * ``\sigma^2``: variance of the innovation ``\varepsilon_t`` (in code: `sigma2`)
+ * ``\alpha \in ]0,1[``: level smoothing (in code: `smoothing_level`)
+ * ``\beta \in ]0,1[``: linear trend smoothing (in code: `smoothing_trend`)
+ * ``\phi`` (in code: `damping_trend`)
+ * ``\gamma \in ]0,1[``: seasonal component smoothing (in code: `smoothing_seasonal`)
+ * initial value of all state variables: level, trend,
+   and ``m-1`` elements of the seasonal component vector (in code: `initial_...`)
+
+The meaning of the smoothing parameters ``\alpha, \beta, \gamma`` can be understood
+in the *recursive* expression of the exponential smoothing
+(as opposed to the state space implementation which is actually used):
+
+```math
+\begin{gather*}
+    \begin{aligned}
+        l_t &= \alpha (y_t - s_{t-m}) + (1- \alpha) (l_{t-1} + b_{t-1}) \\
+        b_t &= \beta^*(l_t - l_{t-1}) + (1-\beta^*)  b_{t-1} \\
+        s_t &= \gamma (y_t - l_{t-1} - b_{t-1}) + (1-\gamma) s_{t-m}
+    \end{aligned}
+\end{gather*}
+```
+
+(with ``\beta^* = \alpha/\beta`` and written in the special case ``\phi=1`` for simplicity)
+
+In particular, the three smoothing parameters should be interpreted, perhaps despite their names,
+as: ``\alpha \approx 0`` implies strong level smoothing (little effect of new observations)
+while ``\alpha \approx 1`` implies little smoothing (strong effect of new observations),
+and same for ``\beta`` and ``\gamma`` for their respective components.
+
+# Model implementation and limitations
+
+This model is estimated using the Kalman filter for linear Gaussian state space models
+with a [`LinearUnivariateTimeInvariant`](@ref) model.
+
+For this reason only the ETS models with *additive* errors and not with *multplicative* errors
+are implemented (“A” vs “M” in the ETS nomenclature).
+The list of possible models is the following:
+ * ETS(A, N, N): simple exponential smoothing (no linear trend, no seasonality)
+ * ETS(A, A, N): with linear trend (Holt’s linear method)
+ * ETS(A, Ad, N): with damped linear trend
+ * ETS(A, N, A): with seasonal component, but no linear trend
+ * ETS(A, A, A): with linear trend and seasonal component (Holt-Winters’ method)
+ * ETS(A, Ad, A): with damped linear trend and seasonal component
+
+Other software implementations use the augmented least squares approach and have all the possible ETS
+combinations. The Kalman filter approach might be slower than others but has the advantages of
 filtering the components.
 
+The state space vector of the ETS model is of size 2 + 1 (if `trend`) + `seasonal`
+with the following components in this order:
+ * 1 auxiliary variable to “reroute” the state dynamics noise to the observation,
+   since ETS use a single source of error
+ * 1 level variable
+ * 1 trend slope variable (optional)
+ * ``m`` seasonal components (optional), in reversed chronological order
+   (the first element is the most recent)
+
+For this state vector ``x_t``, the observation is built as
+``y_t = Z.x_t``, with observation matrix ``Z = [1, 1, 0, 1, 0, \ldots]``,
+that is ``y_t = x_t[1] + x_t[2] + x_t[4]``, assuming all components are included.
+
 # References
- * Hyndman, Rob, Anne B. Koehler, J. Keith Ord, and Ralph D. Snyder.
-   Forecasting with exponential smoothing: the state space approach.
+ * Rob J. Hyndman, Anne B. Koehler, Keith J. Ord, and Ralph D. Snyder.
+   Forecasting with Exponential Smoothing: the State Space Approach.
    Springer Science & Business Media, 2008.
- * Hyndman, Robin John; Athanasopoulos, George. 
-   Forecasting: Principles and Practice. 
+ * Rob J. Hyndman, and George Athanasopoulos.
+   Forecasting: Principles and Practice.
    2nd ed. OTexts, 2018.
 """
 mutable struct ExponentialSmoothing <: StateSpaceModel
@@ -36,7 +105,7 @@ mutable struct ExponentialSmoothing <: StateSpaceModel
     system::LinearUnivariateTimeInvariant
     results::Results
 
-    function ExponentialSmoothing(y::Vector{Fl}; 
+    function ExponentialSmoothing(y::Vector{Fl};
                                   trend::Bool = false,
                                   damped_trend::Bool = false,
                                   seasonal::Int = 0
@@ -61,7 +130,7 @@ mutable struct ExponentialSmoothing <: StateSpaceModel
         names = build_names(trend, damped_trend, seasonal)
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new(hyperparameters, trend, damped_trend, 
+        return new(hyperparameters, trend, damped_trend,
                    seasonal, system, Results{Fl}())
     end
 end
@@ -159,7 +228,7 @@ function initial_hyperparameters!(model::ExponentialSmoothing)
             initial_hyperparameters["initial_trend"] = obs[2] - obs[1]
         end
         for i in 1:model.seasonal - 1
-            initial_hyperparameters["initial_seasonal_$i"] = observations[i] - 
+            initial_hyperparameters["initial_seasonal_$i"] = observations[i] -
                                                              mean(observations[1:model.seasonal - 1])
         end
     end
@@ -238,7 +307,7 @@ function fill_model_filter!(filter::KalmanFilter, model::ExponentialSmoothing)
     Fl = typeof_model_elements(model)
     initial_level = get_constrained_value(model, "initial_level")
     initial_state = [0; initial_level]
-    if model.trend 
+    if model.trend
         initial_trend = get_constrained_value(model, "initial_trend")
         initial_state = vcat(initial_state, initial_trend)
     end
@@ -259,7 +328,7 @@ end
 has_exogenous(model::ExponentialSmoothing) = false
 
 function reinstantiate(model::ExponentialSmoothing, y::Vector{Fl}) where Fl
-    return ExponentialSmoothing(y; 
+    return ExponentialSmoothing(y;
                 trend = model.trend,
                 damped_trend = model.damped_trend,
                 seasonal = model.seasonal
@@ -268,7 +337,7 @@ end
 
 function model_name(model::ExponentialSmoothing)
     E = "A"
-    T = model.trend ? 
+    T = model.trend ?
         model.damped_trend ? "Ad" : "A" :
         "N"
     S = model.seasonal > 0 ? "A" : "N"
@@ -293,21 +362,21 @@ end
 @doc raw"""
     auto_ets(y::Vector{Fl}; seasonal::Int = 0) where Fl
 
-Automatically fits the best [`ExponentialSmoothing`](@ref) model according to the best AIC 
+Automatically fits the best [`ExponentialSmoothing`](@ref) model according to the best AIC
 between the models:
  * ETS(A, N, N)
  * ETS(A, A, N)
  * ETS(A, Ad, N)
 
-If the user provides the time series seasonality it will search between the models
+If the user provides the time series seasonality it will search between the models:
  * ETS(A, N, A)
  * ETS(A, A, A)
  * ETS(A, Ad, A)
 
 # References
- * Hyndman, Robin John; Athanasopoulos, George. 
- Forecasting: Principles and Practice. 
- 2nd ed. OTexts, 2018.
+ * Rob J. Hyndman, and George Athanasopoulos.
+   Forecasting: Principles and Practice.
+   2nd ed. OTexts, 2018.
 """
 function auto_ets(y::Vector{Fl}; seasonal::Int = 0) where Fl
     models = StateSpaceModel[]
