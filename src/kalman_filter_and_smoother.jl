@@ -115,9 +115,9 @@ end
 
 function vector_of_matrix_to_array(vom::Vector{Matrix{T}}) where T
     n = length(vom)
-    p = length(vom[1])
-    arr = Array{T, 3}(undef, n, p, p)
-    for i in 1:n, j in 1:p, k in 1:p
+    rows, cols = size(vom[1])
+    arr = Array{T, 3}(undef, n, rows, cols)
+    for i in 1:n, j in 1:rows, k in 1:cols
         arr[i, j, k] = vom[i][j, k]
     end
     return arr
