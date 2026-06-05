@@ -187,7 +187,7 @@ function build_coef_table(model::StateSpaceModel, std_err::Vector{Fl}) where Fl
     all_coef = get_constrained_values(model)
     all_std_err = handle_std_err(model, std_err)
     all_z_stat = handle_z_stat(all_coef, all_std_err)
-    all_p_value = handle_p_value(all_coef, all_std_err, all_z_stat)
+    all_p_value = handle_p_value(all_coef, all_z_stat)
 
     return CoefficientTable{Fl}(
         get_names(model), all_coef, all_std_err, all_z_stat, all_p_value
@@ -217,15 +217,10 @@ function handle_z_stat(all_coef::Vector{Fl}, all_std_err::Vector{Fl}) where Fl
     return Fl.(all_z_stat)
 end
 
-function handle_p_value(
-    all_coef::Vector{Fl}, all_std_err::Vector{Fl}, all_z_stat::Vector{Fl}
-) where Fl
-    all_p_value = fill(NaN, length(all_std_err))
-    for i in 1:length(all_std_err)
-        if !isnan(all_std_err[i]) && all_std_err[i] > 0
-            dist = Normal(all_coef[i], all_std_err[i])
-            all_p_value[i] = 1 - 2 * abs(cdf(dist, all_z_stat[i]) - 0.5)
-        end
+function handle_p_value(all_coef::Vector{Fl}, all_z_stat::Vector{Fl}) where Fl
+    all_p_value = fill(NaN, length(all_z_stat))
+    for i in 1:length(all_z_stat)
+        all_p_value[i] = 2 * ccdf(Normal(), abs(all_z_stat[i]))
     end
     return Fl.(all_p_value)
 end
