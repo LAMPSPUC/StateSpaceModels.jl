@@ -4,7 +4,7 @@ num_series(model::StateSpaceModel) = num_series(system(model))
 system(model::StateSpaceModel) = model.system
 isunivariate(model::StateSpaceModel) = isa(model.system.y, Vector)
 model_name(model::StateSpaceModel) = "$(typeof(model))"
-num_observations(model::StateSpaceModel) = length(model.system.y)
+num_observations(model::StateSpaceModel) = size(model.system.y, 1)
 observations(model::StateSpaceModel) = model.system.y
 
 function lagmat(y::Vector{Fl}, k::Int) where Fl
