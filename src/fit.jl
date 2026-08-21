@@ -2,7 +2,7 @@
     fit!(
         model::StateSpaceModel;
         filter::KalmanFilter=default_filter(model),
-        optimizer::Optimizer=Optimizer(Optim.LBFGS()),
+        optimizer::Optimizer=Optimizer(Optim.BFGS()),
         save_hyperparameter_distribution::Bool=true
     )
 

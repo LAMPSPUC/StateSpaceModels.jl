@@ -500,6 +500,13 @@ function unconstrain_mean!(model::SARIMA)
 end
 
 # Obligatory functions
+# SARIMA keeps LBFGS as its optimizer: BFGS builds a dense Hessian approximation and its line
+# search stalls on the larger hyperparameter vectors of the seasonal models, making the fit
+# hang rather than converge.
+function default_optimizer(::SARIMA)
+    return Optimizer(Optim.LBFGS())
+end
+
 function default_filter(model::SARIMA)
     Fl = typeof_model_elements(model)
     a1 = zeros(Fl, model.order.n_states)

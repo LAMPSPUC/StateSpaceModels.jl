@@ -23,7 +23,9 @@
     log_finland_fatalities = log.(finland_fatalities.ff)
     model = ExponentialSmoothing(log_finland_fatalities; trend = true, damped_trend = true)
     fit!(model)
-    @test loglike(model) ≈ 21.000 atol = 1e-3 rtol = 1e-3
+    # The damped model nests the non-damped one as damping_trend -> 1, so its loglike must be
+    # at least as high as the ETS(A, A, N) fit above
+    @test loglike(model) ≈ 32.412 atol = 1e-3 rtol = 1e-3
     forec = forecast(model, 10)
     @test monotone_forecast_variance(forec)
 
