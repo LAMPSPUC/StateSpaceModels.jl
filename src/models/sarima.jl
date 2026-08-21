@@ -499,70 +499,6 @@ function unconstrain_mean!(model::SARIMA)
     return nothing
 end
 
-function ar_polinomial(p::Vector{Fl}) where Fl
-    return Polynomial([one(Fl); -p])
-end
-
-function ma_polinomial(q::Vector{Fl}) where Fl
-    return Polynomial([one(Fl); q])
-end
-
-function roots_of_inverse_polinomial(poly::Polynomial)
-    return roots(poly).^-1
-end
-
-function assert_stationarity(p::Vector{Fl}) where Fl
-    poly = ar_polinomial(p)
-    return all(abs.(roots_of_inverse_polinomial(poly)) .< 1)
-end
-
-function assert_invertibility(q::Vector{Fl}) where Fl
-    poly = ma_polinomial(q)
-    return all(abs.(roots_of_inverse_polinomial(poly)) .< 1)
-end
-
-function conditional_sum_of_squares(y_diff::Vector{Fl}, k_ar::Int, k_ma::Int) where Fl
-    if (k_ar == 0) && (k_ma == 0)
-        return (Fl[], Fl[])
-    end
-    k = 2 * k_ma
-    r = max(k + k_ma, k_ar)
-    residuals = nothing
-    X = nothing
-    if k_ar + k_ma > 0
-        # If we have MA terms, get residuals from an AR(k) model to use
-        # as data for conditional sum of squares estimates of the MA
-        # parameters
-        if k_ma > 0
-            y = y_diff[k:end]
-            X = lagmat(y_diff, k)
-            params_ar = X \ y[end - size(X, 1) + 1:end]
-            residuals = y[end - size(X, 1) + 1:end] - X * params_ar
-        end
-        # Run an ARMA(p,q) model using the just computed residuals as
-        # data
-        y = y_diff[r:end]
-        X = Matrix{Fl}(undef, length(y), 0)
-        X = concatenate_on_bottom(X, lagmat(y_diff, k_ar))
-        if k_ma > 0
-            X = concatenate_on_bottom(X, lagmat(residuals, k_ma))
-        end
-    end
-
-    initial_params = X \ y_diff[end - size(X, 1) + 1:end]
-    params_ar = Fl[]
-    params_ma = Fl[]
-    offset = 1
-    if k_ar > 0
-        params_ar = initial_params[offset:offset + k_ar - 1]
-        offset += k_ar
-    end
-    if k_ma > 0
-        params_ma = initial_params[offset:offset + k_ma - 1]
-    end
-    return params_ar, params_ma
-end
-
 # Obligatory functions
 function default_filter(model::SARIMA)
     Fl = typeof_model_elements(model)
@@ -576,43 +512,19 @@ end
 function initial_hyperparameters!(model::SARIMA)
     Fl = typeof_model_elements(model)
     initial_hyperparameters = Dict{String,Fl}()
-    # Heuristic inspired in statsmodels from python
-    # TODO find a reference to this heuristic
-    # conditional sum of squares
     y_diff = diff_sarima(model.system.y, model.order.d, model.order.D, model.order.s)
     y_diff = filter(!isnan, y_diff)
-    # Non-seasonal ARMA
-    (initial_ar, initial_ma) = conditional_sum_of_squares(y_diff, model.order.p, model.order.q)
-    if !assert_stationarity(initial_ar)
-        model.suppress_warns || @warn("Conditional sum of squares estimated initial_ar out of the unit circle, using zero as starting params")
-        initial_ar .= zero(Fl)
-    end
-    if !assert_invertibility(initial_ma)
-        model.suppress_warns || @warn("Conditional sum of squares estimated initial_ma out of the unit circle, using zero as starting params")
-        initial_ma .= zero(Fl)
-    end
-    # Seasonal ARMA
-    (initial_seasonal_ar, 
-    initial_seasonal_ma) = conditional_sum_of_squares(y_diff, model.order.P, model.order.Q)
-    if !assert_stationarity(initial_seasonal_ar)
-        model.suppress_warns || @warn("Conditional sum of squares estimated initial_seasonal_ar out of the unit circle, using zero as starting params")
-        initial_seasonal_ar .= zero(Fl)
-    end
-    if !assert_invertibility(initial_seasonal_ma)
-        model.suppress_warns || @warn("Conditional sum of squares estimated initial_seasonal_ma out of the unit circle, using zero as starting params")
-        initial_seasonal_ma .= zero(Fl)
-    end
     for i in 1:(model.order.p)
-        initial_hyperparameters[get_ar_name(model, i)] = initial_ar[i]
+        initial_hyperparameters[get_ar_name(model, i)] = zero(Fl)
     end
     for j in 1:(model.order.q)
-        initial_hyperparameters[get_ma_name(model, j)] = initial_ma[j]
+        initial_hyperparameters[get_ma_name(model, j)] = zero(Fl)
     end
     for i in 1:(model.order.P)
-        initial_hyperparameters[get_seasonal_ar_name(model, i)] = initial_seasonal_ar[i]
+        initial_hyperparameters[get_seasonal_ar_name(model, i)] = zero(Fl)
     end
     for j in 1:(model.order.Q)
-        initial_hyperparameters[get_seasonal_ma_name(model, j)] = initial_seasonal_ma[j]
+        initial_hyperparameters[get_seasonal_ma_name(model, j)] = zero(Fl)
     end
     if model.include_mean 
         initial_hyperparameters["mean"] = mean(y_diff)

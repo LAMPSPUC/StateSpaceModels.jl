@@ -24,7 +24,7 @@ function Optimizer(
     return Optimizer(method, options)
 end
 
-# General to every StateSpaceModel, some of them haave trouble to converge 
+# General to every StateSpaceModel, some of them have trouble to converge 
 # or have numerical errors with LBFGS
 function default_optimizer(::StateSpaceModel)
     return Optimizer(Optim.LBFGS())

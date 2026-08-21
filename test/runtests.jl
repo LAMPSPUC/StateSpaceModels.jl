@@ -2,7 +2,6 @@ using CSV
 using DataFrames
 using LinearAlgebra
 using Random
-using RecipesBase
 using StateSpaceModels
 using Statistics
 using Test
@@ -27,11 +26,3 @@ include("models/unobserved_components.jl")
 include("models/linear_regression.jl")
 include("models/exponential_smoothing.jl")
 include("models/naive_models.jl")
-include("models/dar.jl")
-include("models/vehicle_tracking.jl")
-
-# Visualization
-include("visualization/forecast.jl")
-include("visualization/components.jl")
-include("visualization/cross_validation.jl")
-include("visualization/diagnostics.jl")

@@ -2,19 +2,14 @@ module StateSpaceModels
 
 import Base: show, length, isempty
 
-using Distributions
 using LinearAlgebra
-using ShiftedArrays
-using Statistics
-using Polynomials
 using MatrixEquations
-using Printf
 using Optim
 using OrderedCollections
-using RecipesBase
+using Printf
 using SeasonalTrendLoess
-using SparseArrays
-using StatsBase
+using SpecialFunctions
+using Statistics
 
 abstract type StateSpaceModel end
 
@@ -29,7 +24,6 @@ include("filters/univariate_kalman_filter.jl")
 include("filters/multivariate_kalman_filter.jl")
 include("filters/scalar_kalman_filter.jl")
 include("filters/regression_kalman_filter.jl")
-include("filters/sparse_univariate_kalman_filter.jl")
 
 include("smoothers/kalman_smoother.jl")
 
@@ -53,19 +47,11 @@ include("models/unobserved_components.jl")
 
 include("models/exponential_smoothing.jl")
 include("models/naive_models.jl")
-include("models/dar.jl")
-include("models/vehicle_tracking.jl")
-
-include("visualization/forecast.jl")
-include("visualization/components.jl")
-include("visualization/cross_validation.jl")
-include("visualization/diagnostics.jl")
 
 # Exported types and structs
 export BasicStructural
 export ExperimentalSeasonalNaive
 export BasicStructuralExplanatory
-export DAR
 export ExponentialSmoothing
 export FilterOutput
 export LinearMultivariateTimeInvariant
@@ -85,11 +71,9 @@ export SARIMA
 export ScalarKalmanFilter
 export SeasonalNaive
 export SmootherOutput
-export SparseUnivariateKalmanFilter
 export StateSpaceModel
 export UnivariateKalmanFilter
 export UnobservedComponents
-export VehicleTracking
 
 # Exported functions
 export auto_arima

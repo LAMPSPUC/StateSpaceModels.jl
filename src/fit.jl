@@ -220,7 +220,11 @@ end
 function handle_p_value(all_coef::Vector{Fl}, all_z_stat::Vector{Fl}) where Fl
     all_p_value = fill(NaN, length(all_z_stat))
     for i in 1:length(all_z_stat)
-        all_p_value[i] = 2 * ccdf(Normal(), abs(all_z_stat[i]))
+        all_p_value[i] = 2 * (1 - normal_cdf(abs(all_z_stat[i])))
     end
     return Fl.(all_p_value)
+end
+
+function normal_cdf(x::Real)
+    return 0.5 * (1 + SpecialFunctions.erf(x / sqrt(2)))
 end

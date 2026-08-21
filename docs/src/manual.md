@@ -30,12 +30,6 @@ v = get_innovations(kf)
 ks = kalman_smoother(model)
 
 alpha = get_smoothed_state(ks)
-
-using Plots
-
-plot(model, forec)
-
-plotdiagnostics(kf)
 ```
 
 ## Models
@@ -46,7 +40,6 @@ The package provides a variaty of pre-defined models. If there is any model that
 UnobservedComponents
 ExponentialSmoothing
 SARIMA
-DAR
 BasicStructural
 BasicStructuralExplanatory
 LinearRegression
@@ -55,7 +48,6 @@ LocalLevelCycle
 LocalLevelExplanatory
 LocalLinearTrend
 MultivariateBasicStructural
-VehicleTracking
 ```
 
 ## Naive models
@@ -133,7 +125,6 @@ StateSpaceModels.jl lets users define tailor-made filters in an easy manner.
 ```@docs
 UnivariateKalmanFilter
 ScalarKalmanFilter
-SparseUnivariateKalmanFilter
 MultivariateKalmanFilter
 FilterOutput
 SmootherOutput
@@ -171,46 +162,6 @@ using cross_validation techniques.
 forecast
 simulate_scenarios
 cross_validation
-```
-
-## Visualization
-
-Some user friendly plot recipes are defined using [RecipesBase.jl](https://github.com/JuliaPlots/RecipesBase.jl). If you have any suggestions do not hesitate to post it as an issue.
-
-```@example
-using StateSpaceModels, CSV, DataFrames, Plots
-
-air_passengers = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
-log_air_passengers = log.(air_passengers.passengers)
-
-model = BasicStructural(log_air_passengers, 12)
-fit!(model)
-forec = forecast(model, 24)
-
-plot(model, forec; legend = :topleft)
-```
-
-```@example
-using StateSpaceModels, CSV, DataFrames, Plots
-
-finland_fatalities = CSV.File(StateSpaceModels.VEHICLE_FATALITIES) |> DataFrame
-log_finland_fatalities = log.(finland_fatalities.ff)
-model = UnobservedComponents(log_finland_fatalities; trend = "local linear trend")
-fit!(model)
-ks = kalman_smoother(model)
-
-plot(model, ks)
-```
-
-```@example
-using StateSpaceModels, CSV, DataFrames, Plots
-
-nile = CSV.File(StateSpaceModels.NILE) |> DataFrame
-model = UnobservedComponents(nile.flow; trend = "local level", cycle = "stochastic")
-fit!(model)
-kf = kalman_filter(model)
-
-plotdiagnostics(kf)
 ```
 
 ## Datasets
