@@ -61,7 +61,6 @@ end
         order::Tuple{Int,Int,Int} = (1, 0, 0), 
         seasonal_order::Tuple{Int, Int, Int, Int} = (0, 0, 0, 0),
         include_mean::Bool = false,
-        suppress_warns::Bool = false
     ) where Fl
 
 A SARIMA model (Seasonal AutoRegressive Integrated Moving Average) implemented within the state-space
@@ -106,13 +105,11 @@ mutable struct SARIMA <: StateSpaceModel
     system::LinearUnivariateTimeInvariant
     results::Results
     include_mean::Bool
-    suppress_warns::Bool
 
     function SARIMA(y::Vector{Fl}; 
                     order::Tuple{Int,Int,Int} = (1, 0, 0), 
                     seasonal_order::Tuple{Int, Int, Int, Int} = (0, 0, 0, 0),
-                    include_mean::Bool = false,
-                    suppress_warns::Bool = false) where Fl
+                    include_mean::Bool = false) where Fl
         or = SARIMAOrder(order[1], order[2], order[3], 
                         seasonal_order[1], seasonal_order[2], seasonal_order[3], seasonal_order[4])
         hyperparameters_auxiliary = SARIMAHyperParametersAuxiliary{Fl}(or)
@@ -151,7 +148,7 @@ mutable struct SARIMA <: StateSpaceModel
 
         hyperparameters = HyperParameters{Fl}(names)
 
-        return new(or, hyperparameters_auxiliary, hyperparameters, system, Results{Fl}(), include_mean, suppress_warns)
+        return new(or, hyperparameters_auxiliary, hyperparameters, system, Results{Fl}(), include_mean)
     end
 end
 
@@ -362,11 +359,6 @@ function SARIMA_exact_initialization!(kalman_state,
     kalman_state.P[(end - num_arma_states + 1):end, (end - num_arma_states + 1):end] .=
         system.Q[1] .* arma_P1
     return nothing
-end
-
-function concatenate_on_bottom(X1::Matrix{Fl}, X2::Matrix{Fl}) where Fl
-    n = min(size(X1, 1), size(X2, 1))
-    return hcat(X1[end-n+1:end, :], X2[end-n+1:end, :])
 end
 
 function diff_sarima(y::Vector{Fl}, d::Int, D::Int, s::Int) where Fl
@@ -751,7 +743,6 @@ function add_new_p_q_models!(candidate_models::Vector{SARIMA},
                     order = (new_p, best_model.order.d, new_q),
                     seasonal_order = (best_model.order.P, best_model.order.D, best_model.order.Q, best_model.order.s),
                     include_mean = best_model.include_mean, 
-                    suppress_warns = true
                 )
         if !is_visited(model, visited_models)
             push!(candidate_models, model)
@@ -776,7 +767,6 @@ function add_new_P_Q_models!(candidate_models::Vector{SARIMA},
                     order = (best_model.order.p, best_model.order.d, best_model.order.q),
                     seasonal_order = (new_P, best_model.order.D, new_Q, best_model.order.s),
                     include_mean = best_model.include_mean, 
-                    suppress_warns = true
                 )
         if !is_visited(model, visited_models)
             push!(candidate_models, model)
@@ -792,7 +782,6 @@ function add_model_with_changed_constant!(candidate_models, visited_models)
                     order = (best_model.order.p, best_model.order.d, best_model.order.q),
                     seasonal_order = (best_model.order.P, best_model.order.D, best_model.order.Q, best_model.order.s),
                     include_mean = !best_model.include_mean,
-                    suppress_warns = true
                 )
     if !is_visited(model, visited_models)
         push!(candidate_models, model)
@@ -809,15 +798,15 @@ function add_first_non_seasonal_models!(
     max_q::Int
 ) where Fl <: AbstractFloat
     if max_p >= 2 && max_q >= 2
-        push!(candidate_models, SARIMA(y; order = (2, d, 2), include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (2, d, 2), include_mean = include_mean))
     end
     if max_p >= 1
-        push!(candidate_models, SARIMA(y; order = (1, d, 0), include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (1, d, 0), include_mean = include_mean))
     end
     if max_q >= 1
-        push!(candidate_models, SARIMA(y; order = (0, d, 1), include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (0, d, 1), include_mean = include_mean))
     end
-    push!(candidate_models, SARIMA(y; order = (0, d, 0), include_mean = include_mean, suppress_warns = true))
+    push!(candidate_models, SARIMA(y; order = (0, d, 0), include_mean = include_mean))
     return candidate_models
 end
 
@@ -834,15 +823,15 @@ function add_first_seasonal_models!(
     seasonal::Int
 ) where Fl <: AbstractFloat
     if max_p >= 2 && max_q >= 2 && max_P >= 1 && max_Q >= 1
-        push!(candidate_models, SARIMA(y; order = (2, d, 2), seasonal_order = (1, D, 1, seasonal) , include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (2, d, 2), seasonal_order = (1, D, 1, seasonal) , include_mean = include_mean))
     end
     if max_p >= 1 && max_P >= 1
-        push!(candidate_models, SARIMA(y; order = (1, d, 0), seasonal_order = (1, D, 0, seasonal) , include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (1, d, 0), seasonal_order = (1, D, 0, seasonal) , include_mean = include_mean))
     end
     if max_q >= 1 && max_Q >= 1
-        push!(candidate_models, SARIMA(y; order = (0, d, 1), seasonal_order = (0, D, 1, seasonal) , include_mean = include_mean, suppress_warns = true))
+        push!(candidate_models, SARIMA(y; order = (0, d, 1), seasonal_order = (0, D, 1, seasonal) , include_mean = include_mean))
     end
-    push!(candidate_models, SARIMA(y; order = (0, d, 0), seasonal_order = (0, D, 0, seasonal) , include_mean = include_mean, suppress_warns = true))
+    push!(candidate_models, SARIMA(y; order = (0, d, 0), seasonal_order = (0, D, 0, seasonal) , include_mean = include_mean))
     return candidate_models
 end
 
