@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Manual · StateSpaceModels.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>StateSpaceModels.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li class="current"><a class="toctext" href>Manual</a><ul class="internal"><li><a class="toctext" href="#Introduction-1">Introduction</a></li><li><a class="toctext" href="#Data-Structures-1">Data Structures</a></li><li><a class="toctext" href="#Default-models-1">Default models</a></li><li><a class="toctext" href="#Estimation-1">Estimation</a></li><li><a class="toctext" href="#Simulation-1">Simulation</a></li><li><a class="toctext" href="#Example-1">Example</a></li><li><a class="toctext" href="#Reference-1">Reference</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Manual</a></li></ul><a class="edit-page" href="https://github.com/LAMPSPUC/StateSpaceModels.jl/blob/master/docs/src/manual.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Manual</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Manual-1" href="#Manual-1">Manual</a></h1><h2><a class="nav-anchor" id="Introduction-1" href="#Introduction-1">Introduction</a></h2><p>In this package we consider the following state space model</p><div>\[\begin{gather*}
+    \begin{aligned}
+        y_t &amp;= Z_t \alpha_t  + \varepsilon_t \quad \quad \quad t = 1 \dots n\\
+        \alpha_{t+1} &amp;= T_t \alpha_t + R_t \eta_t
+    \end{aligned}
+\end{gather*}\]</div><p>where</p><div>\[\begin{bmatrix}
+    \varepsilon_t \\
+    \eta_t \\
+    \alpha_1
+\end{bmatrix}
+\sim
+NID
+\begin{pmatrix}
+    \begin{bmatrix}
+        0 \\
+        0 \\
+        a_1
+    \end{bmatrix}
+    ,
+    \begin{bmatrix}
+        H_t &amp; 0 &amp; 0\\
+        0 &amp; Q_t &amp; 0\\
+        0 &amp; 0 &amp; P_1\\
+    \end{bmatrix}
+\end{pmatrix}\]</div><h2><a class="nav-anchor" id="Data-Structures-1" href="#Data-Structures-1">Data Structures</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="StateSpaceModels.StateSpaceDimensions" href="#StateSpaceModels.StateSpaceDimensions"><code>StateSpaceModels.StateSpaceDimensions</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">StateSpaceDimensions</code></pre><p>StateSpaceModel dimensions, following the notation of on the book  &quot;Time Series Analysis by State Space Methods&quot; (2012) by J. Durbin and S. J. Koopman.</p><ul><li><code>n</code> is the number of observations</li><li><code>p</code> is the dimension of the observation vector <span>$y_t$</span></li><li><code>m</code> is the dimension of the state vector <span>$\alpha_t$</span></li><li><code>r</code> is the dimension of the state covariance matrix <span>$Q_t$</span></li></ul></div></div><a class="source-link" target="_blank" href="https://github.com/LAMPSPUC/StateSpaceModels.jl/blob/b0353332fd14ecd70553a6da4771535014a639ae/src/structures.jl#L66-L76">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="StateSpaceModels.StateSpaceModel" href="#StateSpaceModels.StateSpaceModel"><code>StateSpaceModels.StateSpaceModel</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">StateSpaceModel</code></pre><p>Following the notation of on the book &quot;Time Series Analysis by State Space Methods&quot; (2012) by J. Durbin and S. J. Koopman.</p><ul><li><code>y</code> A <span>$n \times p$</span> matrix containing observations</li><li><code>Z</code> A <span>$p \times m \times n$</span> matrix</li><li><code>T</code> A <span>$m \times m$</span> matrix</li><li><code>R</code> A <span>$m \times r$</span> matrix</li></ul><p>A <code>StateSpaceModel</code> object can be defined using <code>StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64})</code>.</p><p>Alternatively, if <code>Z</code> is time-invariant, it can be input as a single <span>$p \times m$</span> matrix.</p></div></div><a class="source-link" target="_blank" href="https://github.com/LAMPSPUC/StateSpaceModels.jl/blob/b0353332fd14ecd70553a6da4771535014a639ae/src/structures.jl#L84-L97">source</a></section><div class="admonition warning"><div class="admonition-title">Missing docstring.</div><div class="admonition-text"><p>Missing docstring for <code>StateSpaceParameters</code>. Check Documenter&#39;s build log for details.</p></div></div><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="StateSpaceModels.SmoothedState" href="#StateSpaceModels.SmoothedState"><code>StateSpaceModels.SmoothedState</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">SmoothedState</code></pre><p>Following the notation of on the book &quot;Time Series Analysis by State Space Methods&quot; (2012) by J. Durbin and S. J. Koopman.</p><ul><li><code>alpha</code> Expected value of the smoothed state <span>$E(\alpha_t|y_1, \dots , y_n)$</span></li><li><code>V</code> Error covariance matrix of smoothed state <span>$Var(\alpha_t|y_1, \dots , y_n)$</span></li></ul></div></div><a class="source-link" target="_blank" href="https://github.com/LAMPSPUC/StateSpaceModels.jl/blob/b0353332fd14ecd70553a6da4771535014a639ae/src/structures.jl#L164-L171">source</a></section><div class="admonition warning"><div class="admonition-title">Missing docstring.</div><div class="admonition-text"><p>Missing docstring for <code>FilterOutput</code>. Check Documenter&#39;s build log for details.</p></div></div><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="StateSpaceModels.StateSpace" href="#StateSpaceModels.StateSpace"><code>StateSpaceModels.StateSpace</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">StateSpace</code></pre><p>StateSpaceModel</p></div></div><a class="source-link" target="_blank" href="https://github.com/LAMPSPUC/StateSpaceModels.jl/blob/b0353332fd14ecd70553a6da4771535014a639ae/src/structures.jl#L198-L202">source</a></section><h2><a class="nav-anchor" id="Default-models-1" href="#Default-models-1">Default models</a></h2><p>The local level model is defined by</p><div>\[\begin{gather*}
+    \begin{aligned}
+        y_t &amp;=  \mu_t  + \varepsilon_t \quad \varepsilon_t \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &amp;= \mu_t + \eta_t \quad \eta_t \sim \mathcal{N}(0, \sigma^2_{\eta})\\
+    \end{aligned}
+\end{gather*}\]</div><div class="admonition warning"><div class="admonition-title">Missing docstring.</div><div class="admonition-text"><p>Missing docstring for <code>locallevelmodel</code>. Check Documenter&#39;s build log for details.</p></div></div><p>The linear trend model is defined by</p><div>\[\begin{gather*}
+    \begin{aligned}
+        y_t &amp;=  \mu_t  + \varepsilon_t \quad &amp;\varepsilon_t \sim \mathcal{N}(0, \sigma^2_{\varepsilon})\\
+        \mu_{t+1} &amp;= \mu_t + \nu_t + \xi_t \quad &amp;\xi_t \sim \mathcal{N}(0, \sigma^2_{\xi})\\
+        \nu_{t+1} &amp;= \nu_t + \zeta_t \quad &amp;\zeta_t \sim \mathcal{N}(0, \sigma^2_{\zeta})\\
+    \end{aligned}
+\end{gather*}\]</div><div class="admonition warning"><div class="admonition-title">Missing docstring.</div><div class="admonition-text"><p>Missing docstring for <code>lineartrendmodel</code>. Check Documenter&#39;s build log for details.</p></div></div><p>The structural model is defined by</p><p>TODO mathematical model</p><div class="admonition warning"><div class="admonition-title">Missing docstring.</div><div class="admonition-text"><p>Missing docstring for <code>structuralmodel</code>. Check Documenter&#39;s build log for details.</p></div></div><h2><a class="nav-anchor" id="Estimation-1" href="#Estimation-1">Estimation</a></h2><p>The model estimation is made using the function <code>statespace(y, s; X, nseeds)</code>. It receives as argument the time series <code>y</code> and the desired seasonality <code>s</code>. The user can input exogenous variables using optional argument <code>X</code> and specify the desired number of random seeds <code>nseeds</code> to perform the estimation.</p><pre><code class="language-julia">ss = statespace(y, s; X = X, nseeds = nseeds)</code></pre><h2><a class="nav-anchor" id="Simulation-1" href="#Simulation-1">Simulation</a></h2><p>Simulation is made using the function <code>simulate</code>. It receives as argument a <code>StateSpace</code> object, the number of steps ahead <code>N</code> and the number of scenarios to simulate <code>S</code>.</p><pre><code class="language-julia">simulation = simulate(ss, N, S)</code></pre><h2><a class="nav-anchor" id="Example-1" href="#Example-1">Example</a></h2><p>Let&#39;s take the Air Passenger time series to build and example. Taking the log of the series we should have a nice time series to simulate. The code is in the example folder.</p><pre><code class="language-julia">using CSV, StateSpaceModels, Plots, Statistics, Dates
+
+#load the AirPassengers dataset
+AP = CSV.read(&quot;AirPassengers.csv&quot;)
+
+#Take the log of the series
+logAP = log.(Array{Float64}(AP[:Passengers]))
+
+p1 = plot(AP[:Date], logAP, label = &quot;AirPassengers timeseries&quot;, size = (1000, 500))</code></pre><p><img src="../assets/logofairpassengers.png" alt="Log of Air Passengers time series"/></p><p>Estimating a StateSpaceModel gives us the trend and seasonal components of the time series.</p><pre><code class="language-julia">#Define its seasonality 
+s = 12
+
+#Estimate a StateSpace Structure
+ss = statespace(logAP, s)
+
+#Analyze its decomposition in seasonal and trend
+p2 = plot(AP[:Date], ss.state.seasonal, label = &quot;AirPassengers seasonal&quot;, size = (1000, 500))
+p3 = plot(AP[:Date], ss.state.trend, label = &quot;AirPassengers trend&quot;, size = (1000, 500))</code></pre><p><img src="../assets/trendairpassengers.png" alt="Lof of Air Passengers trend component"/> <img src="../assets/seasonalairpassengers.png" alt="Log of Air Passengers seasonal component"/></p><p>We can also simulate future scenarios for this time series. In this example, we simulate 100 scenarios up to five years (60 observations) ahead.</p><pre><code class="language-julia">#Simulate 100 scenarios, 60 steps ahead
+num_scenarios = 100
+num_steps_ahead = 60
+simulation = simulate(ss, num_steps_ahead, num_scenarios)
+
+#Define simulation dates
+firstdate = AP[:Date][end] + Month(1)
+newdates = collect(firstdate:Month(1):firstdate + Month(num_steps_ahead - 1))
+
+#Evaluating the mean of the forecast and its quantiles
+simulation_mean = mean(simulation, dims = 3)[1, :, :]
+
+n = length(logAP)
+nmonths = length(simulation[1, :, 1])
+simulation_q05 = zeros(nmonths)
+simulation_q95 = zeros(nmonths)
+for t = 1:nmonths
+    simulation_q05[t] = quantile(simulation[1, t, :], 0.05)
+    simulation_q95[t] = quantile(simulation[1, t, :], 0.95)
+end
+
+plot!(p1, newdates, [simulation_q05, simulation_mean, simulation_q95], labels = [&quot;5% quantile&quot;, &quot;mean&quot;, &quot;95% quantile&quot;])</code></pre><p><img src="../assets/simulationlogofairpassengers.png" alt="Log of Air Passengers simulation"/></p><h2><a class="nav-anchor" id="Reference-1" href="#Reference-1">Reference</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Base.size" href="#Base.size"><code>Base.size</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">size(model::StateSpaceModel)</code></pre><p>Return the dimensions <code>n</code>, <code>p</code>, <code>m</code> and <code>r</code> of the <code>StateSpaceModel</code></p></div></div><a class="source-link" target="_blank" href="https://github.com/LAMPSPUC/StateSpaceModels.jl/blob/b0353332fd14ecd70553a6da4771535014a639ae/src/utils.jl#L3-L7">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="StateSpaceModels.ztr" href="#StateSpaceModels.ztr"><code>StateSpaceModels.ztr</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">ztr(model::StateSpaceModel)</code></pre><p>Return the state space model arrays <code>Z</code>, <code>T</code> and <code>R</code> of the <code>StateSpaceModel</code></p></div></div><a class="source-link" target="_blank" href="https://github.com/LAMPSPUC/StateSpaceModels.jl/blob/b0353332fd14ecd70553a6da4771535014a639ae/src/utils.jl#L12-L16">source</a></section><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">Home</span></a></footer></article></body></html>
