@@ -2,7 +2,7 @@
     fit!(
         model::StateSpaceModel;
         filter::KalmanFilter=default_filter(model),
-        optimizer::Optimizer=Optimizer(Optim.LBFGS()),
+        optimizer::Optimizer=default_optimizer(model),
         save_hyperparameter_distribution::Bool=true
     )
 
@@ -220,7 +220,7 @@ end
 function handle_p_value(all_coef::Vector{Fl}, all_z_stat::Vector{Fl}) where Fl
     all_p_value = fill(NaN, length(all_z_stat))
     for i in 1:length(all_z_stat)
-        all_p_value[i] = 2 * ccdf(Normal(), abs(all_z_stat[i]))
+        all_p_value[i] = SpecialFunctions.erfc(abs(all_z_stat[i]) / sqrt(2))
     end
     return Fl.(all_p_value)
 end

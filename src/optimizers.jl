@@ -9,7 +9,7 @@ Users can choose among all suitable Optimizers in Optim.jl using very similar sy
 julia> using Optim
 
 # use a semicolon to avoid displaying the big log
-julia> opt = Optimizer(Optim.LBFGS(), Optim.Options(show_trace = true));
+julia> opt = Optimizer(Optim.BFGS(), Optim.Options(show_trace = true));
 ```
 """
 struct Optimizer
@@ -24,8 +24,6 @@ function Optimizer(
     return Optimizer(method, options)
 end
 
-# General to every StateSpaceModel, some of them haave trouble to converge 
-# or have numerical errors with LBFGS
 function default_optimizer(::StateSpaceModel)
-    return Optimizer(Optim.LBFGS())
+    return Optimizer(Optim.BFGS())
 end

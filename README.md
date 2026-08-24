@@ -54,7 +54,6 @@ Current features include:
   * Naive models
 * Completion of missing values
 * Diagnostics for the residuals of fitted models
-* Visualization recipes
 
 ## Quick Examples
 
@@ -64,7 +63,6 @@ Quick example of different models fit and forecast for the air passengers time-s
 ```julia
 using CSV
 using DataFrames
-using Plots
 using StateSpaceModels
 
 airp = CSV.File(StateSpaceModels.AIR_PASSENGERS) |> DataFrame
@@ -90,15 +88,7 @@ forec_ets = forecast(model_ets, steps_ahead)
 model_naive = SeasonalNaive(log_air_passengers, 12)
 fit!(model_naive)
 forec_naive = forecast(model_naive, steps_ahead)
-
-plt_sarima = plot(model_sarima, forec_sarima; title = "SARIMA", label = "");
-plt_uc = plot(model_uc, forec_uc; title = "Unobserved components", label = "");
-plt_ets = plot(model_ets, forec_ets; title = "Exponential smoothing", label = "");
-plt_naive = plot(model_ets, forec_naive; title = "Seasonal Naive", label = "");
-
-plot(plt_sarima, plt_uc, plt_ets, plt_naive; layout = (2, 2), size = (500, 500))
 ```
-![quick_example_airp](./docs/assets/quick_example_airp.png)
 
 ### Automatic forecasting
 Quick examples on automatic forecasting. When performing automatic forecasting 

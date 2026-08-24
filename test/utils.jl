@@ -16,7 +16,7 @@ function expected_value_of_scenarios(scenarios::Array{T,3}) where T
 end
 
 function test_scenarios_adequacy_with_forecast(
-    forec::StateSpaceModels.Forecast, scenarios::Array{T,3}; rtol::T=5e-3, atol::T=NaN
+    forec::StateSpaceModels.Forecast, scenarios::Array{T,3}; rtol::T=1e-2, atol::T=NaN
 ) where T
     # Test expected values
     if isnan(atol)

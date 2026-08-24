@@ -7,14 +7,6 @@ model_name(model::StateSpaceModel) = "$(typeof(model))"
 num_observations(model::StateSpaceModel) = size(model.system.y, 1)
 observations(model::StateSpaceModel) = model.system.y
 
-function lagmat(y::Vector{Fl}, k::Int) where Fl
-    X = Matrix{Fl}(undef, length(y) - k, k)
-    for i in 1:k
-        X[:, i] = ShiftedArrays.lag(y, i)[k + 1:end]
-    end
-    return X
-end
-
 function variance_of_valid_observations(y::Vector{Fl}) where Fl
     return var(filter(!isnan, y))
 end
